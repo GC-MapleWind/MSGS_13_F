@@ -1,0 +1,15 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(chmod:*)",
+      "Bash(npx sv create:*)",
+      "Bash(node:*)",
+      "Bash(npm:*)",
+      "Bash(\"/mnt/c/Program Files/nodejs/node.exe\" --version)",
+      "Bash(npx create-svelte@latest:*)",
+      "Bash(npx create-svelte@6 app)",
+      "Bash(npx svelte-kit sync:*)",
+      "Bash(npx vite build:*)"
+    ]
+  }
+}
