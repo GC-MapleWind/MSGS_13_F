@@ -4,7 +4,7 @@
 	import Header from '$lib/components/Header.svelte';
 	import { getCharacterById } from '$lib/data';
 
-	const characterId = $derived($page.params.id);
+	const characterId = $derived($page.params.id ?? '');
 	const character = $derived(getCharacterById(characterId));
 
 	let cardElement: HTMLDivElement | undefined = $state();
@@ -32,7 +32,7 @@
 	<title>카드 저장 - {character?.name ?? ''}</title>
 </svelte:head>
 
-<div class="fixed inset-0 bg-bg-overlay z-50 flex flex-col">
+<div class="absolute inset-0 bg-bg-overlay z-50 flex flex-col">
 	<!-- Header -->
 	<Header variant="save" onCloseClick={goBack} />
 
