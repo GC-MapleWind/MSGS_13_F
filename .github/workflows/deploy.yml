@@ -14,9 +14,36 @@ env:
   FRONTEND_DIR: "dpbr_front/app"
 
 jobs:
-  test:
-    name: Build and Test Frontend
+  # PR일 때는 가벼운 검증만
+  check:
+    name: Code Quality Check
     runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request'
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+          cache-dependency-path: ${{ env.FRONTEND_DIR }}/package-lock.json
+
+      - name: Install dependencies
+        working-directory: ${{ env.FRONTEND_DIR }}
+        run: npm ci
+
+      - name: Type check
+        working-directory: ${{ env.FRONTEND_DIR }}
+        run: npm run check
+
+  # main push 또는 수동 실행일 때만 빌드 & 배포
+  build:
+    name: Build and Deploy
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main' && (github.event_name == 'push' || github.event_name == 'workflow_dispatch')
     
     steps:
       - name: Checkout code
@@ -40,29 +67,6 @@ jobs:
       - name: Build
         working-directory: ${{ env.FRONTEND_DIR }}
         run: npm run build
-
-      - name: Upload build artifacts
-        uses: actions/upload-artifact@v4
-        with:
-          name: frontend-build
-          path: ${{ env.FRONTEND_DIR }}/build
-          retention-days: 1
-
-  deploy:
-    name: Deploy to Server
-    needs: test
-    runs-on: ubuntu-latest
-    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
-    
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Download build artifacts
-        uses: actions/download-artifact@v4
-        with:
-          name: frontend-build
-          path: ${{ env.FRONTEND_DIR }}/build
 
       - name: Setup SSH Key
         run: |
