@@ -36,7 +36,6 @@ jobs:
       - name: Type check
         working-directory: ${{ env.FRONTEND_DIR }}
         run: npm run check
-        continue-on-error: true
 
       - name: Build
         working-directory: ${{ env.FRONTEND_DIR }}
@@ -80,10 +79,10 @@ jobs:
         run: |
           # 빌드 파일을 서버로 전송
           echo "📦 Uploading build files to server..."
-          scp -i ~/.ssh/deploy_key -r ${{ env.FRONTEND_DIR }}/build/* ${SERVER_USER}@${SERVER_HOST}:${DEPLOY_PATH:-~/dpbr_frontend}/
+          scp -i ~/.ssh/deploy_key -r "${{ env.FRONTEND_DIR }}/build/." "${SERVER_USER}@${SERVER_HOST}:${DEPLOY_PATH:-~/dpbr_frontend}/"
           
           # 서버에서 추가 작업 (필요시)
-          ssh -i ~/.ssh/deploy_key -o StrictHostKeyChecking=no ${SERVER_USER}@${SERVER_HOST} << 'ENDSSH'
+          ssh -i ~/.ssh/deploy_key "${SERVER_USER}@${SERVER_HOST}" << 'ENDSSH'
             set -e
             
             # Nginx 설정 다시 로드
@@ -98,7 +97,10 @@ jobs:
           SERVER_HOST: ${{ secrets.SERVER_HOST }}
         run: |
           sleep 3
-          curl -f http://${SERVER_HOST}/ || echo "⚠️ Frontend health check failed"
+          if ! curl -f "http://${SERVER_HOST}/"; then
+            echo "⚠️ Frontend health check failed"
+            exit 1
+          fi
 
       - name: Notify Success
         if: success()

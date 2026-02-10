@@ -16,7 +16,7 @@
 ### 1.1 서버 접속
 
 ```bash
-ssh ark1st@168.107.45.180
+ssh <USERNAME>@<SERVER_IP>
 ```
 
 ### 1.2 초기 설정 스크립트 실행
@@ -46,10 +46,10 @@ GitHub 저장소 → Settings → Secrets and variables → Actions
 
 | Secret 이름 | 값 | 설명 |
 |------------|-----|------|
-| `SSH_PRIVATE_KEY` | SSH 개인 키 내용 | 백엔드와 동일한 키 |
-| `SERVER_HOST` | `168.107.45.180` | 서버 IP |
-| `SERVER_USER` | `ark1st` | 서버 사용자명 |
-| `FRONTEND_DEPLOY_PATH` | `/home/ark1st/dpbr_frontend` | 프론트엔드 배포 경로 |
+| `SSH_PRIVATE_KEY` | SSH 개인 키 내용 | 서버 SSH 접속용 개인 키 |
+| `SERVER_HOST` | 서버 IP 주소 | 배포 대상 서버 |
+| `SERVER_USER` | 서버 사용자명 | SSH 접속 사용자 |
+| `FRONTEND_DEPLOY_PATH` | `/home/<USER>/dpbr_frontend` | 프론트엔드 배포 경로 |
 
 ---
 
@@ -69,8 +69,8 @@ GitHub 저장소 → Settings → Secrets and variables → Actions
 
 ### 3.3 배포 확인
 
-- 프론트엔드: http://168.107.45.180/
-- API 문서: http://168.107.45.180/docs
+- 프론트엔드: http://<SERVER_IP>/
+- API 문서: http://<SERVER_IP>/docs
 
 ---
 
@@ -87,13 +87,13 @@ npm run build
 ### 4.2 서버로 전송
 
 ```bash
-scp -r build/* ark1st@168.107.45.180:/home/ark1st/dpbr_frontend/
+scp -r build/* <USERNAME>@<SERVER_IP>:/home/<USERNAME>/dpbr_frontend/
 ```
 
 ### 4.3 Nginx 재시작
 
 ```bash
-ssh ark1st@168.107.45.180
+ssh <USERNAME>@<SERVER_IP>
 sudo systemctl reload nginx
 ```
 
@@ -118,8 +118,8 @@ sudo systemctl restart nginx
 
 ```bash
 # 권한 설정
-sudo chown -R ark1st:ark1st /home/ark1st/dpbr_frontend
-sudo chmod -R 755 /home/ark1st/dpbr_frontend
+sudo chown -R <USERNAME>:<USERNAME> /home/<USERNAME>/dpbr_frontend
+sudo chmod -R 755 /home/<USERNAME>/dpbr_frontend
 ```
 
 ---

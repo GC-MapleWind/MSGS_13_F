@@ -27,17 +27,17 @@ echo "npm 버전: $(npm --version)"
 
 # 3. 프론트엔드 디렉토리 생성
 echo "📁 프론트엔드 디렉토리 설정 중..."
-sudo mkdir -p $DEPLOY_PATH
-sudo chown -R $DEPLOY_USER:$DEPLOY_USER $DEPLOY_PATH
+sudo mkdir -p "$DEPLOY_PATH"
+sudo chown -R "$DEPLOY_USER":"$DEPLOY_USER" "$DEPLOY_PATH"
 
 # 4. Nginx 설정
 echo "⚙️  Nginx 설정 중..."
 
 # 백엔드와 프론트엔드를 함께 제공하는 Nginx 설정
-sudo tee $NGINX_CONF > /dev/null << 'EOF'
+sudo tee $NGINX_CONF > /dev/null << EOF
 server {
     listen 80;
-    server_name 168.107.45.180;
+    server_name _;
 
     # 백엔드 API
     location /api/ {
@@ -69,8 +69,8 @@ server {
 
     # 프론트엔드 정적 파일
     location / {
-        root /home/ark1st/dpbr_frontend;
-        try_files $uri $uri/ /index.html;
+        root $DEPLOY_PATH;
+        try_files \$uri \$uri/ /index.html;
         
         # 캐싱 설정
         location ~* \.(js|css|png|jpg|jpeg|gif|ico|svg|woff|woff2|ttf|eot)$ {
@@ -83,7 +83,7 @@ server {
     gzip on;
     gzip_vary on;
     gzip_min_length 1024;
-    gzip_types text/plain text/css text/xml text/javascript application/x-javascript application/xml+rss application/javascript application/json;
+    gzip_types text/plain text/css text/xml text/javascript application/javascript application/xml+rss application/json;
 }
 EOF
 
