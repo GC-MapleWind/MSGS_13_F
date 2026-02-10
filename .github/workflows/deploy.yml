@@ -70,6 +70,11 @@ jobs:
             type=sha,prefix={{branch}}-
             type=raw,value=latest,enable={{is_default_branch}}
 
+      - name: Set deploy image tag
+        id: deploy-tag
+        run: |
+          echo "tag=ghcr.io/${{ github.repository }}/frontend:latest" >> "$GITHUB_OUTPUT"
+
       - name: Build and push Docker image
         uses: docker/build-push-action@v5
         with:
@@ -91,28 +96,32 @@ jobs:
         env:
           SERVER_HOST: ${{ secrets.SERVER_HOST }}
           SERVER_USER: ${{ secrets.SERVER_USER }}
-          IMAGE_TAG: ${{ steps.meta.outputs.tags }}
+          IMAGE_TAG: ${{ steps.deploy-tag.outputs.tag }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_ACTOR: ${{ github.actor }}
         run: |
           echo "🚀 Deploying to server..."
-          ssh -i ~/.ssh/deploy_key "${SERVER_USER}@${SERVER_HOST}" << 'ENDSSH'
+          ssh -i ~/.ssh/deploy_key "${SERVER_USER}@${SERVER_HOST}" \
+            "GH_TOKEN='${GH_TOKEN}' GH_ACTOR='${GH_ACTOR}' IMAGE_TAG='${IMAGE_TAG}'" \
+            bash -s << 'ENDSSH'
             set -e
             
-            # Docker 로그인
-            echo ${{ secrets.GITHUB_TOKEN }} | docker login ghcr.io -u ${{ github.actor }} --password-stdin
+            # Docker 로그인 (환경 변수 사용)
+            echo "${GH_TOKEN}" | docker login ghcr.io -u "${GH_ACTOR}" --password-stdin
             
             # 기존 컨테이너 중지 및 제거
             docker stop dpbr-frontend || true
             docker rm dpbr-frontend || true
             
             # 새 이미지 pull
-            docker pull ${{ steps.meta.outputs.tags }}
+            docker pull "${IMAGE_TAG}"
             
-            # 새 컨테이너 실행
+            # 새 컨테이너 실행 (localhost만 바인딩)
             docker run -d \
               --name dpbr-frontend \
               --restart unless-stopped \
-              -p 3000:80 \
-              ${{ steps.meta.outputs.tags }}
+              -p 127.0.0.1:3000:80 \
+              "${IMAGE_TAG}"
             
             echo "✅ Frontend deployment completed!"
           ENDSSH
@@ -131,7 +140,7 @@ jobs:
         if: success()
         run: |
           echo "🎉 Docker deployment successful!"
-          echo "Image: ${{ steps.meta.outputs.tags }}"
+          echo "Image: ${{ steps.deploy-tag.outputs.tag }}"
 
       - name: Notify Failure
         if: failure()

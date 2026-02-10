@@ -14,9 +14,12 @@
 # 서버 접속
 ssh <USERNAME>@<SERVER_IP>
 
-# Docker 설치
+# Docker 설치 (간편 방식)
 curl -fsSL https://get.docker.com -o get-docker.sh
 sudo sh get-docker.sh
+
+# ⚠️ 프로덕션 환경에서는 공식 저장소를 사용하는 것을 권장합니다
+# 자세한 내용: https://docs.docker.com/engine/install/ubuntu/
 
 # 현재 사용자를 docker 그룹에 추가
 sudo usermod -aG docker $USER
@@ -100,9 +103,17 @@ sudo systemctl enable nginx
 서버에서 로그인:
 
 ```bash
-# GitHub Container Registry 로그인
-echo YOUR_TOKEN | docker login ghcr.io -u YOUR_GITHUB_USERNAME --password-stdin
+# GitHub Container Registry 로그인 (안전한 방법)
+# 방법 1: read 명령 사용 (히스토리에 남지 않음)
+read -sp "GitHub PAT를 입력하세요: " YOUR_TOKEN
+echo $YOUR_TOKEN | docker login ghcr.io -u YOUR_GITHUB_USERNAME --password-stdin
+
+# 방법 2: 대화형 로그인 (가장 안전)
+docker login ghcr.io -u YOUR_GITHUB_USERNAME
+# 이후 PAT를 붙여넣기
 ```
+
+⚠️ **보안 주의**: `echo YOUR_TOKEN | ...` 형태는 셸 히스토리에 토큰이 남을 수 있으므로 피하세요.
 
 ### 방법 2: GitHub Actions에서 자동 로그인
 
@@ -135,11 +146,11 @@ sudo ufw enable
 # 이미지 pull
 docker pull ghcr.io/<OWNER>/<REPO>/frontend:latest
 
-# 컨테이너 실행
+# 컨테이너 실행 (localhost만 바인딩 - 보안 강화)
 docker run -d \
   --name dpbr-frontend \
   --restart unless-stopped \
-  -p 3000:80 \
+  -p 127.0.0.1:3000:80 \
   ghcr.io/<OWNER>/<REPO>/frontend:latest
 
 # 확인
@@ -166,14 +177,15 @@ GitHub 저장소 → Settings → Secrets and variables → Actions
 
 ## 7️⃣ 배포 흐름
 
-```
+```text
 1. PR 머지 → main 브랜치
 2. GitHub Actions 자동 실행
    ├─ Docker 이미지 빌드
    ├─ ghcr.io에 push
    ├─ 서버에 SSH 접속
-   ├─ docker pull
+   ├─ ghcr.io 로그인
    ├─ 기존 컨테이너 중지/제거
+   ├─ 새 이미지 pull
    ├─ 새 컨테이너 실행
    └─ Health check
 3. 배포 완료!
@@ -229,8 +241,11 @@ docker restart dpbr-frontend
 # 이미지 목록
 docker images
 
-# 구버전 이미지 정리
-docker image prune -a
+# 구버전 이미지 정리 (dangling 이미지만)
+docker image prune
+
+# 사용하지 않는 모든 이미지 정리 (주의: 롤백용 이미지도 삭제됨!)
+# docker image prune -a
 
 # 컨테이너 내부 접속
 docker exec -it dpbr-frontend sh
@@ -255,6 +270,8 @@ sudo certbot renew --dry-run
 
 ### 자동 업데이트 (Watchtower)
 
+> **⚠️ 보안 경고**: Watchtower는 Docker 소켓에 접근하므로 호스트 시스템에 대한 전체 제어 권한을 가집니다. 신뢰할 수 있는 환경에서만 사용하고, 보안 위험을 충분히 인지해야 합니다.
+
 ```bash
 # Watchtower 실행 (자동으로 새 이미지 감지 및 업데이트)
 docker run -d \
@@ -264,6 +281,8 @@ docker run -d \
   containrrr/watchtower \
   dpbr-frontend
 ```
+
+**대안**: GitHub Actions의 자동 배포를 사용하는 것이 더 안전합니다.
 
 ---
 
