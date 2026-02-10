@@ -87,41 +87,17 @@ sudo systemctl enable nginx
 
 ---
 
-## 3️⃣ GitHub Container Registry 접근 권한
+## 3️⃣ 배포 디렉토리 설정
 
-서버에서 Docker 이미지를 pull하려면 GitHub 인증이 필요합니다.
-
-### 방법 1: GitHub Personal Access Token (권장)
-
-1. GitHub → Settings → Developer settings → Personal access tokens → Tokens (classic)
-2. Generate new token (classic)
-3. 권한 선택:
-   - `read:packages` ✅
-   - `write:packages` (선택사항)
-4. 토큰 생성 및 복사
-
-서버에서 로그인:
+서버에서 소스 코드를 받아 빌드합니다:
 
 ```bash
-# GitHub Container Registry 로그인 (안전한 방법)
-# 방법 1: read 명령 사용 (히스토리에 남지 않음)
-read -sp "GitHub PAT를 입력하세요: " YOUR_TOKEN
-echo $YOUR_TOKEN | docker login ghcr.io -u YOUR_GITHUB_USERNAME --password-stdin
+# 배포 디렉토리 생성
+mkdir -p ~/dpbr_deploy
+cd ~/dpbr_deploy
 
-# 방법 2: 대화형 로그인 (가장 안전)
-docker login ghcr.io -u YOUR_GITHUB_USERNAME
-# 이후 PAT를 붙여넣기
-```
-
-⚠️ **보안 주의**: `echo YOUR_TOKEN | ...` 형태는 셸 히스토리에 토큰이 남을 수 있으므로 피하세요.
-
-### 방법 2: GitHub Actions에서 자동 로그인
-
-워크플로우에 이미 포함되어 있습니다:
-
-```yaml
-# 서버에서 자동으로 실행됨
-echo ${{ secrets.GITHUB_TOKEN }} | docker login ghcr.io ...
+# 디렉토리 구조 확인
+ls -la
 ```
 
 ---
@@ -143,22 +119,26 @@ sudo ufw enable
 ## 5️⃣ 수동 배포 테스트
 
 ```bash
-# 이미지 pull
-docker pull ghcr.io/<OWNER>/<REPO>/frontend:latest
+# 배포 디렉토리로 이동
+cd ~/dpbr_deploy/dpbr_front
+
+# Docker 이미지 빌드
+docker build -t dpbr-frontend:latest .
 
 # 컨테이너 실행 (localhost만 바인딩 - 보안 강화)
 docker run -d \
   --name dpbr-frontend \
   --restart unless-stopped \
   -p 127.0.0.1:3000:80 \
-  ghcr.io/<OWNER>/<REPO>/frontend:latest
+  dpbr-frontend:latest
 
 # 확인
 docker ps
+docker logs dpbr-frontend
 curl http://localhost:3000
 ```
 
-브라우저에서 `http://<SERVER_IP>` 접속 확인
+브라우저에서 `http://<SERVER_IP>` 접속 확인 (Nginx를 통해)
 
 ---
 
@@ -169,9 +149,8 @@ GitHub 저장소 → Settings → Secrets and variables → Actions
 | Secret 이름 | 값 | 설명 |
 |-------------|-----|------|
 | `SSH_PRIVATE_KEY` | SSH 개인 키 | 서버 접속용 |
-| `SERVER_HOST` | `192.168.1.100` | 서버 IP |
-| `SERVER_USER` | `ubuntu` | SSH 사용자명 |
-| ~~`FRONTEND_DEPLOY_PATH`~~ | ~~삭제~~ | Docker 사용으로 불필요 |
+| `SERVER_HOST` | `<SERVER_IP>` | 서버 IP 또는 도메인 |
+| `SERVER_USER` | `<USERNAME>` | SSH 사용자명 |
 
 ---
 
@@ -180,16 +159,19 @@ GitHub 저장소 → Settings → Secrets and variables → Actions
 ```text
 1. PR 머지 → main 브랜치
 2. GitHub Actions 자동 실행
-   ├─ Docker 이미지 빌드
-   ├─ ghcr.io에 push
-   ├─ 서버에 SSH 접속
-   ├─ ghcr.io 로그인
+   ├─ 소스 코드 체크아웃
+   ├─ 서버에 소스 코드 전송 (scp)
+   ├─ 서버에서 Docker 이미지 빌드
    ├─ 기존 컨테이너 중지/제거
-   ├─ 새 이미지 pull
    ├─ 새 컨테이너 실행
    └─ Health check
 3. 배포 완료!
 ```
+
+**장점**:
+- GHCR 접근 권한 불필요
+- 서버 환경에 맞게 빌드
+- 네트워크 대역폭 절약 (이미지 push/pull 불필요)
 
 ---
 
@@ -221,10 +203,17 @@ docker logs dpbr-frontend
 sudo systemctl restart nginx
 ```
 
-### 문제: 이미지 pull 실패
+### 문제: Docker 빌드 실패
 ```bash
-# GitHub Container Registry 재로그인
-docker login ghcr.io
+# 빌드 로그 확인
+cd ~/dpbr_deploy/dpbr_front
+docker build -t dpbr-frontend:latest .
+
+# 디스크 공간 확인
+df -h
+
+# 빌드 캐시 정리
+docker builder prune
 ```
 
 ---
