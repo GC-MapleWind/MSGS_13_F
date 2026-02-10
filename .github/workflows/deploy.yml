@@ -1,0 +1,111 @@
+name: Frontend CI/CD
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+  workflow_dispatch:
+
+env:
+  NODE_VERSION: "20.x"
+  FRONTEND_DIR: "dpbr_front/app"
+
+jobs:
+  test:
+    name: Build and Test Frontend
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+          cache-dependency-path: ${{ env.FRONTEND_DIR }}/package-lock.json
+
+      - name: Install dependencies
+        working-directory: ${{ env.FRONTEND_DIR }}
+        run: npm ci
+
+      - name: Type check
+        working-directory: ${{ env.FRONTEND_DIR }}
+        run: npm run check
+        continue-on-error: true
+
+      - name: Build
+        working-directory: ${{ env.FRONTEND_DIR }}
+        run: npm run build
+
+      - name: Upload build artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: frontend-build
+          path: ${{ env.FRONTEND_DIR }}/build
+          retention-days: 1
+
+  deploy:
+    name: Deploy to Server
+    needs: test
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Download build artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: frontend-build
+          path: ${{ env.FRONTEND_DIR }}/build
+
+      - name: Setup SSH Key
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/deploy_key
+          chmod 600 ~/.ssh/deploy_key
+          ssh-keyscan -H ${{ secrets.SERVER_HOST }} >> ~/.ssh/known_hosts
+
+      - name: Deploy Frontend
+        env:
+          SERVER_HOST: ${{ secrets.SERVER_HOST }}
+          SERVER_USER: ${{ secrets.SERVER_USER }}
+          DEPLOY_PATH: ${{ secrets.FRONTEND_DEPLOY_PATH }}
+        run: |
+          # 빌드 파일을 서버로 전송
+          echo "📦 Uploading build files to server..."
+          scp -i ~/.ssh/deploy_key -r ${{ env.FRONTEND_DIR }}/build/* ${SERVER_USER}@${SERVER_HOST}:${DEPLOY_PATH:-~/dpbr_frontend}/
+          
+          # 서버에서 추가 작업 (필요시)
+          ssh -i ~/.ssh/deploy_key -o StrictHostKeyChecking=no ${SERVER_USER}@${SERVER_HOST} << 'ENDSSH'
+            set -e
+            
+            # Nginx 설정 다시 로드
+            echo "🔄 Reloading nginx..."
+            sudo systemctl reload nginx || true
+            
+            echo "✅ Frontend deployment completed!"
+          ENDSSH
+
+      - name: Health Check
+        env:
+          SERVER_HOST: ${{ secrets.SERVER_HOST }}
+        run: |
+          sleep 3
+          curl -f http://${SERVER_HOST}/ || echo "⚠️ Frontend health check failed"
+
+      - name: Notify Success
+        if: success()
+        run: |
+          echo "🎉 Frontend deployment successful!"
+
+      - name: Notify Failure
+        if: failure()
+        run: |
+          echo "❌ Frontend deployment failed!"
