@@ -14,9 +14,9 @@ env:
   FRONTEND_DIR: "dpbr_front/app"
 
 jobs:
-  # PR일 때는 가벼운 검증만
-  check:
-    name: Code Quality Check
+  # PR일 때: 빌드 테스트 (배포는 안함)
+  test:
+    name: Build and Test
     runs-on: ubuntu-latest
     if: github.event_name == 'pull_request'
     
@@ -39,9 +39,13 @@ jobs:
         working-directory: ${{ env.FRONTEND_DIR }}
         run: npm run check
 
-  # main push 또는 수동 실행일 때만 빌드 & 배포
-  build:
-    name: Build and Deploy
+      - name: Build (test only, no deploy)
+        working-directory: ${{ env.FRONTEND_DIR }}
+        run: npm run build
+
+  # main 머지 후: 실제 배포
+  deploy:
+    name: Deploy to Production
     runs-on: ubuntu-latest
     if: github.ref == 'refs/heads/main' && (github.event_name == 'push' || github.event_name == 'workflow_dispatch')
     
