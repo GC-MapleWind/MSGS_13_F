@@ -41,32 +41,15 @@ jobs:
         working-directory: ${{ env.FRONTEND_DIR }}
         run: npm run build
 
-  # main 머지 후: 실제 배포
+  # main 머지 후: 서버에서 Docker 빌드 & 배포
   deploy:
-    name: Deploy to Production
+    name: Build Docker & Deploy
     runs-on: ubuntu-latest
     if: github.ref == 'refs/heads/main' && (github.event_name == 'push' || github.event_name == 'workflow_dispatch')
     
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: ${{ env.NODE_VERSION }}
-
-      - name: Install dependencies
-        working-directory: ${{ env.FRONTEND_DIR }}
-        run: npm ci
-
-      - name: Type check
-        working-directory: ${{ env.FRONTEND_DIR }}
-        run: npm run check
-
-      - name: Build
-        working-directory: ${{ env.FRONTEND_DIR }}
-        run: npm run build
 
       - name: Setup SSH Key
         run: |
@@ -75,43 +58,75 @@ jobs:
           chmod 600 ~/.ssh/deploy_key
           ssh-keyscan -H ${{ secrets.SERVER_HOST }} >> ~/.ssh/known_hosts
 
-      - name: Deploy Frontend
+      - name: Transfer source code to server
         env:
           SERVER_HOST: ${{ secrets.SERVER_HOST }}
           SERVER_USER: ${{ secrets.SERVER_USER }}
-          DEPLOY_PATH: ${{ secrets.FRONTEND_DEPLOY_PATH }}
         run: |
-          # 빌드 파일을 서버로 전송
-          echo "📦 Uploading build files to server..."
-          scp -i ~/.ssh/deploy_key -r "${{ env.FRONTEND_DIR }}/build/." "${SERVER_USER}@${SERVER_HOST}:${DEPLOY_PATH:-~/dpbr_frontend}/"
+          echo "📦 Transferring source code to server..."
+          # 서버에 배포 디렉토리 생성
+          ssh -i ~/.ssh/deploy_key "${SERVER_USER}@${SERVER_HOST}" "mkdir -p ~/dpbr_deploy"
           
-          # 서버에서 추가 작업 (필요시)
-          ssh -i ~/.ssh/deploy_key "${SERVER_USER}@${SERVER_HOST}" << 'ENDSSH'
+          # 소스 코드 전송 (dpbr_front 디렉토리)
+          scp -i ~/.ssh/deploy_key -r dpbr_front "${SERVER_USER}@${SERVER_HOST}:~/dpbr_deploy/"
+          
+          echo "✅ Source code transferred"
+
+      - name: Build and Deploy on Server
+        env:
+          SERVER_HOST: ${{ secrets.SERVER_HOST }}
+          SERVER_USER: ${{ secrets.SERVER_USER }}
+        run: |
+          echo "🚀 Building and deploying on server..."
+          ssh -i ~/.ssh/deploy_key "${SERVER_USER}@${SERVER_HOST}" bash -s << 'ENDSSH'
             set -e
+            cd ~/dpbr_deploy/dpbr_front
             
-            # Nginx 설정 다시 로드
-            echo "🔄 Reloading nginx..."
-            sudo systemctl reload nginx || true
+            # 기존 컨테이너 중지 및 제거
+            echo "🛑 Stopping existing container..."
+            docker stop dpbr-frontend || true
+            docker rm dpbr-frontend || true
             
-            echo "✅ Frontend deployment completed!"
+            # Docker 이미지 빌드
+            echo "🔨 Building Docker image..."
+            docker build -t dpbr-frontend:latest .
+            
+            # 사용하지 않는 이미지 정리
+            docker image prune -f
+            
+            # 새 컨테이너 실행 (localhost만 바인딩)
+            echo "🚀 Starting new container..."
+            docker run -d \
+              --name dpbr-frontend \
+              --restart unless-stopped \
+              -p 127.0.0.1:3000:80 \
+              dpbr-frontend:latest
+            
+            echo "✅ Deployment completed!"
           ENDSSH
 
       - name: Health Check
         env:
           SERVER_HOST: ${{ secrets.SERVER_HOST }}
+          SERVER_USER: ${{ secrets.SERVER_USER }}
         run: |
-          sleep 3
-          if ! curl -f "http://${SERVER_HOST}/"; then
-            echo "⚠️ Frontend health check failed"
-            exit 1
-          fi
+          echo "🏥 Running health check..."
+          sleep 5
+          ssh -i ~/.ssh/deploy_key "${SERVER_USER}@${SERVER_HOST}" bash -s << 'ENDSSH'
+            if ! curl -f "http://localhost:3000/"; then
+              echo "⚠️ Frontend health check failed"
+              exit 1
+            fi
+            echo "✅ Health check passed!"
+          ENDSSH
 
       - name: Notify Success
         if: success()
         run: |
-          echo "🎉 Frontend deployment successful!"
+          echo "🎉 Docker deployment successful!"
+          echo "Image: dpbr-frontend:latest (built on server)"
 
       - name: Notify Failure
         if: failure()
         run: |
-          echo "❌ Frontend deployment failed!"
+          echo "❌ Docker deployment failed!"
