@@ -3,7 +3,7 @@
 	import Header from '$lib/components/Header.svelte';
 	import { getSettlementById } from '$lib/data';
 
-	const msgId = $derived($page.params.id);
+	const msgId = $derived($page.params.id ?? '');
 	const settlement = $derived(getSettlementById(msgId));
 
 	function formatDate(dateStr: string): string {

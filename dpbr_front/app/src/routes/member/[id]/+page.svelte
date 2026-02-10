@@ -10,7 +10,7 @@
 	const character = $derived(getCharacterById(characterId));
 	const settlements = $derived(getSettlementsByCharacterId(characterId));
 
-	let captureArea: HTMLElement | undefined;
+	let captureArea = $state<HTMLElement | undefined>();
 	let isCapturing = $state(false);
 
 	async function handleCapture() {

@@ -1,6 +1,6 @@
 # Dependencies
 node_modules/
-package-lock.json
+# package-lock.json  # CI/CD needs this file, don't ignore it!
 
 # Build outputs
 .svelte-kit/
@@ -35,3 +35,6 @@ Thumbs.db
 # Temporary files
 *.tmp
 .temp/
+
+# Auto-generated session files
+.omc/

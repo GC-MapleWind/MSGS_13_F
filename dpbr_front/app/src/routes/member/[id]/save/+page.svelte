@@ -4,7 +4,7 @@
 	import Header from '$lib/components/Header.svelte';
 	import { getCharacterById } from '$lib/data';
 
-	const characterId = $derived($page.params.id);
+	const characterId = $derived($page.params.id ?? '');
 	const character = $derived(getCharacterById(characterId));
 
 	let cardElement: HTMLDivElement | undefined = $state();
