@@ -2,13 +2,26 @@
 	import InputBox from '$lib/components/InputBox.svelte';
 	import Button from '$lib/components/Button.svelte';
 	import { goto } from '$app/navigation';
-	import { authStore } from '$lib/stores/auth'; // authStore 임포트
-	import * as api from '$lib/utils/api'; // api 임포트
-	import { get } from 'svelte/store'; // registerToken 가져오기 위함
+	import { authStore } from '$lib/stores/auth';
+	import * as api from '$lib/utils/api';
+	import { get } from 'svelte/store';
+	import Toast from '$lib/components/Toast.svelte'; // Toast 컴포넌트 임포트 추가
 
 	let studentId = $state('');
 	let nickname = $state('');
 	let isLoading = $state(false);
+	let showToast = $state(false);
+	let toastMessage = $state('');
+
+	function showToastMessage(message: string) {
+		toastMessage = message;
+		showToast = true;
+	}
+
+	function handleToastClose() {
+		showToast = false;
+		toastMessage = '';
+	}
 
 	async function handleSignup() {
 		const trimmedStudentId = studentId.trim();
@@ -16,35 +29,35 @@
 
 		// 기본 필수 입력 검사
 		if (!trimmedStudentId || !trimmedNickname) {
-			alert('학번과 닉네임을 입력해주세요.');
+			showToastMessage('학번과 닉네임을 입력해주세요.'); // 메시지 표시
 			return;
 		}
 
 		// 학번 유효성 검사 (9자리 숫자)
 		if (trimmedStudentId.length !== 9 || !/^\d+$/.test(trimmedStudentId)) {
-			alert('학번은 9자리 숫자로 입력해주세요.');
+			showToastMessage('학번은 9자리 숫자로 입력해주세요.'); // 메시지 표시
 			return;
 		}
 
 		// 닉네임 유효성 검사 (2자 이상 10자 이하, 한글, 영어, 숫자만)
 		if (trimmedNickname.length < 2 || trimmedNickname.length > 10 || !/^[a-zA-Z0-9가-힣]+$/.test(trimmedNickname)) {
-			alert('닉네임은 2자 이상 10자 이하의 한글, 영어, 숫자만 입력 가능합니다.');
+			showToastMessage('닉네임은 2자 이상 10자 이하의 한글, 영어, 숫자만 입력 가능합니다.'); // 메시지 표시
 			return;
 		}
 
 		isLoading = true;
 
 		try {
-			const { registerToken } = get(authStore); // authStore에서 registerToken 가져오기
+			const { registerToken } = get(authStore);
 
 			if (!registerToken) {
 				console.error('registerToken이 없습니다. 로그인 과정을 다시 진행해주세요.');
-				alert('회원가입 토큰이 유효하지 않습니다. 다시 로그인해주세요.');
+				showToastMessage('회원가입 토큰이 유효하지 않습니다. 다시 로그인해주세요.'); // 메시지 표시
 				goto('/login');
 				return;
 			}
 
-			const response = await api.signup({ // 백엔드 회원가입 API 호출 (api 모듈에 signup 함수 필요)
+			const response = await api.signup({
 				registerToken,
 				studentId: trimmedStudentId,
 				nickname: trimmedNickname
@@ -52,15 +65,16 @@
 
 			if (response.success && response.data) {
 				const { token, user } = response.data;
-				authStore.setAuthData(token, user); // 로그인 상태로 전환
-				authStore.setRegisterToken(null); // registerToken 제거
-				goto('/'); // 메인 페이지로 이동
+				authStore.setAuthData(token, user);
+				authStore.setRegisterToken(null);
+				showToastMessage('회원가입이 성공적으로 완료되었습니다!'); // 성공 메시지 표시
+				goto('/');
 			} else {
 				throw new Error(response.message || '회원가입에 실패했습니다.');
 			}
 		} catch (error) {
 			console.error('회원가입 실패:', error);
-			alert('회원가입에 실패했습니다: ' + (error instanceof Error ? error.message : String(error)));
+			showToastMessage('회원가입에 실패했습니다: ' + (error instanceof Error ? error.message : String(error))); // 메시지 표시
 		} finally {
 			isLoading = false;
 		}
@@ -68,6 +82,9 @@
 </script>
 
 <div class="min-h-screen bg-bg-app flex flex-col items-center justify-center px-4 py-8">
+	<!-- Toast 메시지 -->
+	<Toast message={toastMessage} show={showToast} onClose={handleToastClose} />
+
 	<div class="w-full max-w-md flex flex-col items-center gap-8">
 		<h1 class="text-4xl font-bold text-white">회원가입</h1>
 
