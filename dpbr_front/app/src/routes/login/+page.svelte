@@ -24,11 +24,7 @@
 	});
 
 	async function handleLogin() {
-		// 디버깅 용 예외 처리
-		if (name.trim() === '황현성' && studentId.trim() === '202235363') {
-			await goto('/');
-			return;
-		}
+
 
 		// 입력 검증
 		if (!name.trim() || !studentId.trim()) {
@@ -158,13 +154,6 @@
 				<span class="text-text-primary text-sm">이름 저장</span>
 			</label>
 
-			<!-- 디버그용 임시 로그인 버튼 추가 -->
-			<Button
-				label="디버그용 임시 로그인"
-				variant="secondary"
-				onClick={() => { console.log('디버그용 임시 로그인 버튼 클릭됨'); goto('/'); }}
-				type="button"
-			/>
 		</div>
 	</div>
 
