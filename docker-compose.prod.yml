@@ -1,0 +1,55 @@
+version: '3.8'
+
+# 프로덕션 환경용 Docker Compose 설정
+# 백엔드가 별도 서버에 있는 경우 사용
+
+services:
+  # 프론트엔드 서비스
+  frontend:
+    build:
+      context: ./dpbr_front
+      dockerfile: Dockerfile
+    container_name: dpbr-frontend-prod
+    restart: unless-stopped
+    environment:
+      # 프로덕션 API URL 설정
+      - PUBLIC_API_URL=https://api.yourdomain.com
+    networks:
+      - dpbr-network
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:80"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  # Nginx 리버스 프록시 (선택사항)
+  # 백엔드가 같은 서버에 있고 프록시가 필요한 경우 사용
+  nginx:
+    image: nginx:alpine
+    container_name: dpbr-nginx-prod
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./deploy/nginx-proxy.conf:/etc/nginx/conf.d/default.conf:ro
+      # SSL 인증서 (Let's Encrypt 등)
+      # - ./ssl/cert.pem:/etc/nginx/ssl/cert.pem:ro
+      # - ./ssl/key.pem:/etc/nginx/ssl/key.pem:ro
+    depends_on:
+      - frontend
+    extra_hosts:
+      # 백엔드 서버 주소를 환경에 맞게 수정
+      - "host.docker.internal:host-gateway"
+    networks:
+      - dpbr-network
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:80/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+networks:
+  dpbr-network:
+    driver: bridge

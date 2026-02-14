@@ -1,0 +1,26 @@
+version: '3.8'
+
+# 개발 환경용 Docker Compose 설정
+# 프론트엔드만 빌드하고 백엔드는 로컬에서 실행
+
+services:
+  # 프론트엔드 개발 서버
+  frontend:
+    build:
+      context: ./dpbr_front
+      dockerfile: Dockerfile
+    container_name: dpbr-frontend-dev
+    restart: unless-stopped
+    environment:
+      - PUBLIC_API_URL=http://localhost:8000
+    ports:
+      - "3000:80"
+    networks:
+      - dpbr-network
+    extra_hosts:
+      # 로컬 백엔드에 접근
+      - "host.docker.internal:host-gateway"
+
+networks:
+  dpbr-network:
+    driver: bridge

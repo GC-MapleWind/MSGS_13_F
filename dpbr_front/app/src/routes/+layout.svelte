@@ -13,8 +13,6 @@
 	<div
 		class="bg-white shadow-lg relative flex flex-col h-[calc(100vh-40px)] aspect-[768/874] max-w-[768px] min-w-[320px] overflow-hidden"
 	>
-		<div class="flex-1 overflow-y-auto">
-			{@render children()}
-		</div>
+		{@render children()}
 	</div>
 </div>

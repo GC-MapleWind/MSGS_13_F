@@ -2,10 +2,29 @@
 	import { page } from '$app/stores';
 	import { Download } from 'lucide-svelte';
 	import Header from '$lib/components/Header.svelte';
-	import { getCharacterById } from '$lib/data';
+	import { getCharacterById } from '$lib/api';
+	import { handleImageError } from '$lib/utils/image';
+	import type { Character } from '$lib/types';
 
 	const characterId = $derived($page.params.id ?? '');
-	const character = $derived(getCharacterById(characterId));
+	let character = $state<Character | null>(null);
+	let loading = $state(true);
+
+	$effect(() => {
+		loadData();
+	});
+
+	async function loadData() {
+		if (!characterId) return;
+		loading = true;
+		try {
+			character = await getCharacterById(characterId);
+		} catch (e) {
+			console.error('Failed to load character:', e);
+		} finally {
+			loading = false;
+		}
+	}
 
 	let cardElement: HTMLDivElement | undefined = $state();
 
@@ -38,7 +57,9 @@
 
 	<!-- Card Preview -->
 	<div class="flex-1 flex flex-col items-center justify-center px-8 gap-4">
-		{#if character}
+		{#if loading}
+			<p class="text-white">로딩 중...</p>
+		{:else if character}
 			<div
 				bind:this={cardElement}
 				class="w-full max-w-64 aspect-[9/16] bg-gradient-to-br from-primary to-secondary rounded-2xl flex flex-col items-center justify-center gap-4 p-6 shadow-2xl"
@@ -47,6 +68,7 @@
 					<img
 						src={character.avatarUrl}
 						alt={character.name}
+						onerror={handleImageError}
 						class="w-full h-full object-cover"
 					/>
 				</div>

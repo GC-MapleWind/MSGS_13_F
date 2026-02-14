@@ -1,10 +1,35 @@
 <script lang="ts">
 	import { page } from '$app/stores';
 	import Header from '$lib/components/Header.svelte';
-	import { getSettlementById } from '$lib/data';
+	import { getSettlementById } from '$lib/api';
+	import { handleImageError } from '$lib/utils/image';
+	import type { SettlementItem } from '$lib/types';
 
 	const msgId = $derived($page.params.id ?? '');
-	const settlement = $derived(getSettlementById(msgId));
+	let settlement = $state<SettlementItem | null>(null);
+	let loading = $state(true);
+	let error = $state<string | null>(null);
+
+	$effect(() => {
+		// msgId가 변경될 때마다 데이터 로드
+		loadData();
+	});
+
+	async function loadData() {
+		if (!msgId) return;
+		
+		loading = true;
+		error = null;
+		
+		try {
+			settlement = await getSettlementById(msgId);
+		} catch (e) {
+			console.error('Failed to load settlement:', e);
+			error = '데이터를 불러오는데 실패했습니다.';
+		} finally {
+			loading = false;
+		}
+	}
 
 	function formatDate(dateStr: string): string {
 		const d = new Date(dateStr);
@@ -23,13 +48,22 @@
 <div class="flex flex-col h-full">
 	<Header variant="close" onCloseClick={goBack} />
 
-	{#if settlement}
+	{#if loading}
+		<div class="flex-1 flex items-center justify-center">
+			<p class="text-text-muted">로딩 중...</p>
+		</div>
+	{:else if error}
+		<div class="flex-1 flex items-center justify-center">
+			<p class="text-text-muted">{error}</p>
+		</div>
+	{:else if settlement}
 		<div class="flex-1 flex flex-col bg-white overflow-y-auto">
 		<!-- Main Image -->
 		<div class="flex justify-center items-center bg-white px-6 py-4">
 			<img
 				src={settlement.imageUrl}
 				alt={settlement.title}
+				onerror={handleImageError}
 				class="w-full max-h-80 object-cover rounded-lg"
 			/>
 		</div>
