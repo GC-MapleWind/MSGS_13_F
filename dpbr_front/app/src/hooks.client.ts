@@ -1,10 +1,11 @@
+import type { Handle, HandleClientError } from '@sveltejs/kit';
 import { redirect } from '@sveltejs/kit';
 import { authStore } from '$lib/stores/auth';
 import { browser } from '$app/environment';
 import { get } from 'svelte/store';
 
 // handle 함수는 페이지 로드 전에 실행됩니다.
-export async function handle({ event, resolve }) {
+export const handle: Handle = async ({ event, resolve }) => {
     if (!browser) {
         return resolve(event);
     }
@@ -42,11 +43,11 @@ export async function handle({ event, resolve }) {
 
     const response = await resolve(event);
     return response;
-}
+};
 
 // 에러 핸들링 훅 추가
-export function handleError({ error, event }) {
+export const handleError: HandleClientError = ({ error, event }) => {
     console.error('Client-side error:', error, event);
     // TODO: 사용자에게 에러 메시지 표시 (Toast 등)
     // Sentry, Datadog 등 에러 모니터링 서비스에 에러 전송
-}
+};

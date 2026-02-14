@@ -9,8 +9,8 @@
 		inputState?: "default" | "focused";
 		showClearButton?: boolean;
 		onInput: (value: string) => void;
-		onFocus: () => void;
-		onBlur: () => void;
+		onFocus?: () => void;
+		onBlur?: () => void;
 		onClear?: () => void;
 		class?: string;
 	}
