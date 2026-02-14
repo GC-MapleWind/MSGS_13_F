@@ -1,5 +1,6 @@
 <script lang="ts">
 	import type { SettlementItem } from '$lib/types';
+	import { handleImageError } from '$lib/utils/image';
 
 	interface Props {
 		item: SettlementItem;
@@ -19,7 +20,12 @@
 >
 	<!-- Thumbnail -->
 	<div class="w-20 h-20 shrink-0 rounded-lg overflow-hidden bg-bg-light">
-		<img src={item.imageUrl} alt={item.title} class="w-full h-full object-cover" />
+		<img 
+			src={item.imageUrl} 
+			alt={item.title} 
+			onerror={handleImageError}
+			class="w-full h-full object-cover" 
+		/>
 	</div>
 
 	<!-- Text -->

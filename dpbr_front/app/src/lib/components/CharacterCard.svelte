@@ -1,5 +1,6 @@
 <script lang="ts">
 	import type { Character } from '$lib/types';
+	import { handleImageError } from '$lib/utils/image';
 
 	interface Props {
 		character: Character;
@@ -20,6 +21,7 @@
 		<img
 			src={character.avatarUrl}
 			alt={character.name}
+			onerror={handleImageError}
 			class="w-3/4 aspect-[5/6] object-cover"
 		/>
 	</div>

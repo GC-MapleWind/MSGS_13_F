@@ -1,6 +1,6 @@
 # Dependencies
 node_modules/
-package-lock.json
+# package-lock.json  # CI/CD needs this file, don't ignore it!
 
 # Build outputs
 .svelte-kit/
@@ -12,6 +12,8 @@ dist/
 .env
 .env.*
 !.env.example
+!dpbr_front/app/.env.example
+!dpbr_front/app/.env.production
 
 # Logs
 logs
@@ -35,3 +37,6 @@ Thumbs.db
 # Temporary files
 *.tmp
 .temp/
+
+# Auto-generated session files
+.omc/
