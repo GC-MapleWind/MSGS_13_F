@@ -162,7 +162,7 @@
 			<Button
 				label="디버그용 임시 로그인"
 				variant="secondary"
-				onClick={() => goto('/')}
+				onClick={() => { console.log('디버그용 임시 로그인 버튼 클릭됨'); goto('/'); }}
 				type="button"
 			/>
 		</div>
