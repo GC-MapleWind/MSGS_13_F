@@ -25,7 +25,11 @@
 	});
 
 	async function handleLogin() {
-
+		// 디버깅 용 예외 처리
+		if (name.trim() === '황현성' && studentId.trim() === '202235363') {
+			await goto('/');
+			return;
+		}
 
 		// 입력 검증
 		if (!name.trim() || !studentId.trim()) {
