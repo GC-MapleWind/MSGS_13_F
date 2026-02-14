@@ -14,7 +14,7 @@
 	let settlements = $state<SettlementItem[]>([]);
 	let loading = $state(true);
 	let error = $state<string | null>(null);
-	let captureArea: HTMLElement | undefined;
+	let captureArea = $state<HTMLElement | undefined>(undefined);
 	let isCapturing = $state(false);
 
 	$effect(() => {
