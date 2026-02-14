@@ -1,0 +1,80 @@
+version: '3.8'
+
+# 프로덕션 환경용 Docker Compose 설정
+# 프론트엔드와 백엔드 모두 Docker 컨테이너로 실행
+
+services:
+  # 백엔드 서비스 (프로덕션)
+  backend:
+    # 백엔드 Dockerfile이 있다면 여기에 빌드 설정
+    # build:
+    #   context: ./dpbr_backend
+    #   dockerfile: Dockerfile
+    image: dpbr-backend:latest  # 또는 실제 백엔드 이미지
+    container_name: dpbr-backend-prod
+    restart: unless-stopped
+    environment:
+      - DATABASE_URL=${DATABASE_URL}
+      - SECRET_KEY=${SECRET_KEY}
+      - KAKAO_CLIENT_ID=${KAKAO_CLIENT_ID}
+      - KAKAO_CLIENT_SECRET=${KAKAO_CLIENT_SECRET}
+    expose:
+      - "8000"
+    networks:
+      - dpbr-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # 프론트엔드 서비스
+  frontend:
+    build:
+      context: ./dpbr_front
+      dockerfile: Dockerfile
+    container_name: dpbr-frontend-prod
+    restart: unless-stopped
+    environment:
+      # Nginx 프록시를 통해 /api로 접근
+      - PUBLIC_API_URL=/api
+    expose:
+      - "80"
+    depends_on:
+      - backend
+    networks:
+      - dpbr-network
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:80"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  # Nginx 리버스 프록시
+  nginx:
+    image: nginx:alpine
+    container_name: dpbr-nginx-prod
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./deploy/nginx-proxy.conf:/etc/nginx/conf.d/default.conf:ro
+      # SSL 인증서 (Let's Encrypt 등)
+      # - ./ssl/cert.pem:/etc/nginx/ssl/cert.pem:ro
+      # - ./ssl/key.pem:/etc/nginx/ssl/key.pem:ro
+    depends_on:
+      - frontend
+      - backend
+    networks:
+      - dpbr-network
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:80/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+networks:
+  dpbr-network:
+    driver: bridge
