@@ -6,6 +6,7 @@
 	import SettlementListItem from '$lib/components/SettlementListItem.svelte';
 	import { getCharacterById, getSettlementsByCharacterId } from '$lib/api';
 	import { handleImageError } from '$lib/utils/image';
+	import { captureElementAsImage, generateFilename } from '$lib/utils/capture';
 	import type { Character, SettlementItem } from '$lib/types';
 
 	const characterId = $derived($page.params.id ?? '');
@@ -13,6 +14,8 @@
 	let settlements = $state<SettlementItem[]>([]);
 	let loading = $state(true);
 	let error = $state<string | null>(null);
+	let captureArea: HTMLElement | undefined;
+	let isCapturing = $state(false);
 
 	$effect(() => {
 		// characterId가 변경될 때마다 데이터 로드
@@ -39,6 +42,21 @@
 			loading = false;
 		}
 	}
+
+	async function handleCapture() {
+		if (!captureArea || !character || isCapturing) return;
+
+		try {
+			isCapturing = true;
+			const filename = generateFilename(`character-${character.name}`);
+			await captureElementAsImage(captureArea, filename);
+		} catch (error) {
+			console.error('페이지 캡쳐 실패:', error);
+			alert('페이지 저장에 실패했습니다. 다시 시도해주세요.');
+		} finally {
+			isCapturing = false;
+		}
+	}
 </script>
 
 <svelte:head>
@@ -55,9 +73,14 @@
 	</div>
 {:else if character}
 	<div class="flex flex-col h-full">
-		<Header variant="detail" onBackClick={() => goto('/')} />
+		<Header
+			variant="detail"
+			onBackClick={() => goto('/')}
+			onSaveClick={handleCapture}
+			isSaving={isCapturing}
+		/>
 
-		<div class="flex-1 overflow-y-auto">
+		<div class="flex-1 overflow-y-auto" bind:this={captureArea}>
 			<!-- Character Info -->
 			<div class="flex items-center gap-4 bg-white px-6 py-4 border-b border-border">
 			<div class="w-14 h-14 rounded-full overflow-hidden shrink-0 bg-bg-light">
