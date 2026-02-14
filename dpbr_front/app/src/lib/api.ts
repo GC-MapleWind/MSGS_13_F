@@ -1,10 +1,12 @@
-import { PUBLIC_API_URL } from '$env/static/public';
+import { env } from '$env/dynamic/public';
 import type { Character, SettlementItem, TalkComment } from './types';
 
 /**
- * API 기본 URL
+ * API 기본 URL (환경 변수 없으면 기본값 사용, CI/빌드 시에도 오류 없음)
  */
-const API_BASE_URL = PUBLIC_API_URL || 'http://localhost:8000';
+function getApiBaseUrl(): string {
+	return env.PUBLIC_API_URL ?? 'http://localhost:8000';
+}
 
 /**
  * API 응답 타입
@@ -40,7 +42,7 @@ interface CommentResponse {
  * API 호출 유틸리티
  */
 async function apiCall<T>(endpoint: string, options?: RequestInit): Promise<T> {
-	const url = `${API_BASE_URL}${endpoint}`;
+	const url = `${getApiBaseUrl()}${endpoint}`;
 	
 	try {
 		const response = await fetch(url, {

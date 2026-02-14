@@ -111,13 +111,20 @@ jobs:
           SERVER_USER: ${{ secrets.SERVER_USER }}
         run: |
           echo "🏥 Running health check..."
-          sleep 5
           ssh -i ~/.ssh/deploy_key "${SERVER_USER}@${SERVER_HOST}" bash -s << 'ENDSSH'
-            if ! curl -f "http://localhost:3000/"; then
-              echo "⚠️ Frontend health check failed"
-              exit 1
-            fi
-            echo "✅ Health check passed!"
+            # 컨테이너가 3000 포트에서 준비될 때까지 재시도 (컨테이너 내부 nginx 80 -> 호스트 3000)
+            for i in 1 2 3 4 5 6; do
+              sleep 5
+              if curl -sf --connect-timeout 5 "http://127.0.0.1:3000/" > /dev/null; then
+                echo "✅ Health check passed!"
+                exit 0
+              fi
+              echo "  Attempt $i: waiting for frontend..."
+            done
+            echo "⚠️ Frontend health check failed (port 3000 not responding)"
+            docker ps -a --filter name=dpbr-frontend
+            docker logs dpbr-frontend --tail 30 || true
+            exit 1
           ENDSSH
 
       - name: Notify Success
