@@ -32,7 +32,7 @@
 	<title>카드 저장 - {character?.name ?? ''}</title>
 </svelte:head>
 
-<div class="fixed inset-0 bg-bg-overlay z-50 flex flex-col">
+<div class="absolute inset-0 bg-bg-overlay z-50 flex flex-col">
 	<!-- Header -->
 	<Header variant="save" onCloseClick={goBack} />
 

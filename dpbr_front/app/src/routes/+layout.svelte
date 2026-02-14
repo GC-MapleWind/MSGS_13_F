@@ -9,8 +9,12 @@
 	let { children }: Props = $props();
 </script>
 
-<div class="min-h-screen bg-bg-app flex justify-center">
-	<div class="w-full max-w-3xl min-w-80 bg-white shadow-lg relative min-h-screen flex flex-col">
-		{@render children()}
+<div class="h-screen bg-bg-app flex justify-center items-center overflow-hidden">
+	<div
+		class="bg-white shadow-lg relative flex flex-col h-[calc(100vh-40px)] aspect-[768/874] max-w-[768px] min-w-[320px] overflow-hidden"
+	>
+		<div class="flex-1 overflow-y-auto">
+			{@render children()}
+		</div>
 	</div>
 </div>
