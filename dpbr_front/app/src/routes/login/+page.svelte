@@ -165,7 +165,7 @@
 			<Button
 				label="메생결산 입장"
 				variant="primary"
-				state={isLoading ? "disabled" : "default"}
+				buttonState={isLoading ? "disabled" : "default"}
 				onClick={handleLogin}
 				type="button"
 				class="bg-white text-primary-dark hover:bg-white/90 font-medium"
@@ -182,6 +182,17 @@
 				/>
 				<span class="text-white text-sm">이름 저장</span>
 			</label>
+
+			<!-- 카카오 로그인 버튼 -->
+			<div class="w-full pt-4 border-t border-white/20 mt-2">
+				<Button
+					label="카카오 계정으로 로그인"
+					variant="secondary"
+					onClick={handleKakaoLogin}
+					type="button"
+					class="bg-[#FEE500] text-black hover:bg-[#FDD835] font-medium border-none"
+				/>
+			</div>
 		</div>
 	</div>
 
