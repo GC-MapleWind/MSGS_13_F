@@ -11,7 +11,7 @@
 
 <div class="h-screen bg-bg-app flex justify-center items-center overflow-hidden">
 	<div
-		class="bg-white shadow-lg relative flex flex-col h-[calc(100vh-40px)] aspect-[768/874] max-w-[768px] min-w-[320px] overflow-hidden"
+		class="bg-white shadow-lg relative flex flex-col h-full aspect-[768/874] max-w-[768px] min-w-[320px] overflow-hidden"
 	>
 		{@render children()}
 	</div>
