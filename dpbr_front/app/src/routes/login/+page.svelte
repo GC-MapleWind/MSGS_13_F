@@ -157,6 +157,14 @@
 				/>
 				<span class="text-text-primary text-sm">이름 저장</span>
 			</label>
+
+			<!-- 디버그용 임시 로그인 버튼 추가 -->
+			<Button
+				label="디버그용 임시 로그인"
+				variant="secondary"
+				onClick={() => goto('/')}
+				type="button"
+			/>
 		</div>
 	</div>
 
