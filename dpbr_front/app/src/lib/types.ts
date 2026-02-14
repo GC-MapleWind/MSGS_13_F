@@ -35,4 +35,5 @@ export interface AuthState {
 	isAuthenticated: boolean;
 	user: User | null;
 	isLoading: boolean;
+	registerToken?: string | null; // 추가
 }
