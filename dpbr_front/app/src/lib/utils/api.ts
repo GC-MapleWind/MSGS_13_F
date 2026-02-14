@@ -104,11 +104,7 @@ export async function login(request: LoginRequest): Promise<ApiResponse<LoginRes
 /**
  * 카카오 로그인 API 호출
  */
-export async function kakaoLogin(code: string): Promise<ApiResponse<LoginResponse>> {
-	return apiRequest<LoginResponse>('/api/auth/kakao/login', {
-		method: 'POST',
-		body: JSON.stringify({ code })
-	});
+export async function kakaoLogin(code: string): Promise<ApiResponse<LoginResponse | { registerToken: string }>> {
 }
 
 /**
