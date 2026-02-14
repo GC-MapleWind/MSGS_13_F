@@ -106,7 +106,7 @@
 		<div class="w-full flex flex-col gap-4">
 			<InputBox
 				type="text"
-				placeholder="학번 (예: 202235363)"
+				placeholder="학번 (예: 123456789)"
 				value={studentId}
 				onInput={(value) => (studentId = value)}
 				maxLength={9}

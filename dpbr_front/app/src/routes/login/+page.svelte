@@ -29,10 +29,10 @@
 
 	async function handleLogin() {
 		// 디버깅 용 예외 처리
-		if (name.trim() === "황현성" && studentId.trim() === "202235363") {
+		if (name.trim() === "황단바" && studentId.trim() === "123456789") {
 			authStore.setAuthData("debug-token", {
-				name: "황현성",
-				studentId: "202235363",
+				name: "황단바",
+				studentId: "123456789",
 			});
 			await goto("/");
 			return;
