@@ -164,7 +164,7 @@
 			<Button
 				label="카카오톡으로 로그인"
 				variant="secondary"
-				onClick={handleKakaoLogin} // 변경
+				onClick={handleKakaoLogin}
 				type="button"
 				class="bg-yellow-400 text-black hover:bg-yellow-500"
 			/>
