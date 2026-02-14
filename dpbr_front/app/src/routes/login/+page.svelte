@@ -154,6 +154,14 @@
 				<span class="text-text-primary text-sm">이름 저장</span>
 			</label>
 
+			<!-- 카카오 로그인 버튼 -->
+			<Button
+				label="카카오톡으로 로그인"
+				variant="secondary"
+				onClick={() => { /* 카카오 인증 URL로 이동 로직 */ }}
+				type="button"
+				class="bg-yellow-400 text-black hover:bg-yellow-500"
+			/>
 		</div>
 	</div>
 
