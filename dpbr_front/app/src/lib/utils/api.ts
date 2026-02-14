@@ -12,6 +12,10 @@ export interface LoginRequest {
 	saveName?: boolean;
 }
 
+export interface KakaoLoginRequest {
+	code: string;
+}
+
 export interface LoginResponse {
 	token: string;
 	user: {
@@ -94,6 +98,16 @@ export async function login(request: LoginRequest): Promise<ApiResponse<LoginRes
 	return apiRequest<LoginResponse>('/api/auth/login', {
 		method: 'POST',
 		body: JSON.stringify(request)
+	});
+}
+
+/**
+ * 카카오 로그인 API 호출
+ */
+export async function kakaoLogin(code: string): Promise<ApiResponse<LoginResponse>> {
+	return apiRequest<LoginResponse>('/api/auth/kakao/login', {
+		method: 'POST',
+		body: JSON.stringify({ code })
 	});
 }
 

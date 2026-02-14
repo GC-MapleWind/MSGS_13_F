@@ -1,30 +1,32 @@
 <script lang="ts">
-	import { X } from 'lucide-svelte';
+	import { X } from "lucide-svelte";
 
 	interface Props {
-		type?: 'text' | 'number' | 'tel';
+		type?: "text" | "number" | "tel";
 		placeholder: string;
 		value: string;
 		maxLength?: number;
-		inputState?: 'default' | 'focused';
+		inputState?: "default" | "focused";
 		showClearButton?: boolean;
 		onInput: (value: string) => void;
 		onFocus: () => void;
 		onBlur: () => void;
 		onClear?: () => void;
+		class?: string;
 	}
 
 	let {
-		type = 'text',
+		type = "text",
 		placeholder,
 		value: valueProp,
 		maxLength,
-		inputState = 'default',
+		inputState = "default",
 		showClearButton = false,
 		onInput,
 		onFocus,
 		onBlur,
-		onClear
+		onClear,
+		class: className = "",
 	}: Props = $props();
 
 	let inputEl: HTMLInputElement | undefined = $state();
@@ -58,8 +60,8 @@
 
 	function handleClear() {
 		if (inputEl) {
-			inputEl.value = '';
-			onInput('');
+			inputEl.value = "";
+			onInput("");
 		}
 		onClear?.();
 	}
@@ -75,7 +77,7 @@
 		onfocus={onFocus}
 		onblur={onBlur}
 		class="w-full px-4 py-3 rounded-lg bg-primary text-white placeholder-white/70 outline-none transition-all
-			{inputState === 'focused' ? 'ring-2 ring-white/50' : ''}"
+			{inputState === 'focused' ? 'ring-2 ring-white/50' : ''} {className}"
 		style="max-length: {maxLength || 'none'};"
 		aria-label={placeholder}
 	/>
