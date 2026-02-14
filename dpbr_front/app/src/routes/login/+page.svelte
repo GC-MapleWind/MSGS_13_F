@@ -100,6 +100,21 @@
 	function handleStudentIdClear() {
 		studentId = "";
 	}
+
+	function handleNameKeyDown(e: KeyboardEvent) {
+		if (e.key === "Enter") {
+			e.preventDefault();
+			const input = studentIdInputRef?.querySelector("input");
+			input?.focus();
+		}
+	}
+
+	function handleStudentIdKeyDown(e: KeyboardEvent) {
+		if (e.key === "Enter" && studentId.length === 9) {
+			e.preventDefault();
+			handleLogin();
+		}
+	}
 </script>
 
 <svelte:head>
@@ -140,6 +155,7 @@
 					onInput={(value) => (name = value)}
 					onFocus={handleNameFocus}
 					onBlur={handleNameBlur}
+					onKeyDown={handleNameKeyDown}
 					class="rounded-t-lg rounded-b-none bg-white/20 border-b border-white/30 backdrop-blur-sm text-white placeholder-white"
 				/>
 
@@ -156,6 +172,7 @@
 						onFocus={handleStudentIdFocus}
 						onBlur={handleStudentIdBlur}
 						onClear={handleStudentIdClear}
+						onKeyDown={handleStudentIdKeyDown}
 						class="rounded-b-lg rounded-t-none bg-white/20 backdrop-blur-sm text-white placeholder-white"
 					/>
 				</div>

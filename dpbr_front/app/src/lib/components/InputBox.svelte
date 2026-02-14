@@ -11,6 +11,7 @@
 		onInput: (value: string) => void;
 		onFocus?: () => void;
 		onBlur?: () => void;
+		onKeyDown?: (e: KeyboardEvent) => void;
 		onClear?: () => void;
 		class?: string;
 	}
@@ -25,6 +26,7 @@
 		onInput,
 		onFocus,
 		onBlur,
+		onKeyDown,
 		onClear,
 		class: className = "",
 	}: Props = $props();
@@ -76,6 +78,7 @@
 		oninput={handleInput}
 		onfocus={onFocus}
 		onblur={onBlur}
+		onkeydown={onKeyDown}
 		class="w-full px-4 py-3 rounded-lg bg-primary text-white placeholder-white/70 outline-none transition-all
 			{inputState === 'focused' ? 'ring-2 ring-white/50' : ''} {className}"
 		style="max-length: {maxLength || 'none'};"
