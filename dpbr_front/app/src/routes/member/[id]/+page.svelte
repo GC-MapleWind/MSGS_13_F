@@ -4,29 +4,10 @@
 	import Header from '$lib/components/Header.svelte';
 	import SettlementListItem from '$lib/components/SettlementListItem.svelte';
 	import { getCharacterById, getSettlementsByCharacterId } from '$lib/data';
-	import { captureElementAsImage, generateFilename } from '$lib/utils/capture';
 
 	const characterId = $derived($page.params.id ?? '');
 	const character = $derived(getCharacterById(characterId));
 	const settlements = $derived(getSettlementsByCharacterId(characterId));
-
-	let captureArea = $state<HTMLElement | undefined>();
-	let isCapturing = $state(false);
-
-	async function handleCapture() {
-		if (!captureArea || !character || isCapturing) return;
-
-		try {
-			isCapturing = true;
-			const filename = generateFilename(`character-${character.name}`);
-			await captureElementAsImage(captureArea, filename);
-		} catch (error) {
-			console.error('페이지 캡쳐 실패:', error);
-			alert('페이지 저장에 실패했습니다. 다시 시도해주세요.');
-		} finally {
-			isCapturing = false;
-		}
-	}
 </script>
 
 <svelte:head>
