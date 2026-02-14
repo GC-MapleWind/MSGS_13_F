@@ -1,9 +1,33 @@
 version: '3.8'
 
 # 프로덕션 환경용 Docker Compose 설정
-# 백엔드가 별도 서버에 있는 경우 사용
+# 프론트엔드와 백엔드 모두 Docker 컨테이너로 실행
 
 services:
+  # 백엔드 서비스 (프로덕션)
+  backend:
+    # 백엔드 Dockerfile이 있다면 여기에 빌드 설정
+    # build:
+    #   context: ./dpbr_backend
+    #   dockerfile: Dockerfile
+    image: dpbr-backend:latest  # 또는 실제 백엔드 이미지
+    container_name: dpbr-backend-prod
+    restart: unless-stopped
+    environment:
+      - DATABASE_URL=${DATABASE_URL}
+      - SECRET_KEY=${SECRET_KEY}
+      - KAKAO_CLIENT_ID=${KAKAO_CLIENT_ID}
+      - KAKAO_CLIENT_SECRET=${KAKAO_CLIENT_SECRET}
+    expose:
+      - "8000"
+    networks:
+      - dpbr-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
   # 프론트엔드 서비스
   frontend:
     build:
@@ -12,8 +36,12 @@ services:
     container_name: dpbr-frontend-prod
     restart: unless-stopped
     environment:
-      # 프로덕션 API URL 설정
-      - PUBLIC_API_URL=https://api.yourdomain.com
+      # Nginx 프록시를 통해 /api로 접근
+      - PUBLIC_API_URL=/api
+    expose:
+      - "80"
+    depends_on:
+      - backend
     networks:
       - dpbr-network
     healthcheck:
@@ -23,8 +51,7 @@ services:
       retries: 3
       start_period: 40s
 
-  # Nginx 리버스 프록시 (선택사항)
-  # 백엔드가 같은 서버에 있고 프록시가 필요한 경우 사용
+  # Nginx 리버스 프록시
   nginx:
     image: nginx:alpine
     container_name: dpbr-nginx-prod
@@ -39,9 +66,7 @@ services:
       # - ./ssl/key.pem:/etc/nginx/ssl/key.pem:ro
     depends_on:
       - frontend
-    extra_hosts:
-      # 백엔드 서버 주소를 환경에 맞게 수정
-      - "host.docker.internal:host-gateway"
+      - backend
     networks:
       - dpbr-network
     healthcheck:
