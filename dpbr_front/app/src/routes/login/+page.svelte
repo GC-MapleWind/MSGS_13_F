@@ -5,6 +5,7 @@
 	import Button from '$lib/components/Button.svelte';
 	import Toast from '$lib/components/Toast.svelte';
 	import { authStore, getSavedName } from '$lib/stores/auth';
+	import { PUBLIC_KAKAO_CLIENT_ID, PUBLIC_KAKAO_REDIRECT_URI } from '$env/static/public';
 
 	let name = $state('');
 	let studentId = $state('');
@@ -52,6 +53,11 @@
 		} finally {
 			isLoading = false;
 		}
+	}
+
+	function handleKakaoLogin() {
+		const KAKAO_AUTH_URL = `https://kauth.kakao.com/oauth/authorize?client_id=${PUBLIC_KAKAO_CLIENT_ID}&redirect_uri=${PUBLIC_KAKAO_REDIRECT_URI}&response_type=code`;
+		window.location.href = KAKAO_AUTH_URL;
 	}
 
 	function showToastMessage() {
@@ -158,7 +164,7 @@
 			<Button
 				label="카카오톡으로 로그인"
 				variant="secondary"
-				onClick={() => { /* 카카오 인증 URL로 이동 로직 */ }}
+				onClick={handleKakaoLogin} // 변경
 				type="button"
 				class="bg-yellow-400 text-black hover:bg-yellow-500"
 			/>
