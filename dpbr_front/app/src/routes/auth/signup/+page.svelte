@@ -1,30 +1,66 @@
 <script lang="ts">
 	import InputBox from '$lib/components/InputBox.svelte';
 	import Button from '$lib/components/Button.svelte';
-	import { goto } from '$app/navigation'; // 가입 완료 후 페이지 이동용
+	import { goto } from '$app/navigation';
+	import { authStore } from '$lib/stores/auth'; // authStore 임포트
+	import * as api from '$lib/utils/api'; // api 임포트
+	import { get } from 'svelte/store'; // registerToken 가져오기 위함
 
 	let studentId = $state('');
 	let nickname = $state('');
-	let isLoading = $state(false); // 제출 중 로딩 상태
+	let isLoading = $state(false);
 
 	async function handleSignup() {
-		// TODO: 프론트엔드 유효성 검사 (Phase 4.2)
-		if (!studentId.trim() || !nickname.trim()) {
-			alert('학번과 닉네임을 입력해주세요.'); // 임시 알림
+		const trimmedStudentId = studentId.trim();
+		const trimmedNickname = nickname.trim();
+
+		// 기본 필수 입력 검사
+		if (!trimmedStudentId || !trimmedNickname) {
+			alert('학번과 닉네임을 입력해주세요.');
+			return;
+		}
+
+		// 학번 유효성 검사 (9자리 숫자)
+		if (trimmedStudentId.length !== 9 || !/^\d+$/.test(trimmedStudentId)) {
+			alert('학번은 9자리 숫자로 입력해주세요.');
+			return;
+		}
+
+		// 닉네임 유효성 검사 (2자 이상 10자 이하, 한글, 영어, 숫자만)
+		if (trimmedNickname.length < 2 || trimmedNickname.length > 10 || !/^[a-zA-Z0-9가-힣]+$/.test(trimmedNickname)) {
+			alert('닉네임은 2자 이상 10자 이하의 한글, 영어, 숫자만 입력 가능합니다.');
 			return;
 		}
 
 		isLoading = true;
 
-		// TODO: 회원가입 요청 로직 (Phase 4.3)
 		try {
-			// 여기서는 registerToken을 사용해야 하지만, 현재 authStore에 저장 로직이 없으므로 일단 스킵
-			console.log('회원가입 요청:', { studentId, nickname });
-			// 임시적으로 메인 페이지로 이동
-			await goto('/');
+			const { registerToken } = get(authStore); // authStore에서 registerToken 가져오기
+
+			if (!registerToken) {
+				console.error('registerToken이 없습니다. 로그인 과정을 다시 진행해주세요.');
+				alert('회원가입 토큰이 유효하지 않습니다. 다시 로그인해주세요.');
+				goto('/login');
+				return;
+			}
+
+			const response = await api.signup({ // 백엔드 회원가입 API 호출 (api 모듈에 signup 함수 필요)
+				registerToken,
+				studentId: trimmedStudentId,
+				nickname: trimmedNickname
+			});
+
+			if (response.success && response.data) {
+				const { token, user } = response.data;
+				authStore.setAuthData(token, user); // 로그인 상태로 전환
+				authStore.setRegisterToken(null); // registerToken 제거
+				goto('/'); // 메인 페이지로 이동
+			} else {
+				throw new Error(response.message || '회원가입에 실패했습니다.');
+			}
 		} catch (error) {
 			console.error('회원가입 실패:', error);
-			alert('회원가입에 실패했습니다.'); // 임시 알림
+			alert('회원가입에 실패했습니다: ' + (error instanceof Error ? error.message : String(error)));
 		} finally {
 			isLoading = false;
 		}
