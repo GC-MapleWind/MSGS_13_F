@@ -4,9 +4,11 @@ on:
   push:
     branches:
       - main
+      - dev
   pull_request:
     branches:
       - main
+    types: [opened, synchronize, reopened]
   workflow_dispatch:
 
 env:
@@ -135,7 +137,135 @@ jobs:
             echo "❌ Frontend health check failed (port 3000 not responding)"
             docker ps -a --filter name=dpbr-frontend
             docker logs dpbr-frontend --tail 30 || true
+          exit 1
+
+  # ═══════════════════════════════════════════════════
+  # Dev 환경
+  # ═══════════════════════════════════════════════════
+
+  # Dev: Docker 빌드 & 배포 (PR to main 또는 push to dev)
+  deploy-dev:
+    name: Build Docker & Deploy (Dev)
+    runs-on: ubuntu-latest
+    if: >-
+      github.event_name == 'pull_request' ||
+      (github.event_name == 'push' && github.ref == 'refs/heads/dev')
+    concurrency:
+      group: dev-frontend-deploy
+      cancel-in-progress: true
+    environment: dev
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup SSH Key
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/deploy_key
+          chmod 600 ~/.ssh/deploy_key
+          ssh-keyscan -H ${{ secrets.SERVER_HOST }} >> ~/.ssh/known_hosts
+
+      - name: Transfer source code to dev server
+        env:
+          SERVER_HOST: ${{ secrets.SERVER_HOST }}
+          SERVER_USER: ${{ secrets.SERVER_USER }}
+        run: |
+          echo "📦 Transferring source code to dev server..."
+          ssh -i ~/.ssh/deploy_key "${SERVER_USER}@${SERVER_HOST}" "mkdir -p ~/dpbr_deploy_dev"
+          scp -i ~/.ssh/deploy_key -r dpbr_front "${SERVER_USER}@${SERVER_HOST}:~/dpbr_deploy_dev/"
+          echo "✅ Source code transferred to dev"
+
+      - name: Build and Deploy Dev on Server
+        env:
+          SERVER_HOST: ${{ secrets.SERVER_HOST }}
+          SERVER_USER: ${{ secrets.SERVER_USER }}
+        run: |
+          echo "🚀 Building and deploying dev frontend on server..."
+          ssh -i ~/.ssh/deploy_key "${SERVER_USER}@${SERVER_HOST}" bash -s << 'ENDSSH'
+            set -e
+            cd ~/dpbr_deploy_dev/dpbr_front
+
+            # 롤백용 이전 이미지 보존
+            echo "💾 Backing up current dev image..."
+            docker tag dpbr-frontend-dev:latest dpbr-frontend-dev:previous 2>/dev/null || true
+
+            # Docker 이미지 빌드
+            echo "🔨 Building dev Docker image..."
+            docker build -t dpbr-frontend-dev:latest .
+
+            # 기존 dev 컨테이너 중지 및 제거
+            echo "🛑 Stopping existing dev container..."
+            docker stop dpbr-frontend-dev 2>/dev/null || true
+            docker rm dpbr-frontend-dev 2>/dev/null || true
+
+            # 사용하지 않는 이미지 정리
+            docker image prune -f
+
+            # 새 dev 컨테이너 실행
+            echo "🚀 Starting dev container..."
+            docker run -d \
+              --name dpbr-frontend-dev \
+              --restart unless-stopped \
+              -p 127.0.0.1:3001:80 \
+              dpbr-frontend-dev:latest
+
+            echo "✅ Dev frontend deployed!"
+          ENDSSH
+
+      - name: Health Check
+        env:
+          SERVER_HOST: ${{ secrets.SERVER_HOST }}
+          SERVER_USER: ${{ secrets.SERVER_USER }}
+        run: |
+          echo "🏥 Running dev health check..."
+          ssh -i ~/.ssh/deploy_key "${SERVER_USER}@${SERVER_HOST}" bash -s << 'ENDSSH'
+            for i in 1 2 3 4 5 6; do
+              sleep 5
+              if curl -sf --connect-timeout 5 "http://127.0.0.1:3001/" > /dev/null; then
+                echo "✅ Dev frontend health check passed!"
+                exit 0
+              fi
+              echo "  Attempt $i: waiting for dev frontend..."
+            done
+            echo "❌ Dev frontend health check failed (port 3001 not responding)"
+            docker ps -a --filter name=dpbr-frontend-dev
+            docker logs dpbr-frontend-dev --tail 30 || true
             exit 1
+          ENDSSH
+
+      - name: Notify Success
+        if: success()
+        run: |
+          echo "🎉 Dev Docker deployment successful!"
+          echo "Image: dpbr-frontend-dev:latest (built on server)"
+
+      - name: Rollback on Failure
+        if: failure()
+        env:
+          SERVER_HOST: ${{ secrets.SERVER_HOST }}
+          SERVER_USER: ${{ secrets.SERVER_USER }}
+        run: |
+          echo "❌ Dev deployment failed - rolling back..."
+          ssh -i ~/.ssh/deploy_key "${SERVER_USER}@${SERVER_HOST}" bash -s << 'ENDSSH'
+            echo "🔄 Attempting dev rollback..."
+            docker stop dpbr-frontend-dev 2>/dev/null || true
+            docker rm dpbr-frontend-dev 2>/dev/null || true
+
+            if docker image inspect dpbr-frontend-dev:previous > /dev/null 2>&1; then
+              echo "📦 Rolling back to previous dev image..."
+              docker run -d \
+                --name dpbr-frontend-dev \
+                --restart unless-stopped \
+                -p 127.0.0.1:3001:80 \
+                dpbr-frontend-dev:previous
+              echo "⚠️ Dev rollback completed - running previous version"
+            else
+              echo "⚠️ No previous dev image available for rollback"
+            fi
+          ENDSSH
+          exit 1
+
           ENDSSH
 
       - name: Notify Success
