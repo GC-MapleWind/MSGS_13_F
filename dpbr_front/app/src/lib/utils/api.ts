@@ -4,6 +4,7 @@ export interface ApiResponse<T> {
 	success: boolean;
 	data?: T;
 	message?: string;
+	status?: number;
 }
 
 export interface LoginRequest {
@@ -22,6 +23,10 @@ export interface LoginResponse {
 		name: string;
 		studentId: string;
 	};
+}
+
+export interface KakaoLoginNeedSignupResponse {
+	registerToken: string;
 }
 
 export interface VerifyResponse {
@@ -74,13 +79,15 @@ async function apiRequest<T>(
 		if (!response.ok) {
 			return {
 				success: false,
-				message: data.message || '요청에 실패했습니다.'
+				message: data.message || '요청에 실패했습니다.',
+				status: response.status
 			};
 		}
 
 		return {
 			success: true,
-			data: data
+			data: data,
+			status: response.status
 		};
 	} catch (error) {
 		console.error('API request failed:', error);
@@ -104,7 +111,11 @@ export async function login(request: LoginRequest): Promise<ApiResponse<LoginRes
 /**
  * 카카오 로그인 API 호출
  */
-export async function kakaoLogin(code: string): Promise<ApiResponse<LoginResponse | { registerToken: string }>> {
+export async function kakaoLogin(code: string): Promise<ApiResponse<LoginResponse | KakaoLoginNeedSignupResponse>> {
+	return apiRequest<LoginResponse | KakaoLoginNeedSignupResponse>('/api/auth/kakao/login', {
+		method: 'POST',
+		body: JSON.stringify({ code })
+	});
 }
 
 /**

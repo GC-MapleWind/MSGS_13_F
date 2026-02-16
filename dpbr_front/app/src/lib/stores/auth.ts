@@ -202,7 +202,7 @@ export async function checkAuth(): Promise<void> {
 		return;
 	}
 
-	// 디버그 토큰인 경우 백엔드 검증 건너뛰기
+	// 디버그 토큰인 경우 백엔드 검증 건너뛰기 (디버그용)
 	if (token === 'debug-token') {
 		// 로컬 스토리지에서 유저 정보 가져오기
 		const userStr = getStorageItem(USER_STORAGE_KEY);

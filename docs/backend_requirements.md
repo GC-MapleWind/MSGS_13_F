@@ -56,7 +56,7 @@ This document outlines the API endpoints and logic required to support the front
 ```json
 {
   "registerToken": "TOKEN_RECEIVED_FROM_LOGIN_202",
-  "studentId": "202235363",
+  "studentId": "123456789",
   "nickname": "멋진닉네임"
 }
 ```
@@ -68,7 +68,7 @@ This document outlines the API endpoints and logic required to support the front
   "token": "ACCESS_TOKEN_JWT",
   "user": {
     "name": "홍길동", // Extracted from Kakao profile using registerToken
-    "studentId": "202235363",
+    "studentId": "123456789",
     "nickname": "멋진닉네임"
     // ...
   }
@@ -98,7 +98,7 @@ This document outlines the API endpoints and logic required to support the front
 ## 3. Notes for Developer
 - **CORS**: Ensure CORS is configured to allow requests from the frontend origin (e.g., `http://localhost:5173`).
 - **Error Handling**: For all endpoints, return `4xx` or `5xx` with a JSON body `{ "message": "Error description" }` in case of failure.
-- **Debug Token**: The frontend currently uses a hardcoded mechanism to bypass backend auth for the user `황현성/202235363` with a token value of `"debug-token"`. The backend does NOT need to handle this (it's frontend-only), but be aware of it if debugging frontend behavior.
+- **Debug Token**: The frontend currently uses a hardcoded mechanism to bypass backend auth for the user `황단바/123456789` with a token value of `"debug-token"`. The backend does NOT need to handle this (it's frontend-only), but be aware of it if debugging frontend behavior.
 
 ## 4. Data Models & Content Structure
 
