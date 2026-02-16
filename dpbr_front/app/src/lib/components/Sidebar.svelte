@@ -1,5 +1,8 @@
 <script lang="ts">
 	import { fade } from 'svelte/transition';
+	import { goto } from '$app/navigation';
+	import { authStore } from '$lib/stores/auth';
+	import type { AuthState } from '$lib/types';
 
 	interface Props {
 		open: boolean;
@@ -7,6 +10,17 @@
 	}
 
 	let { open, onClose }: Props = $props();
+
+	let authState = $state<AuthState>({ isAuthenticated: false, user: null, isLoading: false });
+	authStore.subscribe((state) => {
+		authState = state;
+	});
+
+	async function handleLogout() {
+		await authStore.logout();
+		onClose();
+		await goto('/login');
+	}
 </script>
 
 <!-- Sidebar Panel: 항상 렌더링하고 transform 으로만 위치를 바꿈 -->
@@ -22,6 +36,20 @@
 			<span class="text-xs text-text-muted">단풍바람 메생결산 정보</span>
 			<span class="text-xl font-medium text-primary-dark">단풍바람 13기 메생결산</span>
 		</div>
+
+		<!-- User Info Section -->
+		{#if authState.user}
+			<div class="flex items-center justify-between px-6 py-3 border-b border-border-dark">
+				<span class="text-lg font-medium text-text-primary">{authState.user.name}</span>
+				<button
+					onclick={handleLogout}
+					class="px-3 py-1.5 text-sm text-text-secondary hover:text-text-primary hover:bg-bg-light rounded transition-colors"
+					aria-label="로그아웃"
+				>
+					로그아웃
+				</button>
+			</div>
+		{/if}
 
 		<!-- Menu -->
 		<div class="flex flex-col gap-2">

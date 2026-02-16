@@ -25,3 +25,15 @@ export interface TalkComment {
 	content: string;
 	createdAt: string;
 }
+
+export interface User {
+	name: string;
+	studentId: string;
+}
+
+export interface AuthState {
+	isAuthenticated: boolean;
+	user: User | null;
+	isLoading: boolean;
+	registerToken?: string | null; // 추가
+}

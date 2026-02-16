@@ -90,6 +90,56 @@ export const characters: Character[] = [
 		job: '듀얼블레이드',
 		club: '단풍바람',
 		server: '이노시스'
+	},
+	{
+		id: 'char-10',
+		name: '윤성현',
+		nickname: '성현이',
+		avatarUrl: 'https://placehold.co/200x200/F8BBD0/C2185B?text=YH',
+		level: 295,
+		job: '비숍',
+		club: '단풍바람',
+		server: '스카니아'
+	},
+	{
+		id: 'char-11',
+		name: '최미나',
+		nickname: '미나짱',
+		avatarUrl: 'https://placehold.co/200x200/E1BEE7/7B1FA2?text=MN',
+		level: 260,
+		job: '윈드브레이커',
+		club: '단풍바람',
+		server: '루나'
+	},
+	{
+		id: 'char-12',
+		name: '강철수',
+		nickname: '철수맨',
+		avatarUrl: 'https://placehold.co/200x200/D1C4E9/512DA8?text=CS',
+		level: 270,
+		job: '다크나이트',
+		club: '단풍바람',
+		server: '엘리시움'
+	},
+	{
+		id: 'char-13',
+		name: '이영희',
+		nickname: '영희공주',
+		avatarUrl: 'https://placehold.co/200x200/C5CAE9/303F9F?text=YH',
+		level: 268,
+		job: '비스트테이머',
+		club: '단풍바람',
+		server: '크로아'
+	},
+	{
+		id: 'char-14',
+		name: '김민수',
+		nickname: '민수형',
+		avatarUrl: 'https://placehold.co/200x200/BBDEFB/1976D2?text=MS',
+		level: 285,
+		job: '나이트로드',
+		club: '단풍바람',
+		server: '베라'
 	}
 ];
 
@@ -137,6 +187,46 @@ export const settlementItems: SettlementItem[] = [
 			'살다살다 데미안도 잡아보네 내용이 길면 두 줄로 내려갑니다(반응형 textbox입니다). 정말 오래 걸렸지만 결국 해냈어요!',
 		imageUrl: 'https://placehold.co/400x300/FFCCBC/FF5722?text=DEMIAN',
 		acquiredAt: '2026-08-01'
+	},
+	{
+		id: 'msg-6',
+		characterId: 'char-1',
+		title: '유니온 8000 달성! 전투력 상승',
+		description: '드디어 유니온 8000을 찍었습니다. 매일매일 조금씩 키우던 부캐들이 모여 큰 힘이 되었네요.',
+		imageUrl: 'https://placehold.co/400x300/E1BEE7/8E24AA?text=UNION+8000',
+		acquiredAt: '2026-07-15'
+	},
+	{
+		id: 'msg-7',
+		characterId: 'char-1',
+		title: '마라벨 1기 풀세트 완성',
+		description: '꿈에 그리던 마스터 라벨 1기 풀세트를 완성했습니다. 코디의 완성은 역시 마라벨!',
+		imageUrl: 'https://placehold.co/400x300/BBDEFB/1976D2?text=MASTER+LABEL',
+		acquiredAt: '2026-06-20'
+	},
+	{
+		id: 'msg-8',
+		characterId: 'char-1',
+		title: '제네시스 무기 해방 퀘스트 완료',
+		description: '검은 마법사를 격파하고 드디어 제네시스 무기를 해방했습니다. 이제 진정한 해방 유저!',
+		imageUrl: 'https://placehold.co/400x300/FFCDD2/D32F2F?text=GENESIS+WEAPON',
+		acquiredAt: '2026-05-10'
+	},
+	{
+		id: 'msg-9',
+		characterId: 'char-1',
+		title: '시드 링 4레벨 획득 (리레4)',
+		description: '더 시드 50층 등반 보상으로 리스트레인트 링 4레벨이 떴습니다! 믿기지 않는 행운이네요.',
+		imageUrl: 'https://placehold.co/400x300/C8E6C9/388E3C?text=ROR+4',
+		acquiredAt: '2026-04-05'
+	},
+	{
+		id: 'msg-10',
+		characterId: 'char-1',
+		title: '몬스터 컬렉션 1000마리 등록',
+		description: '메이플 월드를 누비며 몬스터 컬렉션 1000마리를 등록했습니다. 탐험의 증표!',
+		imageUrl: 'https://placehold.co/400x300/FFECB3/FFA000?text=MONSTER+COL',
+		acquiredAt: '2026-03-22'
 	}
 ];
 
