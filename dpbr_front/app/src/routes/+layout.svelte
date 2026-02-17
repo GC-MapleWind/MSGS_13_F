@@ -31,9 +31,6 @@
 	const currentPath = $derived(normalizePath($page.url.pathname));
 	const isLoginRoute = $derived(currentPath.startsWith("/login"));
 	const isSignupRoute = $derived(currentPath.startsWith("/auth/signup"));
-	const isAuthRoute = $derived(
-		isLoginRoute || currentPath.startsWith("/auth/"),
-	);
 	let hasCheckedAuth = $state(false);
 	let navigationInFlight = false;
 
@@ -83,11 +80,6 @@
 
 		if (isLoginRoute && authState.registerToken) {
 			navigateTo("/auth/signup");
-			return;
-		}
-
-		if (!isAuthRoute) {
-			navigateTo("/login");
 		}
 	});
 </script>

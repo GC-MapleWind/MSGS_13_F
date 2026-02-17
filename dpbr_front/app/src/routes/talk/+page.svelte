@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
 	import { goto } from '$app/navigation';
+	import { get } from 'svelte/store';
 	import { ChevronLeft, Send } from 'lucide-svelte';
 	import CommentItem from '$lib/components/CommentItem.svelte';
 	import { getComments, createComment } from '$lib/api';
@@ -34,9 +35,21 @@
 		textareaEl.style.overflowY = textareaEl.scrollHeight > maxHeight ? 'auto' : 'hidden';
 	}
 
+	async function openLoginPopup(): Promise<void> {
+		const confirmed = confirm('댓글 작성은 로그인 후 가능합니다. 로그인 페이지로 이동할까요?');
+		if (confirmed) {
+			await goto('/login');
+		}
+	}
+
 	async function submitComment() {
 		const text = inputText.trim();
 		if (!text || submitting) return;
+
+		if (!get(authStore).isAuthenticated) {
+			await openLoginPopup();
+			return;
+		}
 
 		submitting = true;
 		try {
@@ -67,9 +80,7 @@
 			const message = e instanceof Error ? e.message : '댓글 작성에 실패했습니다.';
 
 			if (message.includes('401') || message.includes('로그인이 필요합니다')) {
-				await authStore.logout();
-				alert('로그인이 필요합니다. 다시 로그인해 주세요.');
-				await goto('/login');
+				await openLoginPopup();
 				return;
 			}
 
