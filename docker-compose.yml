@@ -13,6 +13,7 @@ services:
     restart: unless-stopped
     environment:
       - PUBLIC_API_URL=/api
+      - PUBLIC_API_PREFIX=/v1
     networks:
       - dpbr-network
 

@@ -38,6 +38,7 @@ services:
     environment:
       # Nginx 프록시를 통해 /api로 접근
       - PUBLIC_API_URL=/api
+      - PUBLIC_API_PREFIX=/v1
     expose:
       - "80"
     depends_on:

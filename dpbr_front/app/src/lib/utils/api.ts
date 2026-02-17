@@ -1,6 +1,31 @@
 import { env } from '$env/dynamic/public';
 
-const API_BASE_URL = env.PUBLIC_API_URL || 'http://localhost:8001';
+function getApiBaseUrl(): string {
+	const rawValue = env.PUBLIC_API_URL?.trim();
+	if (!rawValue) {
+		throw new Error('PUBLIC_API_URL is not set');
+	}
+
+	return rawValue.replace(/\/+$/, '');
+}
+
+function getApiPrefix(): string {
+	const rawValue = (env.PUBLIC_API_PREFIX || '/api/v1').trim();
+	const prefixed = rawValue.startsWith('/') ? rawValue : `/${rawValue}`;
+	const normalized = prefixed.replace(/\/+$/, '');
+
+	if (!normalized || normalized === '/') {
+		throw new Error('PUBLIC_API_PREFIX must include at least one path segment');
+	}
+
+	return normalized;
+}
+
+function buildApiUrl(endpoint: string): string {
+	const normalizedEndpoint = endpoint.startsWith('/') ? endpoint : `/${endpoint}`;
+	return `${getApiBaseUrl()}${getApiPrefix()}${normalizedEndpoint}`;
+}
+
 const API_REQUEST_TIMEOUT_MS = 15000;
 
 export interface ApiResponse<T> {
@@ -153,7 +178,7 @@ async function apiRequest<T>(
 			headers.set('Authorization', `Bearer ${token}`);
 		}
 
-		const response = await fetch(`${API_BASE_URL}${endpoint}`, {
+		const response = await fetch(buildApiUrl(endpoint), {
 			...options,
 			headers,
 			signal: timeoutController.signal
@@ -202,7 +227,7 @@ export async function login(request: LoginRequest): Promise<ApiResponse<LoginRes
 	form.set('username', request.studentId);
 	form.set('password', request.studentId);
 
-	const response = await apiRequest<TokenBackendResponse>('/api/v1/users/login', {
+	const response = await apiRequest<TokenBackendResponse>('/users/login', {
 		method: 'POST',
 		headers: {
 			'Content-Type': 'application/x-www-form-urlencoded'
@@ -235,7 +260,7 @@ export async function login(request: LoginRequest): Promise<ApiResponse<LoginRes
  */
 export async function kakaoLogin(code: string): Promise<ApiResponse<LoginResponse | KakaoLoginNeedSignupResponse>> {
 	const query = new URLSearchParams({ code }).toString();
-	const response = await apiRequest<KakaoLoginBackendResponse>(`/api/v1/users/auth/kakao/login?${query}`, {
+	const response = await apiRequest<KakaoLoginBackendResponse>(`/users/auth/kakao/login?${query}`, {
 		method: 'POST'
 	});
 
@@ -277,7 +302,7 @@ export async function kakaoLogin(code: string): Promise<ApiResponse<LoginRespons
  * 로그아웃 API 호출
  */
 export async function logout(): Promise<ApiResponse<void>> {
-	return apiRequest<void>('/api/v1/users/logout', {
+	return apiRequest<void>('/users/logout', {
 		method: 'POST'
 	});
 }
@@ -286,7 +311,7 @@ export async function logout(): Promise<ApiResponse<void>> {
  * 인증 확인 API 호출
  */
 export async function verifyAuth(): Promise<ApiResponse<VerifyResponse>> {
-	const response = await apiRequest<VerifyBackendResponse>('/api/v1/users/me', {
+	const response = await apiRequest<VerifyBackendResponse>('/users/me', {
 		method: 'GET'
 	});
 
@@ -314,7 +339,7 @@ export async function verifyAuth(): Promise<ApiResponse<VerifyResponse>> {
  * 회원가입 API 호출
  */
 export async function signup(request: SignupRequest): Promise<ApiResponse<SignupResponse>> {
-	const response = await apiRequest<TokenBackendResponse>('/api/v1/users/auth/kakao/register', {
+	const response = await apiRequest<TokenBackendResponse>('/users/auth/kakao/register', {
 		method: 'POST',
 		body: JSON.stringify({
 			register_token: request.registerToken,

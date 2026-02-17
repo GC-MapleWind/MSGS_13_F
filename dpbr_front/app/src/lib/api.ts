@@ -6,10 +6,29 @@ import type { Character, SettlementItem, TalkComment } from './types';
  * - 반드시 PUBLIC_API_URL 환경변수로 주입되도록 강제
  */
 function getApiBaseUrl(): string {
-	if (!env.PUBLIC_API_URL) {
+	const rawValue = env.PUBLIC_API_URL?.trim();
+	if (!rawValue) {
 		throw new Error('PUBLIC_API_URL is not set');
 	}
-	return env.PUBLIC_API_URL;
+
+	return rawValue.replace(/\/+$/, '');
+}
+
+function getApiPrefix(): string {
+	const rawValue = (env.PUBLIC_API_PREFIX || '/api/v1').trim();
+	const prefixed = rawValue.startsWith('/') ? rawValue : `/${rawValue}`;
+	const normalized = prefixed.replace(/\/+$/, '');
+
+	if (!normalized || normalized === '/') {
+		throw new Error('PUBLIC_API_PREFIX must include at least one path segment');
+	}
+
+	return normalized;
+}
+
+function buildApiUrl(endpoint: string): string {
+	const normalizedEndpoint = endpoint.startsWith('/') ? endpoint : `/${endpoint}`;
+	return `${getApiBaseUrl()}${getApiPrefix()}${normalizedEndpoint}`;
 }
 
 function getAccessToken(): string | null {
@@ -55,7 +74,7 @@ interface CommentResponse {
  * API 호출 유틸리티
  */
 async function apiCall<T>(endpoint: string, options?: RequestInit): Promise<T> {
-	const url = `${getApiBaseUrl()}${endpoint}`;
+	const url = buildApiUrl(endpoint);
 	
 	try {
 		const response = await fetch(url, {
@@ -81,7 +100,7 @@ async function apiCall<T>(endpoint: string, options?: RequestInit): Promise<T> {
  * 캐릭터 목록 조회
  */
 export async function getCharacters(): Promise<Character[]> {
-	const data = await apiCall<CharacterResponse[]>('/api/v1/characters');
+	const data = await apiCall<CharacterResponse[]>('/characters');
 	
 	return data.map((char) => ({
 		id: char.id.toString(),
@@ -100,7 +119,7 @@ export async function getCharacters(): Promise<Character[]> {
  */
 export async function getCharacterById(id: string): Promise<Character | null> {
 	try {
-		const data = await apiCall<CharacterResponse>(`/api/v1/characters/${id}`);
+		const data = await apiCall<CharacterResponse>(`/characters/${id}`);
 		
 		return {
 			id: data.id.toString(),
@@ -123,7 +142,7 @@ export async function getCharacterById(id: string): Promise<Character | null> {
  */
 export async function getSettlementsByCharacterId(characterId: string): Promise<SettlementItem[]> {
 	const data = await apiCall<SettlementResponse[]>(
-		`/api/v1/characters/${characterId}/settlements`
+		`/characters/${characterId}/settlements`
 	);
 	
 	return data.map((settlement) => ({
@@ -141,7 +160,7 @@ export async function getSettlementsByCharacterId(characterId: string): Promise<
  */
 export async function getSettlementById(id: string): Promise<SettlementItem | null> {
 	try {
-		const data = await apiCall<SettlementResponse>(`/api/v1/settlements/${id}`);
+		const data = await apiCall<SettlementResponse>(`/settlements/${id}`);
 		
 		return {
 			id: data.id.toString(),
@@ -162,7 +181,7 @@ export async function getSettlementById(id: string): Promise<SettlementItem | nu
  */
 export async function getComments(page: number = 1, limit: number = 20): Promise<TalkComment[]> {
 	const data = await apiCall<CommentResponse[]>(
-		`/api/v1/comments?page=${page}&limit=${limit}`
+		`/comments?page=${page}&limit=${limit}`
 	);
 	
 	return data.map((comment) => ({
@@ -189,7 +208,7 @@ export async function createComment(content: string): Promise<CommentResponse> {
 		throw new Error('로그인이 필요합니다.');
 	}
 
-	return await apiCall<CommentResponse>('/api/v1/comments', {
+	return await apiCall<CommentResponse>('/comments', {
 		method: 'POST',
 		headers: {
 			Authorization: `Bearer ${accessToken}`
@@ -202,5 +221,5 @@ export async function createComment(content: string): Promise<CommentResponse> {
  * 시스템 공지사항 조회
  */
 export async function getNotices(): Promise<Record<string, any>> {
-	return await apiCall<Record<string, any>>('/api/v1/system/notices');
+	return await apiCall<Record<string, any>>('/system/notices');
 }
