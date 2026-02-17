@@ -39,6 +39,13 @@ export interface VerifyResponse {
 	};
 }
 
+interface VerifyBackendResponse {
+	id: number;
+	username: string;
+	name: string;
+	student_id?: string | null;
+}
+
 export interface SignupRequest {
 	registerToken: string;
 	studentId: string;
@@ -82,7 +89,13 @@ function decodeJwtPayload(token: string): Record<string, unknown> | null {
 		const normalized = payload.replace(/-/g, '+').replace(/_/g, '/');
 		const padded = normalized.padEnd(Math.ceil(normalized.length / 4) * 4, '=');
 		const json = atob(padded);
-		return JSON.parse(json) as Record<string, unknown>;
+		const decoded = JSON.parse(json) as Record<string, unknown>;
+
+		if (typeof decoded.exp === 'number' && decoded.exp * 1000 < Date.now()) {
+			return null;
+		}
+
+		return decoded;
 	} catch {
 		return null;
 	}
@@ -273,16 +286,27 @@ export async function logout(): Promise<ApiResponse<void>> {
  * 인증 확인 API 호출
  */
 export async function verifyAuth(): Promise<ApiResponse<VerifyResponse>> {
-	const token = getAuthTokenFromStorage();
-	if (!token) {
-		return { success: false, message: '인증 토큰이 없습니다.' };
+	const response = await apiRequest<VerifyBackendResponse>('/api/v1/users/me', {
+		method: 'GET'
+	});
+
+	if (!response.success || !response.data) {
+		return {
+			success: false,
+			message: response.message || '인증 확인에 실패했습니다.',
+			status: response.status
+		};
 	}
 
-	const user = toUserFromToken(token, '사용자', '');
 	return {
 		success: true,
-		data: { user },
-		status: 200
+		data: {
+			user: {
+				name: response.data.name,
+				studentId: response.data.student_id || response.data.username
+			}
+		},
+		status: response.status
 	};
 }
 
@@ -312,8 +336,7 @@ export async function signup(request: SignupRequest): Promise<ApiResponse<Signup
 		data: {
 			token: response.data.access_token,
 			user: {
-				name: request.nickname,
-				studentId: request.studentId,
+				...toUserFromToken(response.data.access_token, request.nickname, request.studentId),
 				nickname: request.nickname
 			}
 		},
