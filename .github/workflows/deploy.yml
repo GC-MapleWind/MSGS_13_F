@@ -166,7 +166,14 @@ jobs:
                 --restart unless-stopped \
                 -p 127.0.0.1:3000:80 \
                 dpbr-frontend:previous
-              echo "⚠️ Rollback completed - running previous version"
+
+              # 롤백 컨테이너 헬스체크
+              sleep 5
+              if curl -sf --connect-timeout 5 "http://127.0.0.1:3000/" > /dev/null; then
+                echo "⚠️ Rollback completed - previous version is running"
+              else
+                echo "❌ Rollback container also unhealthy!"
+              fi
             else
               echo "⚠️ No previous image available for rollback"
             fi
