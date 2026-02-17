@@ -162,10 +162,38 @@ async function apiRequest<T>(
  * 로그인 API 호출
  */
 export async function login(request: LoginRequest): Promise<ApiResponse<LoginResponse>> {
-	return apiRequest<LoginResponse>('/api/v1/users/login', {
+	const form = new URLSearchParams();
+	// 백엔드 스펙: username/password (x-www-form-urlencoded)
+	// 여기서는 username을 학번, password를 학번으로 매핑합니다.
+	form.set('username', request.studentId);
+	form.set('password', request.studentId);
+
+	const response = await apiRequest<TokenBackendResponse>('/api/v1/users/login', {
 		method: 'POST',
-		body: JSON.stringify(request)
+		headers: {
+			'Content-Type': 'application/x-www-form-urlencoded'
+		},
+		body: form.toString()
 	});
+
+	if (!response.success || !response.data) {
+		return {
+			success: false,
+			message: response.message || '로그인에 실패했습니다.',
+			status: response.status
+		};
+	}
+
+	const user = toUserFromToken(response.data.access_token, request.name, request.studentId);
+
+	return {
+		success: true,
+		data: {
+			token: response.data.access_token,
+			user
+		},
+		status: response.status
+	};
 }
 
 /**
