@@ -2,10 +2,14 @@ import { env } from '$env/dynamic/public';
 import type { Character, SettlementItem, TalkComment } from './types';
 
 /**
- * API 기본 URL (환경 변수 없으면 기본값 사용, CI/빌드 시에도 오류 없음)
+ * API 기본 URL
+ * - 반드시 PUBLIC_API_URL 환경변수로 주입되도록 강제
  */
 function getApiBaseUrl(): string {
-	return env.PUBLIC_API_URL ?? 'http://localhost:8000';
+	if (!env.PUBLIC_API_URL) {
+		throw new Error('PUBLIC_API_URL is not set');
+	}
+	return env.PUBLIC_API_URL;
 }
 
 /**
