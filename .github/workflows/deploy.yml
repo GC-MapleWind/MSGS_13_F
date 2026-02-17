@@ -20,7 +20,9 @@ jobs:
   test:
     name: Build and Test
     runs-on: ubuntu-latest
-    if: github.event_name == 'pull_request'
+    if: >-
+      github.event_name == 'pull_request' ||
+      (github.event_name == 'push' && github.ref == 'refs/heads/dev')
     
     steps:
       - name: Checkout code
@@ -137,6 +139,41 @@ jobs:
             echo "❌ Frontend health check failed (port 3000 not responding)"
             docker ps -a --filter name=dpbr-frontend
             docker logs dpbr-frontend --tail 30 || true
+            exit 1
+          ENDSSH
+          exit 1
+
+      - name: Notify Success
+        if: success()
+        run: |
+          echo "🎉 Docker deployment successful!"
+          echo "Image: dpbr-frontend:latest (built on server)"
+
+      - name: Rollback on Failure
+        if: failure()
+        env:
+          SERVER_HOST: ${{ secrets.SERVER_HOST }}
+          SERVER_USER: ${{ secrets.SERVER_USER }}
+        run: |
+          echo "❌ 배포 실패 - 롤백 시도 중..."
+          ssh -i ~/.ssh/deploy_key "${SERVER_USER}@${SERVER_HOST}" bash -s << 'ENDSSH'
+            echo "🔄 Attempting rollback to previous version..."
+
+            docker stop dpbr-frontend 2>/dev/null || true
+            docker rm dpbr-frontend 2>/dev/null || true
+
+            if docker image inspect dpbr-frontend:previous > /dev/null 2>&1; then
+              echo "📦 Rolling back to previous image..."
+              docker run -d \
+                --name dpbr-frontend \
+                --restart unless-stopped \
+                -p 127.0.0.1:3000:80 \
+                dpbr-frontend:previous
+              echo "⚠️ Rollback completed - running previous version"
+            else
+              echo "⚠️ No previous image available for rollback"
+            fi
+          ENDSSH
           exit 1
 
   # ═══════════════════════════════════════════════════
@@ -147,6 +184,7 @@ jobs:
   deploy-dev:
     name: Build Docker & Deploy (Dev)
     runs-on: ubuntu-latest
+    needs: test
     if: >-
       github.event_name == 'pull_request' ||
       (github.event_name == 'push' && github.ref == 'refs/heads/dev')
@@ -262,43 +300,6 @@ jobs:
               echo "⚠️ Dev rollback completed - running previous version"
             else
               echo "⚠️ No previous dev image available for rollback"
-            fi
-          ENDSSH
-          exit 1
-
-          ENDSSH
-
-      - name: Notify Success
-        if: success()
-        run: |
-          echo "🎉 Docker deployment successful!"
-          echo "Image: dpbr-frontend:latest (built on server)"
-
-      - name: Rollback on Failure
-        if: failure()
-        env:
-          SERVER_HOST: ${{ secrets.SERVER_HOST }}
-          SERVER_USER: ${{ secrets.SERVER_USER }}
-        run: |
-          echo "❌ 배포 실패 - 롤백 시도 중..."
-          ssh -i ~/.ssh/deploy_key "${SERVER_USER}@${SERVER_HOST}" bash -s << 'ENDSSH'
-            echo "🔄 Attempting rollback to previous version..."
-            
-            # 현재 실패한 컨테이너 제거
-            docker stop dpbr-frontend 2>/dev/null || true
-            docker rm dpbr-frontend 2>/dev/null || true
-            
-            # 이전 이미지가 있으면 롤백
-            if docker image inspect dpbr-frontend:previous > /dev/null 2>&1; then
-              echo "📦 Rolling back to previous image..."
-              docker run -d \
-                --name dpbr-frontend \
-                --restart unless-stopped \
-                -p 127.0.0.1:3000:80 \
-                dpbr-frontend:previous
-              echo "⚠️ Rollback completed - running previous version"
-            else
-              echo "⚠️ No previous image available for rollback"
             fi
           ENDSSH
           exit 1
