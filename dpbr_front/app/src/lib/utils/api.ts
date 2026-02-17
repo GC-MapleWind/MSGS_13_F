@@ -130,7 +130,6 @@ async function apiRequest<T>(
 
 		const response = await fetch(`${API_BASE_URL}${endpoint}`, {
 			...options,
-			credentials: options.credentials ?? 'include',
 			headers
 		});
 		const text = await response.text();
