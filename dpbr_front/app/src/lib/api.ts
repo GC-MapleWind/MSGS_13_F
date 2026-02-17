@@ -12,6 +12,15 @@ function getApiBaseUrl(): string {
 	return env.PUBLIC_API_URL;
 }
 
+function getAccessToken(): string | null {
+	if (typeof window === 'undefined') return null;
+	try {
+		return localStorage.getItem('auth_token');
+	} catch {
+		return null;
+	}
+}
+
 /**
  * API 응답 타입
  */
@@ -174,7 +183,12 @@ export async function getComments(page: number = 1, limit: number = 20): Promise
 /**
  * 댓글 작성
  */
-export async function createComment(content: string, accessToken: string): Promise<CommentResponse> {
+export async function createComment(content: string): Promise<CommentResponse> {
+	const accessToken = getAccessToken();
+	if (!accessToken) {
+		throw new Error('로그인이 필요합니다.');
+	}
+
 	return await apiCall<CommentResponse>('/api/v1/comments', {
 		method: 'POST',
 		headers: {

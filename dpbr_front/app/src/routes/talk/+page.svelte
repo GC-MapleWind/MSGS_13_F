@@ -4,6 +4,7 @@
 	import { ChevronLeft, Send } from 'lucide-svelte';
 	import CommentItem from '$lib/components/CommentItem.svelte';
 	import { getComments, createComment } from '$lib/api';
+	import { authStore } from '$lib/stores/auth';
 	import type { TalkComment } from '$lib/types';
 
 	let comments = $state<TalkComment[]>([]);
@@ -37,13 +38,9 @@
 		const text = inputText.trim();
 		if (!text || submitting) return;
 
-		// TODO: 실제 인증 토큰 사용
-		// 현재는 더미 토큰 사용 (로그인 기능 구현 후 수정 필요)
-		const accessToken = 'dummy-token';
-
 		submitting = true;
 		try {
-			const newComment = await createComment(text, accessToken);
+			const newComment = await createComment(text);
 			
 			// 새 댓글을 목록 맨 위에 추가
 			const formattedComment: TalkComment = {
@@ -67,7 +64,16 @@
 			}
 		} catch (e) {
 			console.error('Failed to create comment:', e);
-			alert('댓글 작성에 실패했습니다. 로그인이 필요합니다.');
+			const message = e instanceof Error ? e.message : '댓글 작성에 실패했습니다.';
+
+			if (message.includes('401') || message.includes('로그인이 필요합니다')) {
+				await authStore.logout();
+				alert('로그인이 필요합니다. 다시 로그인해 주세요.');
+				await goto('/login');
+				return;
+			}
+
+			alert(message);
 		} finally {
 			submitting = false;
 		}

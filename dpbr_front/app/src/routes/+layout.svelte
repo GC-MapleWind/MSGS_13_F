@@ -24,7 +24,9 @@
 	});
 
 	const currentPath = $derived($page.url.pathname);
-	const isLoginPage = $derived(currentPath === "/login");
+	const isPublicAuthRoute = $derived(
+		currentPath === "/login" || currentPath.startsWith("/auth/"),
+	);
 	let hasCheckedAuth = $state(false);
 
 	onMount(async () => {
@@ -37,7 +39,7 @@
 	$effect(() => {
 		if (
 			hasCheckedAuth &&
-			!isLoginPage &&
+			!isPublicAuthRoute &&
 			!authState.isAuthenticated &&
 			!authState.isLoading
 		) {
