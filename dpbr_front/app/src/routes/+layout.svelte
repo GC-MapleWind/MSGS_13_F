@@ -19,31 +19,75 @@
 		isLoading: true,
 		registerToken: null,
 	});
-	authStore.subscribe((state) => {
-		authState = state;
-	});
 
-	const currentPath = $derived($page.url.pathname);
-	const isPublicAuthRoute = $derived(
-		currentPath === "/login" || currentPath.startsWith("/auth/"),
+	function normalizePath(pathname: string): string {
+		if (pathname.length > 1 && pathname.endsWith("/")) {
+			return pathname.slice(0, -1);
+		}
+
+		return pathname;
+	}
+
+	const currentPath = $derived(normalizePath($page.url.pathname));
+	const isLoginRoute = $derived(currentPath.startsWith("/login"));
+	const isSignupRoute = $derived(currentPath.startsWith("/auth/signup"));
+	const isAuthRoute = $derived(
+		isLoginRoute || currentPath.startsWith("/auth/"),
 	);
 	let hasCheckedAuth = $state(false);
+	let navigationInFlight = false;
 
-	onMount(async () => {
-		// 인증 상태 확인
-		await authStore.checkAuth();
-		hasCheckedAuth = true;
+	function navigateTo(path: string) {
+		const target = normalizePath(path);
+
+		if (navigationInFlight || currentPath === target) {
+			return;
+		}
+
+		navigationInFlight = true;
+		queueMicrotask(() => {
+			void goto(path).finally(() => {
+				navigationInFlight = false;
+			});
+		});
+	}
+
+	onMount(() => {
+		const unsubscribe = authStore.subscribe((state) => {
+			authState = state;
+		});
+
+		void authStore.checkAuth().finally(() => {
+			hasCheckedAuth = true;
+		});
+
+		return unsubscribe;
 	});
 
-	// 경로 변경 시 인증 체크 (로그인 페이지 제외)
 	$effect(() => {
-		if (
-			hasCheckedAuth &&
-			!isPublicAuthRoute &&
-			!authState.isAuthenticated &&
-			!authState.isLoading
-		) {
-			goto("/login");
+		if (!hasCheckedAuth || authState.isLoading) {
+			return;
+		}
+
+		if (authState.isAuthenticated) {
+			if (isLoginRoute || isSignupRoute) {
+				navigateTo("/");
+			}
+			return;
+		}
+
+		if (isSignupRoute && !authState.registerToken) {
+			navigateTo("/login");
+			return;
+		}
+
+		if (isLoginRoute && authState.registerToken) {
+			navigateTo("/auth/signup");
+			return;
+		}
+
+		if (!isAuthRoute) {
+			navigateTo("/login");
 		}
 	});
 </script>

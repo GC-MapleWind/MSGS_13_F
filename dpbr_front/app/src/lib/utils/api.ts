@@ -1,6 +1,7 @@
 import { env } from '$env/dynamic/public';
 
 const API_BASE_URL = env.PUBLIC_API_URL || 'http://localhost:8001';
+const API_REQUEST_TIMEOUT_MS = 15000;
 
 export interface ApiResponse<T> {
 	success: boolean;
@@ -117,6 +118,17 @@ async function apiRequest<T>(
 	endpoint: string,
 	options: RequestInit = {}
 ): Promise<ApiResponse<T>> {
+	const timeoutController = new AbortController();
+	const timeoutId = setTimeout(() => timeoutController.abort(), API_REQUEST_TIMEOUT_MS);
+
+	if (options.signal) {
+		if (options.signal.aborted) {
+			timeoutController.abort();
+		} else {
+			options.signal.addEventListener('abort', () => timeoutController.abort(), { once: true });
+		}
+	}
+
 	try {
 		const token = getAuthTokenFromStorage();
 		const headers = new Headers(options.headers);
@@ -130,7 +142,8 @@ async function apiRequest<T>(
 
 		const response = await fetch(`${API_BASE_URL}${endpoint}`, {
 			...options,
-			headers
+			headers,
+			signal: timeoutController.signal
 		});
 		const text = await response.text();
 		const data = text ? JSON.parse(text) : null;
@@ -150,10 +163,19 @@ async function apiRequest<T>(
 		};
 	} catch (error) {
 		console.error('API request failed:', error);
+		if (error instanceof DOMException && error.name === 'AbortError') {
+			return {
+				success: false,
+				message: '요청 시간이 초과되었습니다. 네트워크 상태를 확인 후 다시 시도해 주세요.'
+			};
+		}
+
 		return {
 			success: false,
 			message: error instanceof Error ? error.message : '네트워크 오류가 발생했습니다.'
 		};
+	} finally {
+		clearTimeout(timeoutId);
 	}
 }
 

@@ -10,7 +10,7 @@
 
 	let { message, duration = 3000, show, onClose }: Props = $props();
 
-	let timeoutId: ReturnType<typeof setTimeout> | null = $state(null);
+	let timeoutId: ReturnType<typeof setTimeout> | null = null;
 
 	$effect(() => {
 		if (show) {
