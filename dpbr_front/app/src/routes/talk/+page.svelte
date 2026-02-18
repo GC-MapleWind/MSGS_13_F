@@ -1,9 +1,11 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
 	import { goto } from '$app/navigation';
+	import { get } from 'svelte/store';
 	import { ChevronLeft, Send } from 'lucide-svelte';
 	import CommentItem from '$lib/components/CommentItem.svelte';
 	import { getComments, createComment } from '$lib/api';
+	import { authStore } from '$lib/stores/auth';
 	import type { TalkComment } from '$lib/types';
 
 	let comments = $state<TalkComment[]>([]);
@@ -33,17 +35,25 @@
 		textareaEl.style.overflowY = textareaEl.scrollHeight > maxHeight ? 'auto' : 'hidden';
 	}
 
+	async function openLoginPopup(): Promise<void> {
+		const confirmed = confirm('댓글 작성은 로그인 후 가능합니다. 로그인 페이지로 이동할까요?');
+		if (confirmed) {
+			await goto('/login');
+		}
+	}
+
 	async function submitComment() {
 		const text = inputText.trim();
 		if (!text || submitting) return;
 
-		// TODO: 실제 인증 토큰 사용
-		// 현재는 더미 토큰 사용 (로그인 기능 구현 후 수정 필요)
-		const accessToken = 'dummy-token';
+		if (!get(authStore).isAuthenticated) {
+			await openLoginPopup();
+			return;
+		}
 
 		submitting = true;
 		try {
-			const newComment = await createComment(text, accessToken);
+			const newComment = await createComment(text);
 			
 			// 새 댓글을 목록 맨 위에 추가
 			const formattedComment: TalkComment = {
@@ -67,7 +77,14 @@
 			}
 		} catch (e) {
 			console.error('Failed to create comment:', e);
-			alert('댓글 작성에 실패했습니다. 로그인이 필요합니다.');
+			const message = e instanceof Error ? e.message : '댓글 작성에 실패했습니다.';
+
+			if (message.includes('401') || message.includes('로그인이 필요합니다')) {
+				await openLoginPopup();
+				return;
+			}
+
+			alert(message);
 		} finally {
 			submitting = false;
 		}

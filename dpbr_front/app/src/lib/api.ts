@@ -6,10 +6,70 @@ import type { Character, SettlementItem, TalkComment } from './types';
  * - 반드시 PUBLIC_API_URL 환경변수로 주입되도록 강제
  */
 function getApiBaseUrl(): string {
-	if (!env.PUBLIC_API_URL) {
+	const rawValue = env.PUBLIC_API_URL?.trim();
+	if (!rawValue) {
 		throw new Error('PUBLIC_API_URL is not set');
 	}
-	return env.PUBLIC_API_URL;
+
+	return rawValue.replace(/\/+$/, '');
+}
+
+function getApiPrefix(): string {
+	const rawValue = (env.PUBLIC_API_PREFIX || '/api/v1').trim();
+	const prefixed = rawValue.startsWith('/') ? rawValue : `/${rawValue}`;
+	const normalized = prefixed.replace(/\/+$/, '');
+
+	if (!normalized || normalized === '/') {
+		throw new Error('PUBLIC_API_PREFIX must include at least one path segment');
+	}
+
+	return normalized;
+}
+
+function buildApiUrl(endpoint: string): string {
+	const normalizedEndpoint = endpoint.startsWith('/') ? endpoint : `/${endpoint}`;
+	return `${getApiBaseUrl()}${getApiPrefix()}${normalizedEndpoint}`;
+}
+
+function normalizeApiErrorDetail(detail: unknown): string {
+	if (typeof detail !== 'string') return '';
+
+	const collapsed = detail.replace(/\s+/g, ' ').trim();
+	if (!collapsed) return '';
+
+	return collapsed.slice(0, 200);
+}
+
+function isExpiredJwt(token: string): boolean {
+	try {
+		const payload = token.split('.')[1];
+		if (!payload) return false;
+		const normalized = payload.replace(/-/g, '+').replace(/_/g, '/');
+		const padded = normalized.padEnd(Math.ceil(normalized.length / 4) * 4, '=');
+		const json = atob(padded);
+		const decoded = JSON.parse(json) as { exp?: number };
+
+		return typeof decoded.exp === 'number' && decoded.exp * 1000 < Date.now();
+	} catch {
+		return false;
+	}
+}
+
+function getAccessToken(): string | null {
+	if (typeof window === 'undefined') return null;
+	try {
+		const token = localStorage.getItem('auth_token');
+		if (!token) return null;
+
+		if (isExpiredJwt(token)) {
+			localStorage.removeItem('auth_token');
+			return null;
+		}
+
+		return token;
+	} catch {
+		return null;
+	}
 }
 
 /**
@@ -46,7 +106,7 @@ interface CommentResponse {
  * API 호출 유틸리티
  */
 async function apiCall<T>(endpoint: string, options?: RequestInit): Promise<T> {
-	const url = `${getApiBaseUrl()}${endpoint}`;
+	const url = buildApiUrl(endpoint);
 	
 	try {
 		const response = await fetch(url, {
@@ -58,7 +118,26 @@ async function apiCall<T>(endpoint: string, options?: RequestInit): Promise<T> {
 		});
 
 		if (!response.ok) {
-			throw new Error(`API Error: ${response.status} ${response.statusText}`);
+			let detail = '';
+			const contentType = response.headers.get('content-type') ?? '';
+			const exposeDetail = response.status >= 400 && response.status < 500;
+
+			try {
+				if (contentType.includes('application/json')) {
+					const errorData = await response.json();
+					detail = normalizeApiErrorDetail(errorData?.detail ?? errorData?.message);
+				}
+			} catch (error) {
+				if (import.meta.env.DEV) {
+					console.warn('Failed to parse API error detail:', error);
+				}
+			}
+
+			throw new Error(
+				exposeDetail && detail
+					? `API Error: ${response.status} ${detail}`
+					: `API Error: ${response.status} ${response.statusText}`
+			);
 		}
 
 		return await response.json();
@@ -72,7 +151,7 @@ async function apiCall<T>(endpoint: string, options?: RequestInit): Promise<T> {
  * 캐릭터 목록 조회
  */
 export async function getCharacters(): Promise<Character[]> {
-	const data = await apiCall<CharacterResponse[]>('/api/v1/characters');
+	const data = await apiCall<CharacterResponse[]>('/characters');
 	
 	return data.map((char) => ({
 		id: char.id.toString(),
@@ -91,7 +170,7 @@ export async function getCharacters(): Promise<Character[]> {
  */
 export async function getCharacterById(id: string): Promise<Character | null> {
 	try {
-		const data = await apiCall<CharacterResponse>(`/api/v1/characters/${id}`);
+		const data = await apiCall<CharacterResponse>(`/characters/${id}`);
 		
 		return {
 			id: data.id.toString(),
@@ -114,7 +193,7 @@ export async function getCharacterById(id: string): Promise<Character | null> {
  */
 export async function getSettlementsByCharacterId(characterId: string): Promise<SettlementItem[]> {
 	const data = await apiCall<SettlementResponse[]>(
-		`/api/v1/characters/${characterId}/settlements`
+		`/characters/${characterId}/settlements`
 	);
 	
 	return data.map((settlement) => ({
@@ -132,7 +211,7 @@ export async function getSettlementsByCharacterId(characterId: string): Promise<
  */
 export async function getSettlementById(id: string): Promise<SettlementItem | null> {
 	try {
-		const data = await apiCall<SettlementResponse>(`/api/v1/settlements/${id}`);
+		const data = await apiCall<SettlementResponse>(`/settlements/${id}`);
 		
 		return {
 			id: data.id.toString(),
@@ -153,7 +232,7 @@ export async function getSettlementById(id: string): Promise<SettlementItem | nu
  */
 export async function getComments(page: number = 1, limit: number = 20): Promise<TalkComment[]> {
 	const data = await apiCall<CommentResponse[]>(
-		`/api/v1/comments?page=${page}&limit=${limit}`
+		`/comments?page=${page}&limit=${limit}`
 	);
 	
 	return data.map((comment) => ({
@@ -174,8 +253,13 @@ export async function getComments(page: number = 1, limit: number = 20): Promise
 /**
  * 댓글 작성
  */
-export async function createComment(content: string, accessToken: string): Promise<CommentResponse> {
-	return await apiCall<CommentResponse>('/api/v1/comments', {
+export async function createComment(content: string): Promise<CommentResponse> {
+	const accessToken = getAccessToken();
+	if (!accessToken) {
+		throw new Error('로그인이 필요합니다.');
+	}
+
+	return await apiCall<CommentResponse>('/comments', {
 		method: 'POST',
 		headers: {
 			Authorization: `Bearer ${accessToken}`
@@ -188,5 +272,5 @@ export async function createComment(content: string, accessToken: string): Promi
  * 시스템 공지사항 조회
  */
 export async function getNotices(): Promise<Record<string, any>> {
-	return await apiCall<Record<string, any>>('/api/v1/system/notices');
+	return await apiCall<Record<string, any>>('/system/notices');
 }
