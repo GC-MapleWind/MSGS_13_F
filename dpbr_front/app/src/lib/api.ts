@@ -104,22 +104,26 @@ interface CommentResponse {
 	is_anonymous?: boolean;
 }
 
-const ANON_COMMENT_SECRET_KEY = 'anon_comment_secret_map';
+const ANON_OWNED_COMMENT_IDS_KEY = 'anon_owned_comment_ids';
 
-function readAnonSecretMap(): Record<string, string> {
+function readAnonOwnedCommentIds(): Record<string, true> {
 	if (typeof window === 'undefined') return {};
 	try {
-		const raw = localStorage.getItem(ANON_COMMENT_SECRET_KEY);
+		const raw = localStorage.getItem(ANON_OWNED_COMMENT_IDS_KEY);
 		if (!raw) return {};
-		return JSON.parse(raw) as Record<string, string>;
+		const ids = JSON.parse(raw) as string[];
+		return ids.reduce<Record<string, true>>((acc, id) => {
+			acc[id] = true;
+			return acc;
+		}, {});
 	} catch {
 		return {};
 	}
 }
 
-function writeAnonSecretMap(data: Record<string, string>) {
+function writeAnonOwnedCommentIds(data: Record<string, true>) {
 	if (typeof window === 'undefined') return;
-	localStorage.setItem(ANON_COMMENT_SECRET_KEY, JSON.stringify(data));
+	localStorage.setItem(ANON_OWNED_COMMENT_IDS_KEY, JSON.stringify(Object.keys(data)));
 }
 
 /**
@@ -256,14 +260,14 @@ export async function getSettlementById(id: string): Promise<SettlementItem | nu
  */
 export async function getComments(page: number = 1, limit: number = 20): Promise<TalkComment[]> {
 	const accessToken = getAccessToken();
-	const anonSecrets = readAnonSecretMap();
+	const anonOwnedIds = readAnonOwnedCommentIds();
 	const data = await apiCall<CommentResponse[]>(`/comments?page=${page}&limit=${limit}`, {
 		headers: accessToken ? { Authorization: `Bearer ${accessToken}` } : undefined
 	});
 
 	return data.map((comment) => {
 		const id = comment.id.toString();
-		const isAnonymousMine = Boolean(comment.user_id === null && anonSecrets[id]);
+		const isAnonymousMine = Boolean(comment.user_id === null && anonOwnedIds[id]);
 		return {
 			id,
 			author: comment.author,
@@ -287,24 +291,20 @@ export async function getComments(page: number = 1, limit: number = 20): Promise
  */
 export async function createComment(content: string, nickname?: string): Promise<CommentResponse> {
 	const accessToken = getAccessToken();
-	const anonymousPassword = !accessToken
-		? crypto.randomUUID().replace(/-/g, '').slice(0, 12)
-		: undefined;
 
 	const created = await apiCall<CommentResponse>('/comments', {
 		method: 'POST',
 		headers: accessToken ? { Authorization: `Bearer ${accessToken}` } : undefined,
 		body: JSON.stringify({
 			content,
-			nickname: accessToken ? undefined : nickname?.trim() || undefined,
-			password: anonymousPassword
+			nickname: accessToken ? undefined : nickname?.trim() || undefined
 		})
 	});
 
-	if (!accessToken && anonymousPassword) {
-		const map = readAnonSecretMap();
-		map[created.id.toString()] = anonymousPassword;
-		writeAnonSecretMap(map);
+	if (!accessToken) {
+		const ownedIds = readAnonOwnedCommentIds();
+		ownedIds[created.id.toString()] = true;
+		writeAnonOwnedCommentIds(ownedIds);
 	}
 
 	return created;
@@ -312,18 +312,17 @@ export async function createComment(content: string, nickname?: string): Promise
 
 export async function deleteComment(commentId: string): Promise<void> {
 	const accessToken = getAccessToken();
-	const anonSecrets = readAnonSecretMap();
-	const anonymousPassword = anonSecrets[commentId];
 
 	await apiCall<void>(`/comments/${commentId}`, {
 		method: 'DELETE',
 		headers: accessToken ? { Authorization: `Bearer ${accessToken}` } : undefined,
-		body: JSON.stringify(accessToken ? {} : { password: anonymousPassword })
+		body: JSON.stringify({})
 	});
 
-	if (!accessToken && anonymousPassword) {
-		delete anonSecrets[commentId];
-		writeAnonSecretMap(anonSecrets);
+	if (!accessToken) {
+		const ownedIds = readAnonOwnedCommentIds();
+		delete ownedIds[commentId];
+		writeAnonOwnedCommentIds(ownedIds);
 	}
 }
 
