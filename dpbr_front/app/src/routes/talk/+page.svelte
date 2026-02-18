@@ -1,7 +1,6 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
 	import { goto } from '$app/navigation';
-	import { get } from 'svelte/store';
 	import { ChevronLeft, Send } from 'lucide-svelte';
 	import CommentItem from '$lib/components/CommentItem.svelte';
 	import { getComments, createComment, deleteComment } from '$lib/api';
@@ -42,8 +41,7 @@
 		const text = inputText.trim();
 		if (!text || submitting) return;
 
-		const authState = get(authStore);
-		const isAuthenticated = authState.isAuthenticated;
+		const isAuthenticated = $authStore.isAuthenticated;
 		const nickname = guestNickname.trim();
 
 		if (!isAuthenticated && nickname) {
@@ -164,7 +162,7 @@
 
 	<!-- Input Area -->
 	<div class="bg-white px-6 py-2 border-t border-border space-y-2">
-		{#if !get(authStore).isAuthenticated}
+		{#if !$authStore.isAuthenticated}
 			<input
 				type="text"
 				bind:value={guestNickname}
