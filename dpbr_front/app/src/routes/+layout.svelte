@@ -42,10 +42,12 @@
 		}
 
 		navigationInFlight = true;
-		queueMicrotask(() => {
-			void goto(path).finally(() => {
+		queueMicrotask(async () => {
+			try {
+				await goto(path);
+			} finally {
 				navigationInFlight = false;
-			});
+			}
 		});
 	}
 

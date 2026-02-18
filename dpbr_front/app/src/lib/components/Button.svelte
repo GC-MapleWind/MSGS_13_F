@@ -45,8 +45,7 @@
 		{variant === 'primary' ? 'bg-white text-text-primary' : 'bg-primary text-white'}
 		{buttonState === 'disabled'
 		? 'opacity-50 cursor-not-allowed'
-		: 'cursor-pointer'}
-		{isPressed || buttonState === 'focused' ? 'bg-black/4' : ''} {className}"
+		: 'cursor-pointer'} {className}"
 	aria-label={label}
 >
 	<span class="relative z-10">{label}</span>

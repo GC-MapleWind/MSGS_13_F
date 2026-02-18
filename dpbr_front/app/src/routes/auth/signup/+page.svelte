@@ -57,9 +57,6 @@
 			const { registerToken } = get(authStore);
 
 			if (!registerToken) {
-				console.error(
-					"registerToken이 없습니다. 로그인 과정을 다시 진행해주세요.",
-				);
 				showToastMessage(
 					"회원가입 토큰이 유효하지 않습니다. 다시 로그인해주세요.",
 				); // 메시지 표시
@@ -83,7 +80,6 @@
 				throw new Error(response.message || "회원가입에 실패했습니다.");
 			}
 		} catch (error) {
-			console.error("회원가입 실패:", error);
 			showToastMessage(
 				"회원가입에 실패했습니다: " +
 					(error instanceof Error ? error.message : String(error)),

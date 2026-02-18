@@ -74,6 +74,7 @@
 		bind:this={inputEl}
 		{type}
 		{placeholder}
+		maxlength={maxLength}
 		value={internalValue}
 		oninput={handleInput}
 		onfocus={onFocus}
@@ -81,7 +82,6 @@
 		onkeydown={onKeyDown}
 		class="w-full px-4 py-3 rounded-lg bg-primary text-white placeholder-white/70 outline-none transition-all
 			{inputState === 'focused' ? 'ring-2 ring-white/50' : ''} {className}"
-		style="max-length: {maxLength || 'none'};"
 		aria-label={placeholder}
 	/>
 	{#if showClearButton && internalValue.length > 0}
