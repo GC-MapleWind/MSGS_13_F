@@ -102,28 +102,29 @@ interface CommentResponse {
 	created_at: string;
 	is_mine?: boolean;
 	is_anonymous?: boolean;
+	delete_token?: string | null;
 }
 
-const ANON_OWNED_COMMENT_IDS_KEY = 'anon_owned_comment_ids';
+const ANON_COMMENT_TOKENS_KEY = 'anon_comment_delete_tokens';
 
-function readAnonOwnedCommentIds(): Record<string, true> {
+function readAnonCommentTokens(): Record<string, string> {
 	if (typeof window === 'undefined') return {};
 	try {
-		const raw = localStorage.getItem(ANON_OWNED_COMMENT_IDS_KEY);
+		const raw = localStorage.getItem(ANON_COMMENT_TOKENS_KEY);
 		if (!raw) return {};
-		const ids = JSON.parse(raw) as string[];
-		return ids.reduce<Record<string, true>>((acc, id) => {
-			acc[id] = true;
-			return acc;
-		}, {});
+		const parsed = JSON.parse(raw) as Record<string, string>;
+		if (!parsed || typeof parsed !== 'object') return {};
+		return Object.fromEntries(
+			Object.entries(parsed).filter(([, token]) => typeof token === 'string' && token.length > 0)
+		);
 	} catch {
 		return {};
 	}
 }
 
-function writeAnonOwnedCommentIds(data: Record<string, true>) {
+function writeAnonCommentTokens(data: Record<string, string>) {
 	if (typeof window === 'undefined') return;
-	localStorage.setItem(ANON_OWNED_COMMENT_IDS_KEY, JSON.stringify(Object.keys(data)));
+	localStorage.setItem(ANON_COMMENT_TOKENS_KEY, JSON.stringify(data));
 }
 
 /**
@@ -260,14 +261,14 @@ export async function getSettlementById(id: string): Promise<SettlementItem | nu
  */
 export async function getComments(page: number = 1, limit: number = 20): Promise<TalkComment[]> {
 	const accessToken = getAccessToken();
-	const anonOwnedIds = readAnonOwnedCommentIds();
+	const anonCommentTokens = readAnonCommentTokens();
 	const data = await apiCall<CommentResponse[]>(`/comments?page=${page}&limit=${limit}`, {
 		headers: accessToken ? { Authorization: `Bearer ${accessToken}` } : undefined
 	});
 
 	return data.map((comment) => {
 		const id = comment.id.toString();
-		const isAnonymousMine = Boolean(comment.user_id === null && anonOwnedIds[id]);
+		const isAnonymousMine = Boolean(comment.user_id === null && anonCommentTokens[id]);
 		return {
 			id,
 			author: comment.author,
@@ -298,10 +299,10 @@ export async function createComment(content: string): Promise<CommentResponse> {
 		body: JSON.stringify({ content })
 	});
 
-	if (!accessToken) {
-		const ownedIds = readAnonOwnedCommentIds();
-		ownedIds[created.id.toString()] = true;
-		writeAnonOwnedCommentIds(ownedIds);
+	if (!accessToken && created.delete_token) {
+		const anonTokens = readAnonCommentTokens();
+		anonTokens[created.id.toString()] = created.delete_token;
+		writeAnonCommentTokens(anonTokens);
 	}
 
 	return created;
@@ -309,17 +310,18 @@ export async function createComment(content: string): Promise<CommentResponse> {
 
 export async function deleteComment(commentId: string): Promise<void> {
 	const accessToken = getAccessToken();
+	const anonTokens = !accessToken ? readAnonCommentTokens() : {};
+	const deleteToken = anonTokens[commentId];
 
 	await apiCall<void>(`/comments/${commentId}`, {
 		method: 'DELETE',
 		headers: accessToken ? { Authorization: `Bearer ${accessToken}` } : undefined,
-		body: JSON.stringify({})
+		body: JSON.stringify(accessToken ? {} : { password: deleteToken ?? '' })
 	});
 
 	if (!accessToken) {
-		const ownedIds = readAnonOwnedCommentIds();
-		delete ownedIds[commentId];
-		writeAnonOwnedCommentIds(ownedIds);
+		delete anonTokens[commentId];
+		writeAnonCommentTokens(anonTokens);
 	}
 }
 

@@ -225,7 +225,7 @@
 					class="flex-1 rounded-xl bg-red-500 px-3 py-2 text-sm text-white disabled:opacity-60"
 					disabled={deleting}
 				>
-					{deleting ? '삭제 중...' : '삭제'}
+					삭제
 				</button>
 			</div>
 		</div>
