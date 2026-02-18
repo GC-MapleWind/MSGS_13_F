@@ -31,10 +31,33 @@ function buildApiUrl(endpoint: string): string {
 	return `${getApiBaseUrl()}${getApiPrefix()}${normalizedEndpoint}`;
 }
 
+function isExpiredJwt(token: string): boolean {
+	try {
+		const payload = token.split('.')[1];
+		if (!payload) return false;
+		const normalized = payload.replace(/-/g, '+').replace(/_/g, '/');
+		const padded = normalized.padEnd(Math.ceil(normalized.length / 4) * 4, '=');
+		const json = atob(padded);
+		const decoded = JSON.parse(json) as { exp?: number };
+
+		return typeof decoded.exp === 'number' && decoded.exp * 1000 < Date.now();
+	} catch {
+		return false;
+	}
+}
+
 function getAccessToken(): string | null {
 	if (typeof window === 'undefined') return null;
 	try {
-		return localStorage.getItem('auth_token');
+		const token = localStorage.getItem('auth_token');
+		if (!token) return null;
+
+		if (isExpiredJwt(token)) {
+			localStorage.removeItem('auth_token');
+			return null;
+		}
+
+		return token;
 	} catch {
 		return null;
 	}
@@ -86,7 +109,19 @@ async function apiCall<T>(endpoint: string, options?: RequestInit): Promise<T> {
 		});
 
 		if (!response.ok) {
-			throw new Error(`API Error: ${response.status} ${response.statusText}`);
+			let detail = '';
+			try {
+				const errorData = await response.json();
+				detail = errorData?.detail || errorData?.message || '';
+			} catch {
+				// ignore parse errors and fallback to status text
+			}
+
+			throw new Error(
+				detail
+					? `API Error: ${response.status} ${detail}`
+					: `API Error: ${response.status} ${response.statusText}`
+			);
 		}
 
 		return await response.json();
