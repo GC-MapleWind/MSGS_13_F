@@ -310,16 +310,16 @@ export async function createComment(content: string): Promise<CommentResponse> {
 
 export async function deleteComment(commentId: string): Promise<void> {
 	const accessToken = getAccessToken();
-	const anonTokens = !accessToken ? readAnonCommentTokens() : {};
+	const anonTokens = readAnonCommentTokens();
 	const deleteToken = anonTokens[commentId];
 
 	await apiCall<void>(`/comments/${commentId}`, {
 		method: 'DELETE',
 		headers: accessToken ? { Authorization: `Bearer ${accessToken}` } : undefined,
-		body: JSON.stringify(accessToken ? {} : { password: deleteToken ?? '' })
+		body: JSON.stringify(deleteToken ? { password: deleteToken } : {})
 	});
 
-	if (!accessToken) {
+	if (deleteToken) {
 		delete anonTokens[commentId];
 		writeAnonCommentTokens(anonTokens);
 	}
