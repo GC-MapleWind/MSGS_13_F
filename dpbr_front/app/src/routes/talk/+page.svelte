@@ -16,6 +16,7 @@
 	let deleting = $state(false);
 	let error = $state<string | null>(null);
 	let deleteTarget = $state<TalkComment | null>(null);
+	const canSubmit = $derived(Boolean(inputText.trim()) && !submitting);
 
 	onMount(async () => {
 		try {
@@ -179,6 +180,7 @@
 			<input
 				type="text"
 				bind:value={guestNickname}
+				onblur={() => (guestNickname = guestNickname.trim())}
 				maxlength="10"
 				placeholder="비로그인 닉네임 (선택, 비워두면 랜덤 닉네임)"
 				class="w-full rounded-xl border border-border px-3 py-2 text-sm outline-none"
@@ -201,8 +203,8 @@
 			</div>
 			<button
 				onclick={submitComment}
-				disabled={submitting}
-				class="w-10 h-10 flex items-center justify-center rounded-full shrink-0 text-primary-dark hover:bg-bg-light transition-colors disabled:opacity-50"
+				disabled={!canSubmit}
+				class="w-10 h-10 flex items-center justify-center rounded-full shrink-0 text-primary-dark hover:bg-bg-light transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
 				aria-label="댓글 보내기"
 			>
 				{#if submitting}
