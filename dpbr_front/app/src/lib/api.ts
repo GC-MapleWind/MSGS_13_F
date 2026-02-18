@@ -100,6 +100,7 @@ interface CommentResponse {
 	author: string;
 	content: string;
 	created_at: string;
+	is_mine?: boolean;
 }
 
 /**
@@ -138,6 +139,10 @@ async function apiCall<T>(endpoint: string, options?: RequestInit): Promise<T> {
 					? `API Error: ${response.status} ${detail}`
 					: `API Error: ${response.status} ${response.statusText}`
 			);
+		}
+
+		if (response.status === 204) {
+			return undefined as T;
 		}
 
 		return await response.json();
@@ -231,9 +236,10 @@ export async function getSettlementById(id: string): Promise<SettlementItem | nu
  * 댓글 목록 조회
  */
 export async function getComments(page: number = 1, limit: number = 20): Promise<TalkComment[]> {
-	const data = await apiCall<CommentResponse[]>(
-		`/comments?page=${page}&limit=${limit}`
-	);
+	const accessToken = getAccessToken();
+	const data = await apiCall<CommentResponse[]>(`/comments?page=${page}&limit=${limit}`, {
+		headers: accessToken ? { Authorization: `Bearer ${accessToken}` } : undefined
+	});
 	
 	return data.map((comment) => ({
 		id: comment.id.toString(),
@@ -246,25 +252,39 @@ export async function getComments(page: number = 1, limit: number = 20): Promise
 			day: '2-digit',
 			hour: '2-digit',
 			minute: '2-digit'
-		})
+		}),
+		userId: comment.user_id,
+		isMine: comment.is_mine ?? false
 	}));
 }
 
 /**
  * 댓글 작성
  */
-export async function createComment(content: string): Promise<CommentResponse> {
+export async function createComment(content: string, nickname?: string): Promise<CommentResponse> {
+	const accessToken = getAccessToken();
+
+	return await apiCall<CommentResponse>('/comments', {
+		method: 'POST',
+		headers: accessToken ? { Authorization: `Bearer ${accessToken}` } : undefined,
+		body: JSON.stringify({
+			content,
+			nickname: accessToken ? undefined : nickname
+		})
+	});
+}
+
+export async function deleteComment(commentId: string): Promise<void> {
 	const accessToken = getAccessToken();
 	if (!accessToken) {
 		throw new Error('로그인이 필요합니다.');
 	}
 
-	return await apiCall<CommentResponse>('/comments', {
-		method: 'POST',
+	await apiCall<void>(`/comments/${commentId}`, {
+		method: 'DELETE',
 		headers: {
 			Authorization: `Bearer ${accessToken}`
-		},
-		body: JSON.stringify({ content })
+		}
 	});
 }
 

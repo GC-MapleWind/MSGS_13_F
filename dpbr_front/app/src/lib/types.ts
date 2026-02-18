@@ -24,6 +24,8 @@ export interface TalkComment {
 	authorAvatar: string;
 	content: string;
 	createdAt: string;
+	userId: number | null;
+	isMine: boolean;
 }
 
 export interface User {
