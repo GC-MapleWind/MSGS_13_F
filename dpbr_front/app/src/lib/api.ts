@@ -31,6 +31,15 @@ function buildApiUrl(endpoint: string): string {
 	return `${getApiBaseUrl()}${getApiPrefix()}${normalizedEndpoint}`;
 }
 
+function normalizeApiErrorDetail(detail: unknown): string {
+	if (typeof detail !== 'string') return '';
+
+	const collapsed = detail.replace(/\s+/g, ' ').trim();
+	if (!collapsed) return '';
+
+	return collapsed.slice(0, 200);
+}
+
 function isExpiredJwt(token: string): boolean {
 	try {
 		const payload = token.split('.')[1];
@@ -110,15 +119,22 @@ async function apiCall<T>(endpoint: string, options?: RequestInit): Promise<T> {
 
 		if (!response.ok) {
 			let detail = '';
+			const contentType = response.headers.get('content-type') ?? '';
+			const exposeDetail = response.status >= 400 && response.status < 500;
+
 			try {
-				const errorData = await response.json();
-				detail = errorData?.detail || errorData?.message || '';
-			} catch {
-				// ignore parse errors and fallback to status text
+				if (contentType.includes('application/json')) {
+					const errorData = await response.json();
+					detail = normalizeApiErrorDetail(errorData?.detail ?? errorData?.message);
+				}
+			} catch (error) {
+				if (import.meta.env.DEV) {
+					console.warn('Failed to parse API error detail:', error);
+				}
 			}
 
 			throw new Error(
-				detail
+				exposeDetail && detail
 					? `API Error: ${response.status} ${detail}`
 					: `API Error: ${response.status} ${response.statusText}`
 			);
