@@ -4,9 +4,11 @@ on:
   push:
     branches:
       - main
+      - dev
   pull_request:
     branches:
       - main
+      - dev
   workflow_dispatch:
 
 env:
@@ -137,3 +139,97 @@ jobs:
         if: failure()
         run: |
           echo "❌ Docker deployment failed!"
+
+  deploy-dev:
+    name: Build Docker & Deploy (Dev)
+    runs-on: ubuntu-latest
+    if: (github.event_name == 'push' && github.ref == 'refs/heads/dev') || (github.event_name == 'pull_request' && github.base_ref == 'dev')
+    environment: dev
+    concurrency:
+      group: dev-frontend-deploy
+      cancel-in-progress: false
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup SSH Key
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/deploy_key
+          chmod 600 ~/.ssh/deploy_key
+          ssh-keyscan -H ${{ secrets.SERVER_HOST }} >> ~/.ssh/known_hosts
+
+      - name: Transfer source code to dev server
+        env:
+          SERVER_HOST: ${{ secrets.SERVER_HOST }}
+          SERVER_USER: ${{ secrets.SERVER_USER }}
+        run: |
+          echo "📦 Transferring source code to dev server..."
+          ssh -i ~/.ssh/deploy_key "${SERVER_USER}@${SERVER_HOST}" "mkdir -p ~/dpbr_deploy_dev"
+
+          scp -i ~/.ssh/deploy_key -r dpbr_front "${SERVER_USER}@${SERVER_HOST}:~/dpbr_deploy_dev/"
+
+          echo "✅ Source code transferred"
+
+      - name: Build and Deploy on Dev Server
+        env:
+          SERVER_HOST: ${{ secrets.SERVER_HOST }}
+          SERVER_USER: ${{ secrets.SERVER_USER }}
+        run: |
+          echo "🚀 Building and deploying on dev server..."
+          ssh -i ~/.ssh/deploy_key "${SERVER_USER}@${SERVER_HOST}" bash -s << 'ENDSSH'
+            set -e
+            cd ~/dpbr_deploy_dev/dpbr_front
+
+            echo "🛑 Stopping existing dev container..."
+            docker stop dpbr-frontend-dev || true
+            docker rm dpbr-frontend-dev || true
+
+            echo "🔨 Building dev Docker image..."
+            docker build -t dpbr-frontend:dev .
+
+            echo "🧹 Cleaning old images..."
+            docker image prune -f
+
+            echo "🚀 Starting new dev container..."
+            docker run -d \
+              --name dpbr-frontend-dev \
+              --restart unless-stopped \
+              -p 127.0.0.1:3001:80 \
+              dpbr-frontend:dev
+
+            echo "✅ Dev deployment completed!"
+          ENDSSH
+
+      - name: Health Check (Dev)
+        env:
+          SERVER_HOST: ${{ secrets.SERVER_HOST }}
+          SERVER_USER: ${{ secrets.SERVER_USER }}
+        run: |
+          echo "🏥 Running dev health check..."
+          ssh -i ~/.ssh/deploy_key "${SERVER_USER}@${SERVER_HOST}" bash -s << 'ENDSSH'
+            for i in 1 2 3 4 5 6; do
+              sleep 5
+              if curl -sf --connect-timeout 5 "http://127.0.0.1:3001/" > /dev/null; then
+                echo "✅ Dev health check passed!"
+                exit 0
+              fi
+              echo "  Attempt $i: waiting for dev frontend..."
+            done
+            echo "⚠️ Dev frontend health check failed (port 3001 not responding)"
+            docker ps -a --filter name=dpbr-frontend-dev
+            docker logs dpbr-frontend-dev --tail 30 || true
+            exit 1
+          ENDSSH
+
+      - name: Notify Success
+        if: success()
+        run: |
+          echo "🎉 Dev Docker deployment successful!"
+          echo "Image: dpbr-frontend:dev (built on server)"
+
+      - name: Notify Failure
+        if: failure()
+        run: |
+          echo "❌ Dev Docker deployment failed!"
