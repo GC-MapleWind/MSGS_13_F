@@ -102,6 +102,19 @@
 		deleteTarget = null;
 	}
 
+	function handleDeleteModalBackdropClick(event: MouseEvent) {
+		if (event.target === event.currentTarget) {
+			closeDeleteModal();
+		}
+	}
+
+	function handleDeleteModalKeydown(event: KeyboardEvent) {
+		if (event.key === 'Escape') {
+			event.preventDefault();
+			closeDeleteModal();
+		}
+	}
+
 	async function confirmDelete() {
 		if (!deleteTarget || deleting) return;
 
@@ -203,7 +216,14 @@
 </div>
 
 {#if deleteTarget}
-	<div class="fixed inset-0 z-50 flex items-center justify-center bg-black/40" role="dialog" aria-modal="true">
+	<div
+		class="fixed inset-0 z-50 flex items-center justify-center bg-black/40"
+		role="dialog"
+		aria-modal="true"
+		tabindex="-1"
+		onclick={handleDeleteModalBackdropClick}
+		onkeydown={handleDeleteModalKeydown}
+	>
 		<div class="w-[280px] rounded-2xl bg-white p-5">
 			<p class="mb-5 text-center text-base text-text-primary">삭제하시겠습니까?</p>
 			<div class="flex gap-2">
