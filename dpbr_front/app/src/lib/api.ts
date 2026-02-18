@@ -101,6 +101,25 @@ interface CommentResponse {
 	content: string;
 	created_at: string;
 	is_mine?: boolean;
+	is_anonymous?: boolean;
+}
+
+const ANON_COMMENT_SECRET_KEY = 'anon_comment_secret_map';
+
+function readAnonSecretMap(): Record<string, string> {
+	if (typeof window === 'undefined') return {};
+	try {
+		const raw = localStorage.getItem(ANON_COMMENT_SECRET_KEY);
+		if (!raw) return {};
+		return JSON.parse(raw) as Record<string, string>;
+	} catch {
+		return {};
+	}
+}
+
+function writeAnonSecretMap(data: Record<string, string>) {
+	if (typeof window === 'undefined') return;
+	localStorage.setItem(ANON_COMMENT_SECRET_KEY, JSON.stringify(data));
 }
 
 /**
@@ -237,25 +256,30 @@ export async function getSettlementById(id: string): Promise<SettlementItem | nu
  */
 export async function getComments(page: number = 1, limit: number = 20): Promise<TalkComment[]> {
 	const accessToken = getAccessToken();
+	const anonSecrets = readAnonSecretMap();
 	const data = await apiCall<CommentResponse[]>(`/comments?page=${page}&limit=${limit}`, {
 		headers: accessToken ? { Authorization: `Bearer ${accessToken}` } : undefined
 	});
-	
-	return data.map((comment) => ({
-		id: comment.id.toString(),
-		author: comment.author,
-		authorAvatar: '/default-avatar.png',
-		content: comment.content,
-		createdAt: new Date(comment.created_at).toLocaleString('ko-KR', {
-			year: '2-digit',
-			month: '2-digit',
-			day: '2-digit',
-			hour: '2-digit',
-			minute: '2-digit'
-		}),
-		userId: comment.user_id,
-		isMine: comment.is_mine ?? false
-	}));
+
+	return data.map((comment) => {
+		const id = comment.id.toString();
+		const isAnonymousMine = Boolean(comment.user_id === null && anonSecrets[id]);
+		return {
+			id,
+			author: comment.author,
+			authorAvatar: '/default-avatar.png',
+			content: comment.content,
+			createdAt: new Date(comment.created_at).toLocaleString('ko-KR', {
+				year: '2-digit',
+				month: '2-digit',
+				day: '2-digit',
+				hour: '2-digit',
+				minute: '2-digit'
+			}),
+			userId: comment.user_id,
+			isMine: (comment.is_mine ?? false) || isAnonymousMine
+		};
+	});
 }
 
 /**
@@ -263,29 +287,44 @@ export async function getComments(page: number = 1, limit: number = 20): Promise
  */
 export async function createComment(content: string, nickname?: string): Promise<CommentResponse> {
 	const accessToken = getAccessToken();
+	const anonymousPassword = !accessToken
+		? crypto.randomUUID().replace(/-/g, '').slice(0, 12)
+		: undefined;
 
-	return await apiCall<CommentResponse>('/comments', {
+	const created = await apiCall<CommentResponse>('/comments', {
 		method: 'POST',
 		headers: accessToken ? { Authorization: `Bearer ${accessToken}` } : undefined,
 		body: JSON.stringify({
 			content,
-			nickname: accessToken ? undefined : nickname
+			nickname: accessToken ? undefined : nickname?.trim() || undefined,
+			password: anonymousPassword
 		})
 	});
+
+	if (!accessToken && anonymousPassword) {
+		const map = readAnonSecretMap();
+		map[created.id.toString()] = anonymousPassword;
+		writeAnonSecretMap(map);
+	}
+
+	return created;
 }
 
 export async function deleteComment(commentId: string): Promise<void> {
 	const accessToken = getAccessToken();
-	if (!accessToken) {
-		throw new Error('로그인이 필요합니다.');
-	}
+	const anonSecrets = readAnonSecretMap();
+	const anonymousPassword = anonSecrets[commentId];
 
 	await apiCall<void>(`/comments/${commentId}`, {
 		method: 'DELETE',
-		headers: {
-			Authorization: `Bearer ${accessToken}`
-		}
+		headers: accessToken ? { Authorization: `Bearer ${accessToken}` } : undefined,
+		body: JSON.stringify(accessToken ? {} : { password: anonymousPassword })
 	});
+
+	if (!accessToken && anonymousPassword) {
+		delete anonSecrets[commentId];
+		writeAnonSecretMap(anonSecrets);
+	}
 }
 
 /**

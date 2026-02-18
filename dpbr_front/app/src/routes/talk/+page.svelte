@@ -46,11 +46,7 @@
 		const isAuthenticated = authState.isAuthenticated;
 		const nickname = guestNickname.trim();
 
-		if (!isAuthenticated) {
-			if (!nickname) {
-				alert('비로그인 작성 시 닉네임을 입력해 주세요.');
-				return;
-			}
+		if (!isAuthenticated && nickname) {
 			if (nickname.length < 2 || nickname.length > 10 || !/^[a-zA-Z0-9가-힣]+$/.test(nickname)) {
 				alert('닉네임은 2~10자, 한글/영문/숫자만 가능합니다.');
 				return;
@@ -74,7 +70,7 @@
 					minute: '2-digit'
 				}),
 				userId: newComment.user_id,
-				isMine: newComment.is_mine ?? isAuthenticated
+				isMine: newComment.is_mine ?? true
 			};
 			
 			comments = [formattedComment, ...comments];
@@ -173,7 +169,7 @@
 				type="text"
 				bind:value={guestNickname}
 				maxlength="10"
-				placeholder="비로그인 닉네임 (2~10자)"
+				placeholder="비로그인 닉네임 (선택, 2~10자)"
 				class="w-full rounded-xl border border-border px-3 py-2 text-sm outline-none"
 			/>
 		{/if}
