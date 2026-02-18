@@ -169,9 +169,11 @@
 				type="text"
 				bind:value={guestNickname}
 				maxlength="10"
-				placeholder="비로그인 닉네임 (선택, 2~10자)"
+				placeholder="비로그인 닉네임 (선택, 비워두면 랜덤 닉네임)"
 				class="w-full rounded-xl border border-border px-3 py-2 text-sm outline-none"
 			/>
+		{:else}
+			<p class="px-1 text-xs text-text-muted">로그인 상태로 작성하면 계정 닉네임/이름으로 등록됩니다.</p>
 		{/if}
 		<div class="flex items-end gap-4">
 			<div class="flex items-end grow bg-bg-light rounded-3xl px-4 py-2">
