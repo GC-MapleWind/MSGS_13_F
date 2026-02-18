@@ -46,6 +46,11 @@
 			onLongPress?.(comment);
 		}
 	}
+
+	function handleContextMenu(event: MouseEvent) {
+		if (!comment.isMine) return;
+		event.preventDefault();
+	}
 </script>
 
 {#snippet commentBody()}
@@ -69,6 +74,7 @@
 		onpointerup={clearLongPress}
 		onpointerleave={clearLongPress}
 		onpointercancel={clearLongPress}
+		oncontextmenu={handleContextMenu}
 	>
 		{@render commentBody()}
 	</button>
