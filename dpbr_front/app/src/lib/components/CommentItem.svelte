@@ -48,18 +48,7 @@
 	}
 </script>
 
-<div
-	class="flex flex-col gap-2 px-6 pt-4 bg-white"
-	role={comment.isMine ? 'button' : 'article'}
-	tabindex={comment.isMine ? 0 : -1}
-	aria-label={comment.isMine ? '내 댓글 삭제 메뉴 열기' : '댓글'}
-	onkeydown={handleKeydown}
-	onpointerdown={startLongPress}
-	onpointermove={handlePointerMove}
-	onpointerup={clearLongPress}
-	onpointerleave={clearLongPress}
-	onpointercancel={clearLongPress}
->
+{#snippet commentBody()}
 	<div class="flex justify-between items-center">
 		<div class="flex items-center gap-2">
 			<span class="text-xs font-light text-text-primary">{comment.author}</span>
@@ -67,4 +56,24 @@
 		<span class="text-xs font-light text-text-muted">{comment.createdAt}</span>
 	</div>
 	<p class="text-sm font-light text-text-primary pb-4 border-b border-border">{comment.content}</p>
-</div>
+{/snippet}
+
+{#if comment.isMine}
+	<button
+		type="button"
+		class="flex flex-col gap-2 px-6 pt-4 bg-white text-left w-full"
+		aria-label="내 댓글 삭제 메뉴 열기"
+		onkeydown={handleKeydown}
+		onpointerdown={startLongPress}
+		onpointermove={handlePointerMove}
+		onpointerup={clearLongPress}
+		onpointerleave={clearLongPress}
+		onpointercancel={clearLongPress}
+	>
+		{@render commentBody()}
+	</button>
+{:else}
+	<article class="flex flex-col gap-2 px-6 pt-4 bg-white" aria-label="댓글">
+		{@render commentBody()}
+	</article>
+{/if}
