@@ -9,7 +9,6 @@
 
 	let comments = $state<TalkComment[]>([]);
 	let inputText = $state('');
-	let guestNickname = $state('');
 	let textareaEl: HTMLTextAreaElement | undefined = $state();
 	let loading = $state(true);
 	let submitting = $state(false);
@@ -42,19 +41,9 @@
 		const text = inputText.trim();
 		if (!text || submitting) return;
 
-		const isAuthenticated = $authStore.isAuthenticated;
-		const nickname = guestNickname.trim();
-
-		if (!isAuthenticated && nickname) {
-			if (nickname.length < 2 || nickname.length > 10 || !/^[a-zA-Z0-9가-힣]+$/.test(nickname)) {
-				alert('닉네임은 2~10자, 한글/영문/숫자만 가능합니다.');
-				return;
-			}
-		}
-
 		submitting = true;
 		try {
-			const newComment = await createComment(text, isAuthenticated ? undefined : nickname);
+			const newComment = await createComment(text);
 			
 			const formattedComment: TalkComment = {
 				id: newComment.id.toString(),
@@ -177,14 +166,7 @@
 	<!-- Input Area -->
 	<div class="bg-white px-6 py-2 border-t border-border space-y-2">
 		{#if !$authStore.isAuthenticated}
-			<input
-				type="text"
-				bind:value={guestNickname}
-				onblur={() => (guestNickname = guestNickname.trim())}
-				maxlength="10"
-				placeholder="비로그인 닉네임 (선택, 비워두면 랜덤 닉네임)"
-				class="w-full rounded-xl border border-border px-3 py-2 text-sm outline-none"
-			/>
+			<p class="px-1 text-xs text-text-muted">비로그인 댓글은 랜덤 닉네임으로 등록됩니다.</p>
 		{:else}
 			<p class="px-1 text-xs text-text-muted">로그인 상태로 작성하면 계정 닉네임/이름으로 등록됩니다.</p>
 		{/if}

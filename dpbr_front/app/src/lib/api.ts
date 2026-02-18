@@ -289,16 +289,13 @@ export async function getComments(page: number = 1, limit: number = 20): Promise
 /**
  * 댓글 작성
  */
-export async function createComment(content: string, nickname?: string): Promise<CommentResponse> {
+export async function createComment(content: string): Promise<CommentResponse> {
 	const accessToken = getAccessToken();
 
 	const created = await apiCall<CommentResponse>('/comments', {
 		method: 'POST',
 		headers: accessToken ? { Authorization: `Bearer ${accessToken}` } : undefined,
-		body: JSON.stringify({
-			content,
-			nickname: accessToken ? undefined : nickname?.trim() || undefined
-		})
+		body: JSON.stringify({ content })
 	});
 
 	if (!accessToken) {
