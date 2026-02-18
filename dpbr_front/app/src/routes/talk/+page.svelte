@@ -15,6 +15,7 @@
 	let deleting = $state(false);
 	let error = $state<string | null>(null);
 	let deleteTarget = $state<TalkComment | null>(null);
+	const COMMENT_MAX_LENGTH = 500;
 	const canSubmit = $derived(Boolean(inputText.trim()) && !submitting);
 
 	onMount(async () => {
@@ -40,6 +41,10 @@
 	async function submitComment() {
 		const text = inputText.trim();
 		if (!text || submitting) return;
+		if (text.length > COMMENT_MAX_LENGTH) {
+			alert(`댓글은 ${COMMENT_MAX_LENGTH}자 이하로 작성해주세요.`);
+			return;
+		}
 
 		submitting = true;
 		try {
@@ -179,6 +184,7 @@
 					onkeydown={handleKeydown}
 					placeholder="댓글을 남겨 보세요."
 					rows={1}
+					maxlength={COMMENT_MAX_LENGTH}
 					class="w-full bg-transparent text-base text-text-primary placeholder-text-muted outline-none resize-none leading-6"
 					style="overflow-y: hidden;"
 				></textarea>
