@@ -106,25 +106,82 @@ interface CommentResponse {
 }
 
 const ANON_COMMENT_TOKENS_KEY = 'anon_comment_delete_tokens';
+const ANON_COMMENT_TOKEN_TTL_MS = 1000 * 60 * 60 * 24 * 7; // 7 days
 
-function readAnonCommentTokens(): Record<string, string> {
+interface StoredAnonCommentToken {
+	token: string;
+	savedAt: number;
+}
+
+function normalizeAnonCommentTokens(
+	parsed: unknown,
+	now: number = Date.now()
+): Record<string, StoredAnonCommentToken> {
+	if (!parsed || typeof parsed !== 'object') return {};
+
+	const entries = Object.entries(parsed as Record<string, unknown>)
+		.map(([commentId, value]) => {
+			if (typeof value === 'string') {
+				return [commentId, { token: value, savedAt: now }] as const;
+			}
+
+			if (!value || typeof value !== 'object') return null;
+			const token = (value as { token?: unknown }).token;
+			const savedAtRaw = (value as { savedAt?: unknown }).savedAt;
+			const savedAt =
+				typeof savedAtRaw === 'number' && Number.isFinite(savedAtRaw) ? savedAtRaw : now;
+
+			if (typeof token !== 'string' || token.length === 0) return null;
+			if (now - savedAt > ANON_COMMENT_TOKEN_TTL_MS) return null;
+
+			return [commentId, { token, savedAt }] as const;
+		})
+		.filter((entry): entry is readonly [string, StoredAnonCommentToken] => entry !== null);
+
+	return Object.fromEntries(entries);
+}
+
+function readAnonCommentTokenStore(): Record<string, StoredAnonCommentToken> {
 	if (typeof window === 'undefined') return {};
 	try {
 		const raw = localStorage.getItem(ANON_COMMENT_TOKENS_KEY);
 		if (!raw) return {};
-		const parsed = JSON.parse(raw) as Record<string, string>;
-		if (!parsed || typeof parsed !== 'object') return {};
-		return Object.fromEntries(
-			Object.entries(parsed).filter(([, token]) => typeof token === 'string' && token.length > 0)
-		);
+		return normalizeAnonCommentTokens(JSON.parse(raw));
 	} catch {
 		return {};
 	}
 }
 
-function writeAnonCommentTokens(data: Record<string, string>) {
+function readAnonCommentTokens(): Record<string, string> {
+	const normalizedStore = readAnonCommentTokenStore();
+	const raw = typeof window !== 'undefined' ? localStorage.getItem(ANON_COMMENT_TOKENS_KEY) : null;
+	if (raw) {
+		try {
+			const parsed = JSON.parse(raw);
+			const nextStore = normalizeAnonCommentTokens(parsed);
+			if (JSON.stringify(parsed) !== JSON.stringify(nextStore)) {
+				writeAnonCommentTokenStore(nextStore);
+			}
+		} catch {
+			// ignore and keep normalizedStore fallback
+		}
+	}
+	return Object.fromEntries(
+		Object.entries(normalizedStore).map(([commentId, value]) => [commentId, value.token])
+	);
+}
+
+function writeAnonCommentTokenStore(data: Record<string, StoredAnonCommentToken>) {
 	if (typeof window === 'undefined') return;
 	localStorage.setItem(ANON_COMMENT_TOKENS_KEY, JSON.stringify(data));
+}
+
+function writeAnonCommentTokens(data: Record<string, string>) {
+	const now = Date.now();
+	const normalizedStore = Object.fromEntries(
+		Object.entries(data).map(([commentId, token]) => [commentId, { token, savedAt: now }])
+	);
+	writeAnonCommentTokenStore(normalizedStore);
 }
 
 /**
