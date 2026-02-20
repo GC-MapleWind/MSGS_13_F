@@ -17,11 +17,22 @@
 	let isLoading = $state(false);
 	let studentIdInputRef: HTMLDivElement | undefined = $state();
 
-	// 저장된 이름이 있으면 자동 입력
+	// 저장된 이름이 있으면 자동 입력 및 체크박스 활성화
 	onMount(() => {
 		const savedName = getSavedName();
 		if (savedName) {
-			name = savedName;
+			// 직접 수정을 대비해 최대 3글자까지만 수용
+			name = savedName.slice(0, 3);
+			saveName = true;
+		}
+	});
+
+	// 이름 저장 실시간 처리 ($effect: Svelte 5)
+	$effect(() => {
+		if (saveName) {
+			authStore.saveName(name);
+		} else {
+			authStore.saveName(null); // 체크 해제 시 삭제
 		}
 	});
 

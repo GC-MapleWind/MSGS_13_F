@@ -223,8 +223,8 @@ async function apiRequest<T>(
 export async function login(request: LoginRequest): Promise<ApiResponse<LoginResponse>> {
 	const form = new URLSearchParams();
 	// 백엔드 스펙: username/password (x-www-form-urlencoded)
-	// 여기서는 username을 학번, password를 학번으로 매핑합니다.
-	form.set('username', request.studentId);
+	// 여기서는 username을 이름, password를 학번으로 매핑합니다.
+	form.set('username', request.name);
 	form.set('password', request.studentId);
 
 	const response = await apiRequest<TokenBackendResponse>('/users/login', {
