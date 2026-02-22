@@ -140,23 +140,6 @@ export async function login(name: string, studentId: string, saveNameFlag = fals
 	update((state) => ({ ...state, isLoading: true }));
 
 	try {
-		// TODO(임시 로그인): PUSH 전 반드시 삭제!!!
-		if (studentId === '000000000') {
-			const mockUser = {
-				id: 9999,
-				name: name || '테스트유저',
-				studentId: '000000000',
-				role: 'user',
-				major: '테스트학과'
-			} as User;
-			setAuthData('test-token-123', mockUser);
-			if (saveNameFlag) {
-				saveName(mockUser.name);
-			}
-			update((state) => ({ ...state, isLoading: false }));
-			return;
-		}
-		// TODO(임시 로그인) 끝
 		const response = await api.login({
 			name,
 			studentId,
@@ -218,16 +201,6 @@ export async function checkAuth(): Promise<void> {
 		setAuthData(null, null, null); // 토큰 없으면 모든 인증 정보 초기화
 		return;
 	}
-
-	// TODO(임시 로그인): PUSH 전 반드시 삭제!!!
-	if (token === 'test-token-123') {
-		const userStr = getStorageItem(USER_STORAGE_KEY);
-		if (userStr) {
-			setAuthData(token, JSON.parse(userStr));
-			return;
-		}
-	}
-	// TODO(임시 로그인) 끝
 
 	update((state) => ({ ...state, isLoading: true }));
 
