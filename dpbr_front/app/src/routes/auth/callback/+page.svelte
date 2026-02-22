@@ -4,19 +4,10 @@
 	import { goto } from "$app/navigation";
 	import { authStore } from "$lib/stores/auth";
 	import * as api from "$lib/utils/api";
-	import Toast from "$lib/components/Toast.svelte"; // Toast 컴포넌트 임포트 추가
-
-	let showToast = $state(false);
-	let toastMessage = $state("");
+	import { toast } from "$lib/stores/toast";
 
 	function showToastMessage(message: string) {
-		toastMessage = message;
-		showToast = true;
-	}
-
-	function handleToastClose() {
-		showToast = false;
-		toastMessage = "";
+		toast.show(message);
 	}
 
 	// 백엔드로 인가 코드를 전송하는 함수
@@ -68,9 +59,6 @@
 		}
 	});
 </script>
-
-<!-- Toast 메시지 -->
-<Toast message={toastMessage} show={showToast} onClose={handleToastClose} />
 
 <h1>카카오 로그인 처리 중...</h1>
 <p>잠시만 기다려 주세요.</p>

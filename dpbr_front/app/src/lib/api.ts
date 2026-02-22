@@ -107,7 +107,7 @@ interface CommentResponse {
  */
 async function apiCall<T>(endpoint: string, options?: RequestInit): Promise<T> {
 	const url = buildApiUrl(endpoint);
-	
+
 	try {
 		const response = await fetch(url, {
 			...options,
@@ -152,7 +152,7 @@ async function apiCall<T>(endpoint: string, options?: RequestInit): Promise<T> {
  */
 export async function getCharacters(): Promise<Character[]> {
 	const data = await apiCall<CharacterResponse[]>('/characters');
-	
+
 	return data.map((char) => ({
 		id: char.id.toString(),
 		name: char.name,
@@ -171,7 +171,7 @@ export async function getCharacters(): Promise<Character[]> {
 export async function getCharacterById(id: string): Promise<Character | null> {
 	try {
 		const data = await apiCall<CharacterResponse>(`/characters/${id}`);
-		
+
 		return {
 			id: data.id.toString(),
 			name: data.name,
@@ -195,7 +195,7 @@ export async function getSettlementsByCharacterId(characterId: string): Promise<
 	const data = await apiCall<SettlementResponse[]>(
 		`/characters/${characterId}/settlements`
 	);
-	
+
 	return data.map((settlement) => ({
 		id: settlement.id.toString(),
 		characterId: settlement.character_id.toString(),
@@ -212,7 +212,7 @@ export async function getSettlementsByCharacterId(characterId: string): Promise<
 export async function getSettlementById(id: string): Promise<SettlementItem | null> {
 	try {
 		const data = await apiCall<SettlementResponse>(`/settlements/${id}`);
-		
+
 		return {
 			id: data.id.toString(),
 			characterId: data.character_id.toString(),
@@ -234,9 +234,10 @@ export async function getComments(page: number = 1, limit: number = 20): Promise
 	const data = await apiCall<CommentResponse[]>(
 		`/comments?page=${page}&limit=${limit}`
 	);
-	
+
 	return data.map((comment) => ({
 		id: comment.id.toString(),
+		userId: comment.user_id !== null ? comment.user_id.toString() : null, // 백엔드의 user_id 맵핑
 		author: comment.author,
 		authorAvatar: '/default-avatar.png',
 		content: comment.content,
@@ -266,6 +267,31 @@ export async function createComment(content: string): Promise<CommentResponse> {
 		},
 		body: JSON.stringify({ content })
 	});
+}
+
+/**
+ * 댓글 삭제 (스켈레톤 함수 - 프론트엔드 작업용)
+ */
+export async function deleteComment(id: string): Promise<void> {
+	const accessToken = getAccessToken();
+	if (!accessToken) {
+		throw new Error('로그인이 필요합니다.');
+	}
+
+	console.log(`[Skeleton API] DELETE /comments/${id}`);
+
+	// 백엔드 API 구현 시 아래 주석 해제하여 사용
+	/*
+	await apiCall(`/comments/${id}`, {
+		method: 'DELETE',
+		headers: {
+			Authorization: `Bearer ${accessToken}`
+		}
+	});
+	*/
+
+	// 가짜 딜레이
+	await new Promise(resolve => setTimeout(resolve, 300));
 }
 
 /**

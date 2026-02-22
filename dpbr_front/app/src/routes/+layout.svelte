@@ -4,6 +4,7 @@
 	import { page } from "$app/stores";
 	import { goto } from "$app/navigation";
 	import type { Snippet } from "svelte";
+	import Toast from "$lib/components/Toast.svelte";
 	import { authStore } from "$lib/stores/auth";
 	import type { AuthState } from "$lib/types";
 
@@ -92,6 +93,7 @@
 	<div
 		class="bg-white shadow-lg relative flex flex-col h-full w-full max-w-3xl overflow-hidden"
 	>
+		<Toast />
 		{@render children()}
 	</div>
 </div>

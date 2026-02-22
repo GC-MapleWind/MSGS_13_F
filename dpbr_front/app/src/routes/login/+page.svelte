@@ -4,7 +4,7 @@
 	import { env } from "$env/dynamic/public";
 	import InputBox from "$lib/components/InputBox.svelte";
 	import Button from "$lib/components/Button.svelte";
-	import Toast from "$lib/components/Toast.svelte";
+	import { toast } from "$lib/stores/toast";
 	import { authStore, getSavedName } from "$lib/stores/auth";
 
 	let name = $state("");
@@ -12,8 +12,6 @@
 	let saveName = $state(false);
 	let nameFocused = $state(false);
 	let studentIdFocused = $state(false);
-	let showToast = $state(false);
-	let toastMessage = $state("이름 또는 학번을 확인해 주세요.");
 	let isLoading = $state(false);
 	let studentIdInputRef: HTMLDivElement | undefined = $state();
 
@@ -70,7 +68,9 @@
 		const kakaoRedirectUri = env.PUBLIC_KAKAO_REDIRECT_URI;
 
 		if (!kakaoClientId || !kakaoRedirectUri) {
-			showToastMessage("카카오 로그인 설정이 누락되었습니다. 관리자에게 문의해주세요.");
+			showToastMessage(
+				"카카오 로그인 설정이 누락되었습니다. 관리자에게 문의해주세요.",
+			);
 			return;
 		}
 
@@ -79,14 +79,7 @@
 	}
 
 	function showToastMessage(message?: string) {
-		if (message) {
-			toastMessage = message;
-		}
-		showToast = true;
-	}
-
-	function handleToastClose() {
-		showToast = false;
+		toast.show(message || "이름 또는 학번을 확인해 주세요.");
 	}
 
 	function handleNameFocus() {
@@ -134,13 +127,6 @@
 <div
 	class="min-h-screen bg-gradient-to-b from-[#FCDDA5] to-[#F1A470] flex flex-col px-4 py-8"
 >
-	<!-- Toast 메시지 -->
-	<Toast
-		message={toastMessage}
-		show={showToast}
-		onClose={handleToastClose}
-	/>
-
 	<!-- 메인 컨텐츠 -->
 	<div class="flex-1 flex items-center justify-center">
 		<div class="w-full max-w-md flex flex-col items-center gap-12">
@@ -177,7 +163,9 @@
 							placeholder="학번"
 							value={studentId}
 							maxLength={9}
-							inputState={studentIdFocused ? "focused" : "default"}
+							inputState={studentIdFocused
+								? "focused"
+								: "default"}
 							showClearButton={true}
 							onInput={(value) => (studentId = value)}
 							onFocus={handleStudentIdFocus}
