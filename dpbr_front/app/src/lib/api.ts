@@ -237,7 +237,7 @@ export async function getComments(page: number = 1, limit: number = 20): Promise
 
 	return data.map((comment) => ({
 		id: comment.id.toString(),
-		userId: comment.user_id ? comment.user_id.toString() : null, // 백엔드의 user_id 맵핑
+		userId: comment.user_id !== null ? comment.user_id.toString() : null, // 백엔드의 user_id 맵핑
 		author: comment.author,
 		authorAvatar: '/default-avatar.png',
 		content: comment.content,
@@ -259,21 +259,6 @@ export async function createComment(content: string): Promise<CommentResponse> {
 	if (!accessToken) {
 		throw new Error('로그인이 필요합니다.');
 	}
-
-	// TODO(임시 로그인): PUSH 전 반드시 삭제!!!
-	if (accessToken === 'test-token-123') {
-		const userStr = localStorage.getItem('auth_user');
-		const authorName = userStr ? JSON.parse(userStr).name : '테스트유저';
-		await new Promise(resolve => setTimeout(resolve, 300));
-		return {
-			id: Date.now(),
-			user_id: 9999, // 임시 로그인 유저의 ID
-			author: authorName,
-			content: content,
-			created_at: new Date().toISOString()
-		};
-	}
-	// TODO(임시 로그인) 끝
 
 	return await apiCall<CommentResponse>('/comments', {
 		method: 'POST',

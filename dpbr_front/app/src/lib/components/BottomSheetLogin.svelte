@@ -4,7 +4,7 @@
     import { X, MessageCircle } from "lucide-svelte";
     import InputBox from "$lib/components/InputBox.svelte";
     import Button from "$lib/components/Button.svelte";
-    import Toast from "$lib/components/Toast.svelte";
+    import { toast } from "$lib/stores/toast";
     import { authStore, getSavedName } from "$lib/stores/auth";
 
     interface Props {
@@ -19,8 +19,6 @@
     let saveName = $state(false);
     let nameFocused = $state(false);
     let studentIdFocused = $state(false);
-    let showToast = $state(false);
-    let toastMessage = $state("이름 또는 학번을 확인해 주세요.");
     let isLoading = $state(false);
     let studentIdInputRef: HTMLDivElement | undefined = $state();
 
@@ -92,14 +90,7 @@
     }
 
     function showToastMessage(message?: string) {
-        if (message) {
-            toastMessage = message;
-        }
-        showToast = true;
-    }
-
-    function handleToastClose() {
-        showToast = false;
+        toast.show(message || "이름 또는 학번을 확인해 주세요.");
     }
 
     // Focus/Blur 핸들러들
@@ -145,9 +136,6 @@
         : 'opacity-0'}"
     onclick={handleClose}
 >
-    <!-- Toast 메시지 -->
-    <Toast message={toastMessage} show={showToast} onClose={handleToastClose} />
-
     <div
         class="w-full h-[72%] bg-gradient-to-b from-[#FCDDA5] to-[#F1A470] rounded-t-3xl pt-4 pb-8 px-6 flex flex-col items-center shadow-lg transition-transform duration-300 {isVisible
             ? 'translate-y-0'

@@ -7,6 +7,7 @@
 	import BottomSheetLogin from "$lib/components/BottomSheetLogin.svelte";
 	import { getComments, createComment } from "$lib/api";
 	import { authStore } from "$lib/stores/auth";
+	import { toast } from "$lib/stores/toast";
 	import type { TalkComment } from "$lib/types";
 
 	let comments = $state<TalkComment[]>([]);
@@ -75,9 +76,10 @@
 			// 새 댓글을 목록 맨 위에 추가
 			const formattedComment: TalkComment = {
 				id: newComment.id.toString(),
-				userId: newComment.user_id
-					? newComment.user_id.toString()
-					: null,
+				userId:
+					newComment.user_id !== null
+						? newComment.user_id.toString()
+						: null,
 				author: newComment.author,
 				authorAvatar: "/default-avatar.png",
 				content: newComment.content,
@@ -111,7 +113,7 @@
 				return;
 			}
 
-			alert(message);
+			toast.show(message);
 		} finally {
 			submitting = false;
 		}

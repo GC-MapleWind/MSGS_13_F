@@ -3,6 +3,7 @@
 	import { authStore } from "$lib/stores/auth";
 	import { deleteComment } from "$lib/api";
 	import ConfirmPopup from "$lib/components/ConfirmPopup.svelte";
+	import { toast } from "$lib/stores/toast";
 
 	interface Props {
 		comment: TalkComment;
@@ -32,7 +33,7 @@
 		} catch (e) {
 			const message =
 				e instanceof Error ? e.message : "삭제에 실패했습니다.";
-			alert(message);
+			toast.show(message);
 		} finally {
 			isDeleting = false;
 		}
