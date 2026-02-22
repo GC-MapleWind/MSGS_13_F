@@ -1,12 +1,14 @@
 <script lang="ts">
-	import { page } from '$app/stores';
-	import Header from '$lib/components/Header.svelte';
-	import { getSettlementById } from '$lib/api';
-	import { handleImageError } from '$lib/utils/image';
-	import type { SettlementItem } from '$lib/types';
+	import { page } from "$app/stores";
+	import Header from "$lib/components/Header.svelte";
+	import { getSettlementById, getCharacterById } from "$lib/api";
+	import { handleImageError } from "$lib/utils/image";
+	import type { SettlementItem, Character } from "$lib/types";
 
-	const msgId = $derived($page.params.id ?? '');
+	const msgId = $derived($page.params.id ?? "");
 	let settlement = $state<SettlementItem | null>(null);
+	let character = $state<Character | null>(null);
+	let isAdminTeam = $derived(character?.name === "단풍바람 운영팀");
 	let loading = $state(true);
 	let error = $state<string | null>(null);
 
@@ -17,15 +19,18 @@
 
 	async function loadData() {
 		if (!msgId) return;
-		
+
 		loading = true;
 		error = null;
-		
+
 		try {
 			settlement = await getSettlementById(msgId);
+			if (settlement) {
+				character = await getCharacterById(settlement.characterId);
+			}
 		} catch (e) {
-			console.error('Failed to load settlement:', e);
-			error = '데이터를 불러오는데 실패했습니다.';
+			console.error("Failed to load data:", e);
+			error = "데이터를 불러오는데 실패했습니다.";
 		} finally {
 			loading = false;
 		}
@@ -42,7 +47,7 @@
 </script>
 
 <svelte:head>
-	<title>{settlement?.title ?? '결산 상세'} - 단풍바람</title>
+	<title>{settlement?.title ?? "결산 상세"} - 단풍바람</title>
 </svelte:head>
 
 <div class="flex flex-col h-full">
@@ -58,30 +63,43 @@
 		</div>
 	{:else if settlement}
 		<div class="flex-1 flex flex-col bg-white overflow-y-auto">
-		<!-- Main Image -->
-		<div class="flex justify-center items-center bg-white px-6 py-4">
-			<img
-				src={settlement.imageUrl}
-				alt={settlement.title}
-				onerror={handleImageError}
-				class="w-full max-h-80 object-cover rounded-lg"
-			/>
-		</div>
-
-		<!-- Info -->
-		<div class="flex flex-col gap-4 px-6 pt-4">
-			<div class="flex gap-4">
-				<span class="text-sm font-light text-text-muted shrink-0">획득 일자</span>
-				<span class="text-base text-text-primary">{formatDate(settlement.acquiredAt)}</span>
+			<!-- Main Image -->
+			<div class="flex justify-center items-center bg-white px-6 py-4">
+				<img
+					src={settlement.imageUrl ||
+						(isAdminTeam ? "/logo.png" : "")}
+					alt={settlement.title}
+					onerror={handleImageError}
+					class={isAdminTeam && !settlement.imageUrl
+						? "w-1/2 object-contain rounded-lg"
+						: "w-full max-h-80 object-cover rounded-lg"}
+				/>
 			</div>
-		</div>
 
-		<div class="flex flex-col gap-4 px-6 pt-4 pb-6">
-			<div class="flex gap-4">
-				<span class="text-sm font-light text-text-muted shrink-0">상세 내용</span>
-				<span class="text-base text-text-primary leading-relaxed">{settlement.description}</span>
+			<!-- Info -->
+			<div class="flex flex-col gap-4 px-6 pt-4">
+				<div class="flex gap-4">
+					<span class="text-sm font-light text-text-muted shrink-0"
+						>{isAdminTeam ? "직책" : "획득 일자"}</span
+					>
+					<span class="text-base text-text-primary"
+						>{isAdminTeam
+							? settlement.title
+							: formatDate(settlement.acquiredAt)}</span
+					>
+				</div>
 			</div>
-		</div>
+
+			<div class="flex flex-col gap-4 px-6 pt-4 pb-6">
+				<div class="flex gap-4">
+					<span class="text-sm font-light text-text-muted shrink-0"
+						>상세 내용</span
+					>
+					<span class="text-base text-text-primary leading-relaxed"
+						>{settlement.description}</span
+					>
+				</div>
+			</div>
 		</div>
 	{:else}
 		<div class="flex-1 flex items-center justify-center">
