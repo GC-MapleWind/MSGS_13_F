@@ -7,9 +7,10 @@
 	interface Props {
 		open: boolean;
 		onClose: () => void;
+		adminTeamId?: string | null;
 	}
 
-	let { open, onClose }: Props = $props();
+	let { open, onClose, adminTeamId = null }: Props = $props();
 
 	let authState = $state<AuthState>({ isAuthenticated: false, user: null, isLoading: false });
 	authStore.subscribe((state) => {
@@ -64,13 +65,15 @@
 				>
 					메생결산 소식
 				</a>
-				<a
-					href="/"
-					class="flex items-center px-6 py-3 text-base text-text-primary hover:bg-bg-light transition-colors"
-					onclick={onClose}
-				>
-					운영팀 한마디
-				</a>
+				{#if adminTeamId}
+					<a
+						href="/member/{adminTeamId}"
+						class="flex items-center px-6 py-3 text-base text-text-primary hover:bg-bg-light transition-colors"
+						onclick={onClose}
+					>
+						운영팀 한마디
+					</a>
+				{/if}
 			</nav>
 		</div>
 	</div>
