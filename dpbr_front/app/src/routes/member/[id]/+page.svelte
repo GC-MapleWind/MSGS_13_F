@@ -4,7 +4,7 @@
 	import { goto } from "$app/navigation";
 	import Header from "$lib/components/Header.svelte";
 	import SettlementListItem from "$lib/components/SettlementListItem.svelte";
-	import { getCharacterById, getSettlementsByCharacterId } from "$lib/api";
+	import { getCharacterById, getSettlementsByCharacterId, getTeamMembers } from "$lib/api";
 	import { handleImageError } from "$lib/utils/image";
 	import type { Character, SettlementItem } from "$lib/types";
 
@@ -27,12 +27,14 @@
 		error = null;
 
 		try {
-			const [charData, settlementsData] = await Promise.all([
-				getCharacterById(characterId),
-				getSettlementsByCharacterId(characterId),
-			]);
+			const charData = await getCharacterById(characterId);
 			character = charData;
-			settlements = settlementsData;
+
+			if (charData?.name === "단풍바람 운영팀") {
+				settlements = await getTeamMembers();
+			} else {
+				settlements = await getSettlementsByCharacterId(characterId);
+			}
 		} catch (e) {
 			console.error("Failed to load character data:", e);
 			error = "데이터를 불러오는데 실패했습니다.";
@@ -126,11 +128,11 @@
 				<div class="flex flex-col bg-white">
 					{#if settlements.length > 0}
 						{#each settlements as item (item.id)}
-							<SettlementListItem {item} />
+							<SettlementListItem {item} {isAdminTeam} />
 						{/each}
 					{:else}
 						<div class="flex items-center justify-center py-8">
-							<p class="text-text-muted">메생결산이 없습니다.</p>
+							<p class="text-text-muted">{isAdminTeam ? "운영팀 정보가 없습니다." : "메생결산이 없습니다."}</p>
 						</div>
 					{/if}
 				</div>

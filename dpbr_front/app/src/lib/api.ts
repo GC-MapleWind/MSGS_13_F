@@ -102,6 +102,22 @@ interface CommentResponse {
 	created_at: string;
 }
 
+interface TeamMemberResponse {
+	id: number;
+	name: string;
+	role: string;
+	profile_img_url: string | null;
+}
+
+interface TeamMemberDetailResponse extends TeamMemberResponse {
+	message: {
+		id: number;
+		title: string;
+		content: string;
+		detail_img_url: string | null;
+	} | null;
+}
+
 /**
  * API 호출 유틸리티
  */
@@ -292,6 +308,44 @@ export async function deleteComment(id: string): Promise<void> {
 
 	// 가짜 딜레이
 	await new Promise(resolve => setTimeout(resolve, 300));
+}
+
+/**
+ * 운영팀 멤버 목록 조회 (SettlementItem 형태로 매핑)
+ * id는 'team-{memberId}' 형태로 반환하여 일반 결산과 구분합니다.
+ */
+export async function getTeamMembers(): Promise<SettlementItem[]> {
+	const data = await apiCall<TeamMemberResponse[]>('/system/team');
+
+	return data.map((member) => ({
+		id: `team-${member.id}`,
+		characterId: '',
+		title: `${member.name} ${member.role}`,
+		description: '',
+		imageUrl: member.profile_img_url || '',
+		acquiredAt: ''
+	}));
+}
+
+/**
+ * 운영팀 멤버 상세(한마디) 조회 (SettlementItem 형태로 매핑)
+ */
+export async function getTeamMemberDetail(memberId: number): Promise<SettlementItem | null> {
+	try {
+		const data = await apiCall<TeamMemberDetailResponse>(`/system/team/${memberId}`);
+
+		return {
+			id: `team-${data.id}`,
+			characterId: '',
+			title: `${data.name} ${data.role}`,
+			description: data.message?.content || '',
+			imageUrl: data.message?.detail_img_url || data.profile_img_url || '',
+			acquiredAt: ''
+		};
+	} catch (error) {
+		console.error('Failed to fetch team member detail:', error);
+		return null;
+	}
 }
 
 /**
