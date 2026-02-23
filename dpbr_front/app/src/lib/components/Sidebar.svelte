@@ -1,20 +1,28 @@
 <script lang="ts">
+	import { onMount } from 'svelte';
 	import { fade } from 'svelte/transition';
 	import { goto } from '$app/navigation';
 	import { authStore } from '$lib/stores/auth';
+	import { getAdminCharacter } from '$lib/api';
 	import type { AuthState } from '$lib/types';
 
 	interface Props {
 		open: boolean;
 		onClose: () => void;
-		adminTeamId?: string | null;
 	}
 
-	let { open, onClose, adminTeamId = null }: Props = $props();
+	let { open, onClose }: Props = $props();
 
 	let authState = $state<AuthState>({ isAuthenticated: false, user: null, isLoading: false });
+	let adminTeamId = $state<string | null>(null);
+
 	authStore.subscribe((state) => {
 		authState = state;
+	});
+
+	onMount(async () => {
+		const result = await getAdminCharacter();
+		adminTeamId = result.id !== null ? result.id.toString() : null;
 	});
 
 	async function handleLogout() {

@@ -8,16 +8,12 @@
 
 	let sidebarOpen = $state(false);
 	let characters = $state<Character[]>([]);
-	let adminTeamId = $state<string | null>(null);
 	let loading = $state(true);
 	let error = $state<string | null>(null);
 
 	onMount(async () => {
 		try {
-			const all = await getCharacters();
-			const adminTeam = all.find((c) => c.name === "단풍바람 운영팀");
-			adminTeamId = adminTeam?.id ?? null;
-			characters = all.filter((c) => c.name !== "단풍바람 운영팀");
+			characters = await getCharacters();
 		} catch (e) {
 			console.error("Failed to load characters:", e);
 			error = "캐릭터 목록을 불러오는데 실패했습니다.";
@@ -32,7 +28,7 @@
 </svelte:head>
 
 <div class="flex flex-col h-full bg-gradient-to-b from-[#FCDDA5] to-[#F1A470]">
-	<Sidebar open={sidebarOpen} onClose={() => (sidebarOpen = false)} {adminTeamId} />
+	<Sidebar open={sidebarOpen} onClose={() => (sidebarOpen = false)} />
 
 	<Header variant="main" onMenuClick={() => (sidebarOpen = true)} />
 

@@ -349,6 +349,17 @@ export async function getTeamMemberDetail(memberId: number): Promise<SettlementI
 }
 
 /**
+ * 사이드바용: 운영팀 캐릭터 ID 조회
+ */
+export async function getAdminCharacter(): Promise<{ id: number | null; name?: string }> {
+	try {
+		return await apiCall<{ id: number | null; name?: string }>('/system/admin-character');
+	} catch {
+		return { id: null };
+	}
+}
+
+/**
  * 시스템 공지사항 조회
  */
 export async function getNotices(): Promise<Record<string, any>> {
