@@ -368,3 +368,37 @@ export async function signup(request: SignupRequest): Promise<ApiResponse<Signup
 		status: response.status
 	};
 }
+
+export async function submitNewApplication(payload: Record<string, unknown>): Promise<ApiResponse<unknown>> {
+	return apiRequest('/applications/new', {
+		method: 'POST',
+		body: JSON.stringify(payload)
+	});
+}
+
+export async function submitRenewApplication(payload: Record<string, unknown>): Promise<ApiResponse<unknown>> {
+	return apiRequest('/applications/renew', {
+		method: 'POST',
+		body: JSON.stringify(payload)
+	});
+}
+
+export async function getMyApplication(): Promise<ApiResponse<unknown>> {
+	return apiRequest('/applications/me', {
+		method: 'GET'
+	});
+}
+
+export async function getDepartments(query?: string): Promise<ApiResponse<string[]>> {
+	const q = query?.trim();
+	const endpoint = q ? `/meta/departments?query=${encodeURIComponent(q)}` : '/meta/departments';
+	return apiRequest<string[]>(endpoint, { method: 'GET' });
+}
+
+export async function getJobs(): Promise<ApiResponse<string[]>> {
+	return apiRequest<string[]>('/meta/jobs', { method: 'GET' });
+}
+
+export async function getWorlds(): Promise<ApiResponse<string[]>> {
+	return apiRequest<string[]>('/meta/worlds', { method: 'GET' });
+}

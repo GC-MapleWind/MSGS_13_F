@@ -65,11 +65,18 @@
 					메생결산 소식
 				</a>
 				<a
-					href="/"
+					href="/apply"
 					class="flex items-center px-6 py-3 text-base text-text-primary hover:bg-bg-light transition-colors"
 					onclick={onClose}
 				>
-					운영팀 한마디
+					신입/재등록 신청
+				</a>
+				<a
+					href="/my/application"
+					class="flex items-center px-6 py-3 text-base text-text-primary hover:bg-bg-light transition-colors"
+					onclick={onClose}
+				>
+					내 신청 내역
 				</a>
 			</nav>
 		</div>
