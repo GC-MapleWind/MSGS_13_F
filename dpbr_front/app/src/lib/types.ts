@@ -20,6 +20,7 @@ export interface SettlementItem {
 
 export interface TalkComment {
 	id: string;
+	userId: string | null;  // 작성자의 고유 ID (비회원 등 null일 수 있음)
 	author: string;
 	authorAvatar: string;
 	content: string;
@@ -27,6 +28,7 @@ export interface TalkComment {
 }
 
 export interface User {
+	id: number;           // 백엔드 회원 고유 번호
 	name: string;
 	studentId: string;
 }

@@ -102,12 +102,28 @@ interface CommentResponse {
 	created_at: string;
 }
 
+interface TeamMemberResponse {
+	id: number;
+	name: string;
+	role: string;
+	profile_img_url: string | null;
+}
+
+interface TeamMemberDetailResponse extends TeamMemberResponse {
+	message: {
+		id: number;
+		title: string;
+		content: string;
+		detail_img_url: string | null;
+	} | null;
+}
+
 /**
  * API 호출 유틸리티
  */
 async function apiCall<T>(endpoint: string, options?: RequestInit): Promise<T> {
 	const url = buildApiUrl(endpoint);
-	
+
 	try {
 		const response = await fetch(url, {
 			...options,
@@ -152,7 +168,7 @@ async function apiCall<T>(endpoint: string, options?: RequestInit): Promise<T> {
  */
 export async function getCharacters(): Promise<Character[]> {
 	const data = await apiCall<CharacterResponse[]>('/characters');
-	
+
 	return data.map((char) => ({
 		id: char.id.toString(),
 		name: char.name,
@@ -171,7 +187,7 @@ export async function getCharacters(): Promise<Character[]> {
 export async function getCharacterById(id: string): Promise<Character | null> {
 	try {
 		const data = await apiCall<CharacterResponse>(`/characters/${id}`);
-		
+
 		return {
 			id: data.id.toString(),
 			name: data.name,
@@ -195,7 +211,7 @@ export async function getSettlementsByCharacterId(characterId: string): Promise<
 	const data = await apiCall<SettlementResponse[]>(
 		`/characters/${characterId}/settlements`
 	);
-	
+
 	return data.map((settlement) => ({
 		id: settlement.id.toString(),
 		characterId: settlement.character_id.toString(),
@@ -212,7 +228,7 @@ export async function getSettlementsByCharacterId(characterId: string): Promise<
 export async function getSettlementById(id: string): Promise<SettlementItem | null> {
 	try {
 		const data = await apiCall<SettlementResponse>(`/settlements/${id}`);
-		
+
 		return {
 			id: data.id.toString(),
 			characterId: data.character_id.toString(),
@@ -234,9 +250,10 @@ export async function getComments(page: number = 1, limit: number = 20): Promise
 	const data = await apiCall<CommentResponse[]>(
 		`/comments?page=${page}&limit=${limit}`
 	);
-	
+
 	return data.map((comment) => ({
 		id: comment.id.toString(),
+		userId: comment.user_id !== null ? comment.user_id.toString() : null, // 백엔드의 user_id 맵핑
 		author: comment.author,
 		authorAvatar: '/default-avatar.png',
 		content: comment.content,
@@ -266,6 +283,80 @@ export async function createComment(content: string): Promise<CommentResponse> {
 		},
 		body: JSON.stringify({ content })
 	});
+}
+
+/**
+ * 댓글 삭제 (스켈레톤 함수 - 프론트엔드 작업용)
+ */
+export async function deleteComment(id: string): Promise<void> {
+	const accessToken = getAccessToken();
+	if (!accessToken) {
+		throw new Error('로그인이 필요합니다.');
+	}
+
+	console.log(`[Skeleton API] DELETE /comments/${id}`);
+
+	// 백엔드 API 구현 시 아래 주석 해제하여 사용
+	/*
+	await apiCall(`/comments/${id}`, {
+		method: 'DELETE',
+		headers: {
+			Authorization: `Bearer ${accessToken}`
+		}
+	});
+	*/
+
+	// 가짜 딜레이
+	await new Promise(resolve => setTimeout(resolve, 300));
+}
+
+/**
+ * 운영팀 멤버 목록 조회 (SettlementItem 형태로 매핑)
+ * id는 'team-{memberId}' 형태로 반환하여 일반 결산과 구분합니다.
+ */
+export async function getTeamMembers(): Promise<SettlementItem[]> {
+	const data = await apiCall<TeamMemberResponse[]>('/system/team');
+
+	return data.map((member) => ({
+		id: `team-${member.id}`,
+		characterId: '',
+		title: `${member.name} ${member.role}`,
+		description: '',
+		imageUrl: member.profile_img_url || '',
+		acquiredAt: ''
+	}));
+}
+
+/**
+ * 운영팀 멤버 상세(한마디) 조회 (SettlementItem 형태로 매핑)
+ */
+export async function getTeamMemberDetail(memberId: number): Promise<SettlementItem | null> {
+	try {
+		const data = await apiCall<TeamMemberDetailResponse>(`/system/team/${memberId}`);
+
+		return {
+			id: `team-${data.id}`,
+			characterId: '',
+			title: `${data.name} ${data.role}`,
+			description: data.message?.content || '',
+			imageUrl: data.message?.detail_img_url || data.profile_img_url || '',
+			acquiredAt: ''
+		};
+	} catch (error) {
+		console.error('Failed to fetch team member detail:', error);
+		return null;
+	}
+}
+
+/**
+ * 사이드바용: 운영팀 캐릭터 ID 조회
+ */
+export async function getAdminCharacter(): Promise<{ id: number | null; name?: string }> {
+	try {
+		return await apiCall<{ id: number | null; name?: string }>('/system/admin-character');
+	} catch {
+		return { id: null };
+	}
 }
 
 /**

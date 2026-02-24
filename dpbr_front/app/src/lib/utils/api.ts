@@ -48,6 +48,7 @@ export interface KakaoLoginRequest {
 export interface LoginResponse {
 	token: string;
 	user: {
+		id: number;
 		name: string;
 		studentId: string;
 	};
@@ -59,6 +60,7 @@ export interface KakaoLoginNeedSignupResponse {
 
 export interface VerifyResponse {
 	user: {
+		id: number;
 		name: string;
 		studentId: string;
 	};
@@ -80,6 +82,7 @@ export interface SignupRequest {
 export interface SignupResponse {
 	token: string;
 	user: {
+		id: number;
 		name: string;
 		studentId: string;
 		nickname: string;
@@ -130,12 +133,16 @@ function toUserFromToken(
 	token: string,
 	fallbackName: string,
 	fallbackStudentId: string
-): { name: string; studentId: string } {
+): { id: number; name: string; studentId: string } {
 	const payload = decodeJwtPayload(token);
 	if (!payload) {
-		return { name: fallbackName, studentId: fallbackStudentId };
+		return { id: 0, name: fallbackName, studentId: fallbackStudentId };
 	}
 
+	const id =
+		(typeof payload.id === 'number' && payload.id) ||
+		(typeof payload.sub === 'string' && parseInt(payload.sub, 10)) ||
+		0;
 	const name =
 		(typeof payload.name === 'string' && payload.name) ||
 		(typeof payload.nickname === 'string' && payload.nickname) ||
@@ -146,7 +153,7 @@ function toUserFromToken(
 		(typeof payload.studentId === 'string' && payload.studentId) ||
 		fallbackStudentId;
 
-	return { name, studentId };
+	return { id, name, studentId };
 }
 
 /**
@@ -327,6 +334,7 @@ export async function verifyAuth(): Promise<ApiResponse<VerifyResponse>> {
 		success: true,
 		data: {
 			user: {
+				id: response.data.id || 0,
 				name: response.data.name,
 				studentId: response.data.student_id || response.data.username
 			}

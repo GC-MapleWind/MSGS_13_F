@@ -5,22 +5,14 @@
 	import { authStore } from "$lib/stores/auth";
 	import * as api from "$lib/utils/api";
 	import { get } from "svelte/store";
-	import Toast from "$lib/components/Toast.svelte"; // Toast 컴포넌트 임포트 추가
+	import { toast } from "$lib/stores/toast";
 
 	let studentId = $state("");
 	let nickname = $state("");
 	let isLoading = $state(false);
-	let showToast = $state(false);
-	let toastMessage = $state("");
 
 	function showToastMessage(message: string) {
-		toastMessage = message;
-		showToast = true;
-	}
-
-	function handleToastClose() {
-		showToast = false;
-		toastMessage = "";
+		toast.show(message);
 	}
 
 	async function handleSignup() {
@@ -93,9 +85,6 @@
 <div
 	class="min-h-screen bg-bg-app flex flex-col items-center justify-center px-4 py-8"
 >
-	<!-- Toast 메시지 -->
-	<Toast message={toastMessage} show={showToast} onClose={handleToastClose} />
-
 	<div class="w-full max-w-md flex flex-col items-center gap-8">
 		<h1 class="text-4xl font-bold text-white">회원가입</h1>
 

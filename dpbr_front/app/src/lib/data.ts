@@ -233,6 +233,7 @@ export const settlementItems: SettlementItem[] = [
 export const talkComments: TalkComment[] = [
 	{
 		id: 'talk-1',
+		userId: '101',
 		author: '단풍사랑',
 		authorAvatar: 'https://placehold.co/40x40/FFE0B2/ff8e42?text=DS',
 		content: '안녕하세요! 단풍바람 13기 메생결산 축하합니다!',
@@ -240,6 +241,7 @@ export const talkComments: TalkComment[] = [
 	},
 	{
 		id: 'talk-2',
+		userId: '102',
 		author: '메이플러버',
 		authorAvatar: 'https://placehold.co/40x40/E8F5E9/4CAF50?text=ML',
 		content: '모두 수고하셨습니다~ 다음 기수도 화이팅!',
@@ -247,6 +249,7 @@ export const talkComments: TalkComment[] = [
 	},
 	{
 		id: 'talk-3',
+		userId: '103',
 		author: '바람의나라',
 		authorAvatar: 'https://placehold.co/40x40/E3F2FD/2196F3?text=BN',
 		content: '메생결산 정말 잘 만들었네요. 디자인이 너무 예뻐요!',
@@ -254,6 +257,7 @@ export const talkComments: TalkComment[] = [
 	},
 	{
 		id: 'talk-4',
+		userId: '104',
 		author: '길드장최고',
 		authorAvatar: 'https://placehold.co/40x40/F3E5F5/9C27B0?text=GJ',
 		content:
@@ -262,6 +266,7 @@ export const talkComments: TalkComment[] = [
 	},
 	{
 		id: 'talk-5',
+		userId: '105',
 		author: '초보모험가',
 		authorAvatar: 'https://placehold.co/40x40/FFF9C4/FFC107?text=CB',
 		content: '저도 다음에 메생결산 받고 싶어요!',
@@ -269,6 +274,7 @@ export const talkComments: TalkComment[] = [
 	},
 	{
 		id: 'talk-6',
+		userId: '106',
 		author: '어둠의기사',
 		authorAvatar: 'https://placehold.co/40x40/FFCCBC/FF5722?text=DK',
 		content: '멋진 결산이네요 ㅎㅎ',
@@ -276,6 +282,7 @@ export const talkComments: TalkComment[] = [
 	},
 	{
 		id: 'talk-7',
+		userId: '107',
 		author: '별빛수호자',
 		authorAvatar: 'https://placehold.co/40x40/FCE4EC/E91E63?text=BS',
 		content: '와 진짜 대단하다... 부럽!',
@@ -283,6 +290,7 @@ export const talkComments: TalkComment[] = [
 	},
 	{
 		id: 'talk-8',
+		userId: '108',
 		author: '나무늘보',
 		authorAvatar: 'https://placehold.co/40x40/E0F2F1/009688?text=NB',
 		content: '다음 기수에는 저도 꼭 참여할게요!',

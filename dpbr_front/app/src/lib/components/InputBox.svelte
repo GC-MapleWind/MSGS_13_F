@@ -32,17 +32,6 @@
 	}: Props = $props();
 
 	let inputEl: HTMLInputElement | undefined = $state();
-	let internalValue = $state(valueProp);
-
-	// 외부 value prop 변경 시 내부 값 동기화
-	$effect(() => {
-		if (valueProp !== internalValue && inputEl?.value !== valueProp) {
-			internalValue = valueProp;
-			if (inputEl) {
-				inputEl.value = valueProp;
-			}
-		}
-	});
 
 	function handleInput(e: Event) {
 		const target = e.target as HTMLInputElement;
@@ -56,15 +45,14 @@
 			}
 		}
 
-		internalValue = newValue;
 		onInput(newValue);
 	}
 
 	function handleClear() {
 		if (inputEl) {
 			inputEl.value = "";
-			onInput("");
 		}
+		onInput("");
 		onClear?.();
 	}
 </script>
@@ -75,7 +63,7 @@
 		{type}
 		{placeholder}
 		maxlength={maxLength}
-		value={internalValue}
+		value={valueProp}
 		oninput={handleInput}
 		onfocus={onFocus}
 		onblur={onBlur}
@@ -84,7 +72,7 @@
 			{inputState === 'focused' ? 'ring-2 ring-white/50' : ''} {className}"
 		aria-label={placeholder}
 	/>
-	{#if showClearButton && internalValue.length > 0}
+	{#if showClearButton && valueProp.length > 0}
 		<button
 			type="button"
 			onclick={handleClear}

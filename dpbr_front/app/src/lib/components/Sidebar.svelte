@@ -1,7 +1,9 @@
 <script lang="ts">
+	import { onMount } from 'svelte';
 	import { fade } from 'svelte/transition';
 	import { goto } from '$app/navigation';
 	import { authStore } from '$lib/stores/auth';
+	import { getAdminCharacter } from '$lib/api';
 	import type { AuthState } from '$lib/types';
 
 	interface Props {
@@ -12,8 +14,15 @@
 	let { open, onClose }: Props = $props();
 
 	let authState = $state<AuthState>({ isAuthenticated: false, user: null, isLoading: false });
+	let adminTeamId = $state<string | null>(null);
+
 	authStore.subscribe((state) => {
 		authState = state;
+	});
+
+	onMount(async () => {
+		const result = await getAdminCharacter();
+		adminTeamId = result.id !== null ? result.id.toString() : null;
 	});
 
 	async function handleLogout() {
@@ -64,13 +73,15 @@
 				>
 					메생결산 소식
 				</a>
-				<a
-					href="/"
-					class="flex items-center px-6 py-3 text-base text-text-primary hover:bg-bg-light transition-colors"
-					onclick={onClose}
-				>
-					운영팀 한마디
-				</a>
+				{#if adminTeamId}
+					<a
+						href="/member/{adminTeamId}"
+						class="flex items-center px-6 py-3 text-base text-text-primary hover:bg-bg-light transition-colors"
+						onclick={onClose}
+					>
+						운영팀 한마디
+					</a>
+				{/if}
 			</nav>
 		</div>
 	</div>
