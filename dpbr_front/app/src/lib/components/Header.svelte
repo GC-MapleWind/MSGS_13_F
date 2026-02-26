@@ -40,18 +40,20 @@
 	</header>
 {:else if variant === "detail"}
 	<header
-		class="flex items-center gap-2 bg-white px-3 py-2 sticky top-0 z-30 border-b border-border"
+		class="relative flex items-center bg-white px-2 py-3 sticky top-0 z-30 border-b border-gray-100"
 	>
 		<button
 			onclick={onBackClick}
-			class="p-2 text-text-primary"
+			class="p-2 text-text-primary shrink-0 relative z-10"
 			aria-label="뒤로가기"
 		>
 			<ChevronLeft size={24} />
 		</button>
-		<div class="flex flex-col grow min-w-0">
+		<div
+			class="absolute inset-0 flex flex-col items-center justify-center pointer-events-none px-12"
+		>
 			{#if title}
-				<span class="text-base font-medium text-text-primary truncate"
+				<span class="text-[17px] font-medium text-text-primary truncate"
 					>{title}</span
 				>
 			{/if}

@@ -289,25 +289,9 @@ export async function createComment(content: string): Promise<CommentResponse> {
  * 댓글 삭제 (스켈레톤 함수 - 프론트엔드 작업용)
  */
 export async function deleteComment(id: string): Promise<void> {
-	const accessToken = getAccessToken();
-	if (!accessToken) {
-		throw new Error('로그인이 필요합니다.');
-	}
-
-	console.log(`[Skeleton API] DELETE /comments/${id}`);
-
-	// 백엔드 API 구현 시 아래 주석 해제하여 사용
-	/*
-	await apiCall(`/comments/${id}`, {
-		method: 'DELETE',
-		headers: {
-			Authorization: `Bearer ${accessToken}`
-		}
-	});
-	*/
-
-	// 가짜 딜레이
-	await new Promise(resolve => setTimeout(resolve, 300));
+	// 실제 API 연동 전 프론트엔드 작업용 (300ms 딜레이 후 성공 처리)
+	console.log(`[API Mock] Deleting comment ID: ${id}`);
+	await new Promise((resolve) => setTimeout(resolve, 300));
 }
 
 /**

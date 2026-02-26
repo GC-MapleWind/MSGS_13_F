@@ -4,7 +4,11 @@
 	import { goto } from "$app/navigation";
 	import Header from "$lib/components/Header.svelte";
 	import SettlementListItem from "$lib/components/SettlementListItem.svelte";
-	import { getCharacterById, getSettlementsByCharacterId, getTeamMembers } from "$lib/api";
+	import {
+		getCharacterById,
+		getSettlementsByCharacterId,
+		getTeamMembers,
+	} from "$lib/api";
 	import { handleImageError } from "$lib/utils/image";
 	import type { Character, SettlementItem } from "$lib/types";
 
@@ -57,18 +61,16 @@
 		<p class="text-text-muted">{error}</p>
 	</div>
 {:else if character}
-	<div class="flex flex-col h-full">
+	<div class="flex flex-col h-full bg-bg-light">
 		<Header
 			variant="detail"
-			title={isAdminTeam ? "운영팀 한마디 상세" : undefined}
+			title={isAdminTeam ? "운영팀 한마디 상세" : "메생결산 상세"}
 			onBackClick={() => goto("/")}
 		/>
 
-		<div class="flex-1 overflow-y-auto">
+		<div class="flex-1 overflow-y-auto flex flex-col gap-2 pb-8">
 			<!-- Character Info -->
-			<div
-				class="flex items-center gap-4 bg-white px-6 py-4 border-b border-border"
-			>
+			<div class="flex items-center gap-4 bg-white px-6 py-5">
 				<div
 					class="w-14 h-14 rounded-full overflow-hidden shrink-0 bg-bg-light flex items-center justify-center"
 				>
@@ -109,7 +111,7 @@
 				{#if !isAdminTeam}
 					<a
 						href="/member/{characterId}/save"
-						class="shrink-0 flex items-center justify-center h-10 px-4 rounded-2xl border border-border-dark text-sm font-light text-text-secondary"
+						class="shrink-0 flex items-center justify-center h-10 px-4 rounded-2xl border border-border-dark text-sm font-light text-text-secondary hover:bg-gray-100 focus:bg-gray-100 active:bg-gray-200 transition-none"
 					>
 						저장
 					</a>
@@ -117,26 +119,41 @@
 			</div>
 
 			<!-- Settlement List -->
-			<div class="bg-bg-light">
-				<div class="flex items-center bg-white px-6 py-4">
+			<div class="bg-white flex flex-col pb-2">
+				<div
+					class="flex items-center px-6 py-5 border-b border-bg-light"
+				>
 					<span class="text-base font-medium text-text-primary"
 						>{isAdminTeam
 							? "단풍바람 운영팀 한마디 목록"
 							: "획득한 메생결산 목록"}</span
 					>
 				</div>
-				<div class="flex flex-col bg-white">
+				<div class="flex flex-col">
 					{#if settlements.length > 0}
 						{#each settlements as item (item.id)}
 							<SettlementListItem {item} {isAdminTeam} />
 						{/each}
 					{:else}
 						<div class="flex items-center justify-center py-8">
-							<p class="text-text-muted">{isAdminTeam ? "운영팀 정보가 없습니다." : "메생결산이 없습니다."}</p>
+							<p class="text-text-muted">
+								{isAdminTeam
+									? "운영팀 정보가 없습니다."
+									: "메생결산이 없습니다."}
+							</p>
 						</div>
 					{/if}
 				</div>
 			</div>
+		</div>
+
+		<!-- Footer Logo (Fixed) -->
+		<div
+			class="flex justify-center items-center h-[calc(100dvh*64/874)] bg-white shrink-0 mt-2"
+		>
+			<span class="text-xl font-black text-[#D1D5DB] tracking-tighter"
+				>단풍바람</span
+			>
 		</div>
 	</div>
 {:else}
