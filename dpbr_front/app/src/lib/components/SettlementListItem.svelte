@@ -17,10 +17,12 @@
 
 <a
 	href="/msg/{item.id}"
-	class="flex items-center gap-4 px-6 py-4 bg-white border-b border-border hover:bg-bg-light transition-colors"
+	class="flex items-center gap-4 px-6 py-4 bg-white border-b border-bg-light hover:bg-gray-50 focus:bg-gray-50 transition-none last:border-b-0"
 >
 	<!-- Thumbnail -->
-	<div class="w-20 h-20 shrink-0 rounded-lg overflow-hidden bg-bg-light">
+	<div
+		class="w-[4.5rem] h-[4.5rem] shrink-0 rounded-2xl overflow-hidden bg-bg-light shadow-sm"
+	>
 		<img
 			src={item.imageUrl || (isAdminTeam ? "/logo.png" : "")}
 			alt={item.title}
@@ -32,9 +34,12 @@
 	</div>
 
 	<!-- Text -->
-	<div class="flex flex-col grow min-w-0 gap-1">
-		<span class="text-base text-text-primary truncate">{item.title}</span>
-		<span class="text-sm font-light text-text-muted">
+	<div class="flex flex-col grow min-w-0 gap-1.5 ml-2">
+		<span
+			class="text-[17px] leading-tight text-text-primary font-semibold truncate"
+			>{item.title}</span
+		>
+		<span class="text-[13px] font-normal text-[#9CA3AF]">
 			{isAdminTeam
 				? item.title.split(" ")[1] || item.title
 				: formatDate(item.acquiredAt)}

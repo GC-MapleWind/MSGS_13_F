@@ -124,9 +124,7 @@
 	<title>로그인 - 단풍바람</title>
 </svelte:head>
 
-<div
-	class="min-h-screen bg-gradient-to-b from-[#FCDDA5] to-[#F1A470] flex flex-col px-4 py-8"
->
+<div class="min-h-screen bg-transparent flex flex-col px-4 py-8">
 	<!-- 메인 컨텐츠 -->
 	<div class="flex-1 flex items-center justify-center">
 		<div class="w-full max-w-md flex flex-col items-center gap-12">

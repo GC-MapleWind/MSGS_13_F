@@ -88,10 +88,12 @@
 </script>
 
 <div
-	class="h-screen bg-bg-app flex justify-center items-center overflow-hidden"
+	class="h-[100dvh] w-full bg-[#FFFBF5] flex justify-center items-center overflow-hidden"
 >
 	<div
-		class="bg-white shadow-lg relative flex flex-col h-full w-full max-w-3xl overflow-hidden"
+		class="bg-[#FAFAFA] shadow-2xl relative flex flex-col h-full mx-auto overflow-hidden
+		w-full min-w-[calc(100dvh*320/874)] max-w-[calc(100dvh*768/874)]
+		md:min-w-[calc(100dvh*9/16)] md:max-w-[calc(100dvh*9/16)] md:w-[calc(100dvh*9/16)]"
 	>
 		<Toast />
 		{@render children()}

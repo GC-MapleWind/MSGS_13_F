@@ -27,7 +27,9 @@
 	<title>단풍바람 - 메생결산</title>
 </svelte:head>
 
-<div class="flex flex-col h-full bg-gradient-to-b from-[#FCDDA5] to-[#F1A470]">
+<div
+	class="flex flex-col h-full bg-[linear-gradient(to_bottom,#FAC486,#F2A372)]"
+>
 	<Sidebar open={sidebarOpen} onClose={() => (sidebarOpen = false)} />
 
 	<Header variant="main" onMenuClick={() => (sidebarOpen = true)} />
