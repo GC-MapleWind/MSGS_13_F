@@ -217,7 +217,7 @@ export async function getSettlementsByCharacterId(characterId: string): Promise<
 		characterId: settlement.character_id.toString(),
 		title: settlement.title,
 		description: settlement.description || '',
-		imageUrl: settlement.img_url || '/default-avatar.png',
+		imageUrl: settlement.img_url ? `${getApiBaseUrl()}${settlement.img_url}` : '/default-avatar.png',
 		acquiredAt: settlement.acquired_at
 	}));
 }
@@ -234,7 +234,7 @@ export async function getSettlementById(id: string): Promise<SettlementItem | nu
 			characterId: data.character_id.toString(),
 			title: data.title,
 			description: data.description || '',
-			imageUrl: data.img_url || '/default-avatar.png',
+			imageUrl: data.img_url ? `${getApiBaseUrl()}${data.img_url}` : '/default-avatar.png',
 			acquiredAt: data.acquired_at
 		};
 	} catch (error) {

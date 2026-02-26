@@ -103,7 +103,7 @@
 						>상세 내용</span
 					>
 					<span class="text-base text-text-primary leading-relaxed"
-						>{settlement.description}</span
+						>{settlement.title}</span
 					>
 				</div>
 			</div>
