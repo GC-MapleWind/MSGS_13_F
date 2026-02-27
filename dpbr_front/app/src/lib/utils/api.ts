@@ -72,14 +72,16 @@ interface VerifyBackendResponse {
 }
 
 export interface SignupRequest {
-	registerToken: string;
+	registerToken?: string;
+	name: string;
 	studentId: string;
 	nickname: string;
+	password: string;
 }
 
 export interface SignupResponse {
-	token: string;
-	user: {
+	token?: string;
+	user?: {
 		name: string;
 		studentId: string;
 		nickname: string;
@@ -96,6 +98,20 @@ interface KakaoLoginBackendResponse {
 interface TokenBackendResponse {
 	access_token: string;
 	token_type: string;
+}
+
+interface SignupBackendUserResponse {
+	name?: string;
+	username?: string;
+	student_id?: string | null;
+	studentId?: string | null;
+	nickname?: string;
+}
+
+interface SignupBackendResponse {
+	access_token?: string;
+	token?: string;
+	user?: SignupBackendUserResponse;
 }
 
 function getAuthTokenFromStorage(): string | null {
@@ -339,16 +355,18 @@ export async function verifyAuth(): Promise<ApiResponse<VerifyResponse>> {
  * 회원가입 API 호출
  */
 export async function signup(request: SignupRequest): Promise<ApiResponse<SignupResponse>> {
-	const response = await apiRequest<TokenBackendResponse>('/users/auth/kakao/register', {
+	const response = await apiRequest<SignupBackendResponse>('/users/signup', {
 		method: 'POST',
 		body: JSON.stringify({
-			register_token: request.registerToken,
+			name: request.name,
 			student_id: request.studentId,
-			nickname: request.nickname
+			nickname: request.nickname,
+			password: request.password,
+			register_token: request.registerToken ?? null
 		})
 	});
 
-	if (!response.success || !response.data) {
+	if (!response.success) {
 		return {
 			success: false,
 			message: response.message || '회원가입에 실패했습니다.',
@@ -356,13 +374,35 @@ export async function signup(request: SignupRequest): Promise<ApiResponse<Signup
 		};
 	}
 
+	const token = response.data?.access_token || response.data?.token;
+
+	if (!token && !response.data?.user) {
+		return {
+			success: true,
+			data: {},
+			status: response.status
+		};
+	}
+
+	const userFromResponse = response.data?.user;
+	const userFromToken = token ? toUserFromToken(token, request.name, request.studentId) : null;
+	const userName =
+		userFromResponse?.name || userFromResponse?.username || userFromToken?.name || request.name;
+	const userStudentId =
+		userFromResponse?.student_id ||
+		userFromResponse?.studentId ||
+		userFromToken?.studentId ||
+		request.studentId;
+	const userNickname = userFromResponse?.nickname || request.nickname;
+
 	return {
 		success: true,
 		data: {
-			token: response.data.access_token,
+			token,
 			user: {
-				...toUserFromToken(response.data.access_token, request.nickname, request.studentId),
-				nickname: request.nickname
+				name: userName,
+				studentId: userStudentId,
+				nickname: userNickname
 			}
 		},
 		status: response.status

@@ -75,11 +75,6 @@
 			return;
 		}
 
-		if (isSignupRoute && !authState.registerToken) {
-			navigateTo("/login");
-			return;
-		}
-
 		if (isLoginRoute && authState.registerToken) {
 			navigateTo("/auth/signup");
 		}

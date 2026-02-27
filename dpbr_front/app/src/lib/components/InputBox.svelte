@@ -2,7 +2,7 @@
 	import { X } from "lucide-svelte";
 
 	interface Props {
-		type?: "text" | "number" | "tel";
+		type?: "text" | "number" | "tel" | "password" | "email";
 		placeholder: string;
 		value: string;
 		maxLength?: number;
@@ -32,7 +32,7 @@
 	}: Props = $props();
 
 	let inputEl: HTMLInputElement | undefined = $state();
-	let internalValue = $state(valueProp);
+	let internalValue = $state("");
 
 	// 외부 value prop 변경 시 내부 값 동기화
 	$effect(() => {

@@ -209,6 +209,13 @@
 						type="button"
 						class="bg-[#FEE500] text-black hover:bg-[#FDD835] font-medium border-none"
 					/>
+					<button
+						type="button"
+						class="w-full mt-3 text-sm text-white/90 underline underline-offset-2"
+						onclick={() => goto("/auth/signup")}
+					>
+						일반 회원가입
+					</button>
 				</div>
 			</div>
 		</div>
