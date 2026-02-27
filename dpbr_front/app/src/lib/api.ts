@@ -178,8 +178,13 @@ function writeAnonCommentTokenStore(data: Record<string, StoredAnonCommentToken>
 
 function writeAnonCommentTokens(data: Record<string, string>) {
 	const now = Date.now();
+	const existingStore = readAnonCommentTokenStore();
 	const normalizedStore = Object.fromEntries(
-		Object.entries(data).map(([commentId, token]) => [commentId, { token, savedAt: now }])
+		Object.entries(data).map(([commentId, token]) => {
+			const existingToken = existingStore[commentId];
+			const savedAt = existingToken?.token === token ? existingToken.savedAt : now;
+			return [commentId, { token, savedAt }];
+		})
 	);
 	writeAnonCommentTokenStore(normalizedStore);
 }
