@@ -491,10 +491,9 @@ npm install
 
 #### 2. 포트 충돌 (Port already in use)
 ```bash
-# 5173 포트가 사용 중일 때
-# → Vite가 자동으로 5174로 변경함
-# 또는 수동으로 포트 지정:
-npm run dev -- --port 3000
+# predev 스크립트가 프로젝트의 기존 Vite 프로세스만 자동 정리
+# 다른 프로그램이 5173을 점유 중이면 해당 프로세스를 수동 종료
+npm run dev
 ```
 
 #### 3. WSL에서 npm 명령어 느림

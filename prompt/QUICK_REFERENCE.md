@@ -291,9 +291,9 @@ npm install
 
 ### "Port already in use"
 ```bash
-# Vite가 자동으로 다른 포트 사용 (5174, 5175...)
-# 또는 수동 지정
-npm run dev -- --port 3000
+# predev 스크립트가 프로젝트의 기존 Vite 프로세스만 자동 정리
+# 다른 프로그램이 5173을 점유 중이면 수동 종료 후 재시도
+npm run dev
 ```
 
 ### TypeScript 에러
