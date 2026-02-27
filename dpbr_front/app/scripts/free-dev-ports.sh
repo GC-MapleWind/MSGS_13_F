@@ -1,38 +1,96 @@
 #!/usr/bin/env sh
 
-# Best-effort cleanup for common local dev ports before starting Vite.
-# Intentionally never fails the npm lifecycle if no process is bound.
+# Dev startup guard:
+# - Frontend: enforce stable Vite port handling on 5173.
+# - Backend: inspect 8000 and report status, but never kill it.
 
-PORTS="5173 8000"
+FRONTEND_PORT="${FRONTEND_PORT:-5173}"
+BACKEND_PORT="${BACKEND_PORT:-8000}"
+BACKEND_HEALTH_URL="${BACKEND_HEALTH_URL:-http://127.0.0.1:${BACKEND_PORT}/health}"
 
-kill_port() {
+find_listen_pids() {
   port="$1"
-  pids=""
 
   if command -v lsof >/dev/null 2>&1; then
-    pids="$(lsof -ti tcp:"$port" -sTCP:LISTEN 2>/dev/null | tr '\n' ' ')"
+    lsof -ti tcp:"$port" -sTCP:LISTEN 2>/dev/null | tr '\n' ' '
+    return 0
   elif command -v ss >/dev/null 2>&1; then
-    pids="$(ss -ltnp 2>/dev/null | awk -v p=":$port" '$4 ~ p { if (match($0, /pid=[0-9]+/)) { print substr($0, RSTART + 4, RLENGTH - 4) } }' | tr '\n' ' ')"
+    ss -ltnp 2>/dev/null | awk -v p=":$port" '$4 ~ p { if (match($0, /pid=[0-9]+/)) { print substr($0, RSTART + 4, RLENGTH - 4) } }' | tr '\n' ' '
+    return 0
   fi
 
-  [ -n "$pids" ] || return 0
+  return 1
+}
 
-  # Try graceful stop first, then hard kill if still alive.
-  kill $pids >/dev/null 2>&1 || true
-  sleep 0.5
+get_cmd() {
+  pid="$1"
+  ps -p "$pid" -o command= 2>/dev/null
+}
 
-  alive=""
-  for pid in $pids; do
-    if kill -0 "$pid" >/dev/null 2>&1; then
-      alive="$alive $pid"
+wait_for_exit() {
+  pid="$1"
+  tries=0
+  while [ "$tries" -lt 10 ]; do
+    if ! kill -0 "$pid" >/dev/null 2>&1; then
+      return 0
+    fi
+    sleep 0.2
+    tries=$((tries + 1))
+  done
+  return 1
+}
+
+frontend_pids="$(find_listen_pids "$FRONTEND_PORT" || true)"
+if [ -n "$frontend_pids" ]; then
+  foreign_pids=""
+  vite_pids=""
+
+  for pid in $frontend_pids; do
+    cmd="$(get_cmd "$pid")"
+    if echo "$cmd" | grep -qi "vite"; then
+      vite_pids="$vite_pids $pid"
+    else
+      foreign_pids="$foreign_pids $pid"
     fi
   done
 
-  [ -n "$alive" ] && kill -9 $alive >/dev/null 2>&1 || true
-}
+  if [ -n "$foreign_pids" ]; then
+    echo "ERROR: Port $FRONTEND_PORT is already in use by non-Vite process(es):$foreign_pids" >&2
+    echo "       Stop them manually or run Vite on another port." >&2
+    exit 1
+  fi
 
-for port in $PORTS; do
-  kill_port "$port"
-done
+  if [ -n "$vite_pids" ]; then
+    echo "INFO: Releasing existing Vite process(es) on :$FRONTEND_PORT ($vite_pids)"
+    kill $vite_pids >/dev/null 2>&1 || true
+    for pid in $vite_pids; do
+      if wait_for_exit "$pid"; then
+        continue
+      fi
+      kill -9 "$pid" >/dev/null 2>&1 || true
+    done
+  fi
+fi
+
+backend_pids="$(find_listen_pids "$BACKEND_PORT" || true)"
+if [ -n "$backend_pids" ]; then
+  first_backend_pid="$(echo "$backend_pids" | awk '{print $1}')"
+  backend_cmd="$(get_cmd "$first_backend_pid")"
+
+  echo "INFO: Backend port :$BACKEND_PORT is already in use (pid $first_backend_pid)."
+  if [ -n "$backend_cmd" ]; then
+    echo "INFO: Detected process: $backend_cmd"
+  fi
+
+  if command -v curl >/dev/null 2>&1 && curl -fsS --max-time 2 "$BACKEND_HEALTH_URL" >/dev/null 2>&1; then
+    echo "INFO: Backend health check succeeded at $BACKEND_HEALTH_URL"
+  else
+    echo "WARN: Could not verify backend health at $BACKEND_HEALTH_URL"
+    echo "      If you just saw '[Errno 98] address already in use' from uvicorn, reuse existing backend or stop old PID first."
+  fi
+else
+  echo "WARN: No backend process detected on :$BACKEND_PORT"
+  echo "      Start backend before using API-backed pages."
+fi
 
 exit 0
