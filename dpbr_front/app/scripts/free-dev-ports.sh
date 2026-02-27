@@ -90,6 +90,29 @@ get_cmd() {
   ps -p "$pid" -o command= 2>/dev/null
 }
 
+is_vite_dev_cmd() {
+  cmd="$1"
+  vite_cli_pattern='(^|[[:space:]])([^[:space:]]*/)?vite(\.js)?([[:space:]]|$)'
+
+  if [ -z "$cmd" ]; then
+    return 1
+  fi
+
+  if printf '%s\n' "$cmd" | grep -Eqi '(^|[[:space:]])(npm|pnpm|yarn|bun)([[:space:]]|$)'; then
+    if printf '%s\n' "$cmd" | grep -Eqi '(^|[[:space:]])run([[:space:]]+dev)([[:space:]]|$)' &&
+      printf '%s\n' "$cmd" | grep -Eqi "$vite_cli_pattern"; then
+      return 0
+    fi
+    return 1
+  fi
+
+  if printf '%s\n' "$cmd" | grep -Eqi "$vite_cli_pattern"; then
+    return 0
+  fi
+
+  return 1
+}
+
 get_pid_cwd() {
   pid="$1"
   if [ -d "/proc/$pid" ] && command -v readlink >/dev/null 2>&1; then
@@ -146,7 +169,7 @@ if [ -n "$frontend_pids" ]; then
 
   for pid in $frontend_pids; do
     cmd="$(get_cmd "$pid")"
-    if echo "$cmd" | grep -qi "vite"; then
+    if is_vite_dev_cmd "$cmd"; then
       if is_pid_in_app_dir "$pid"; then
         vite_pids="$vite_pids $pid"
       else
@@ -192,7 +215,7 @@ if [ -n "$frontend_pids" ]; then
         fi
       done
 
-      if [ "$pid_still_on_frontend_port" -ne 1 ] || ! echo "$cmd_before_kill" | grep -qi "vite"; then
+      if [ "$pid_still_on_frontend_port" -ne 1 ] || ! is_vite_dev_cmd "$cmd_before_kill"; then
         if kill -0 "$pid" >/dev/null 2>&1; then
           echo "ERROR: Refusing to stop pid $pid because it is no longer recognized as Vite on :$FRONTEND_PORT."
           echo "       Current command: ${cmd_before_kill:-<unknown>}"
@@ -207,7 +230,7 @@ if [ -n "$frontend_pids" ]; then
       fi
 
       cmd_after_wait="$(get_cmd "$pid")"
-      if [ "$FRONTEND_FORCE_KILL" = "1" ] && [ "$FRONTEND_FORCE_KILL_CONFIRM" = "YES" ] && echo "$cmd_after_wait" | grep -qi "vite"; then
+      if [ "$FRONTEND_FORCE_KILL" = "1" ] && [ "$FRONTEND_FORCE_KILL_CONFIRM" = "YES" ] && is_vite_dev_cmd "$cmd_after_wait"; then
         echo "WARN: Graceful stop timed out for Vite pid $pid; sending SIGKILL (FRONTEND_FORCE_KILL=1 and FRONTEND_FORCE_KILL_CONFIRM=YES)."
         kill -9 "$pid" >/dev/null 2>&1 || true
         continue
