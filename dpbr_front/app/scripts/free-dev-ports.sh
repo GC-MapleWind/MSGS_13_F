@@ -63,8 +63,18 @@ if [ -n "$frontend_pids" ]; then
 
   if [ -n "$vite_pids" ]; then
     echo "INFO: Releasing existing Vite process(es) on :$FRONTEND_PORT ($vite_pids)"
-    kill $vite_pids >/dev/null 2>&1 || true
     for pid in $vite_pids; do
+      cmd_before_kill="$(get_cmd "$pid")"
+      if ! echo "$cmd_before_kill" | grep -qi "vite"; then
+        if kill -0 "$pid" >/dev/null 2>&1; then
+          echo "ERROR: Refusing to stop pid $pid because it is no longer recognized as Vite."
+          echo "       Current command: ${cmd_before_kill:-<unknown>}"
+          exit 1
+        fi
+        continue
+      fi
+
+      kill "$pid" >/dev/null 2>&1 || true
       if wait_for_exit "$pid"; then
         continue
       fi
