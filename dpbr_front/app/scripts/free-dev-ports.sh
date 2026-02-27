@@ -14,11 +14,19 @@ find_listen_pids() {
   port="$1"
 
   if command -v lsof >/dev/null 2>&1; then
-    lsof -ti tcp:"$port" -sTCP:LISTEN 2>/dev/null | tr '\n' ' '
-    return 0
-  elif command -v ss >/dev/null 2>&1; then
-    ss -ltnp 2>/dev/null | awk -v p=":$port" '$4 ~ p { if (match($0, /pid=[0-9]+/)) { print substr($0, RSTART + 4, RLENGTH - 4) } }' | tr '\n' ' '
-    return 0
+    lsof_raw="$(lsof -ti tcp:"$port" -sTCP:LISTEN 2>/dev/null)"
+    if [ "$?" -eq 0 ]; then
+      printf '%s' "$lsof_raw" | tr '\n' ' '
+      return 0
+    fi
+  fi
+
+  if command -v ss >/dev/null 2>&1; then
+    ss_raw="$(ss -ltnp 2>/dev/null | awk -v p=":$port" '$4 ~ p { if (match($0, /pid=[0-9]+/)) { print substr($0, RSTART + 4, RLENGTH - 4) } }')"
+    if [ "$?" -eq 0 ]; then
+      printf '%s' "$ss_raw" | tr '\n' ' '
+      return 0
+    fi
   fi
 
   return 1
