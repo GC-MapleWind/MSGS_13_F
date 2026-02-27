@@ -8,6 +8,7 @@ FRONTEND_PORT="${FRONTEND_PORT:-5173}"
 BACKEND_PORT="${BACKEND_PORT:-8000}"
 BACKEND_HEALTH_URL="${BACKEND_HEALTH_URL:-http://127.0.0.1:${BACKEND_PORT}/health}"
 FRONTEND_FORCE_KILL="${FRONTEND_FORCE_KILL:-0}"
+FRONTEND_FORCE_KILL_CONFIRM="${FRONTEND_FORCE_KILL_CONFIRM:-}"
 
 find_listen_pids() {
   port="$1"
@@ -30,8 +31,9 @@ get_cmd() {
 
 wait_for_exit() {
   pid="$1"
+  max_tries="${2:-10}"
   tries=0
-  while [ "$tries" -lt 10 ]; do
+  while [ "$tries" -lt "$max_tries" ]; do
     if ! kill -0 "$pid" >/dev/null 2>&1; then
       return 0
     fi
@@ -75,20 +77,20 @@ if [ -n "$frontend_pids" ]; then
       fi
 
       kill "$pid" >/dev/null 2>&1 || true
-      if wait_for_exit "$pid"; then
+      if wait_for_exit "$pid" 25; then
         continue
       fi
 
       cmd_after_wait="$(get_cmd "$pid")"
-      if [ "$FRONTEND_FORCE_KILL" = "1" ] && echo "$cmd_after_wait" | grep -qi "vite"; then
-        echo "WARN: Graceful stop timed out for Vite pid $pid; sending SIGKILL (FRONTEND_FORCE_KILL=1)."
+      if [ "$FRONTEND_FORCE_KILL" = "1" ] && [ "$FRONTEND_FORCE_KILL_CONFIRM" = "YES" ] && echo "$cmd_after_wait" | grep -qi "vite"; then
+        echo "WARN: Graceful stop timed out for Vite pid $pid; sending SIGKILL (FRONTEND_FORCE_KILL=1 and FRONTEND_FORCE_KILL_CONFIRM=YES)."
         kill -9 "$pid" >/dev/null 2>&1 || true
         continue
       fi
 
       echo "WARN: Graceful stop timed out for Vite pid $pid; leaving process running to avoid unexpected SIGKILL."
       echo "ERROR: Could not stop Vite pid $pid gracefully."
-      echo "       Stop it manually, or set FRONTEND_FORCE_KILL=1 to allow SIGKILL fallback for stuck Vite processes."
+      echo "       Stop it manually, or set FRONTEND_FORCE_KILL=1 and FRONTEND_FORCE_KILL_CONFIRM=YES to allow SIGKILL fallback."
       exit 1
     done
   fi
