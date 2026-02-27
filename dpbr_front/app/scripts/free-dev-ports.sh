@@ -3,9 +3,25 @@
 # Best-effort guard before starting Vite.
 # Safety: never SIGKILL, and only stop project-local Vite listeners.
 
-FRONTEND_PORT="5173"
-BACKEND_PORT="8000"
-BACKEND_HEALTH_URL="${BACKEND_HEALTH_URL:-http://localhost:8000/health}"
+resolve_port() {
+  value="$1"
+  default_port="$2"
+
+  case "$value" in
+    ''|*[!0-9]*) echo "$default_port" ;;
+    *)
+      if [ "$value" -gt 0 ] 2>/dev/null; then
+        echo "$value"
+      else
+        echo "$default_port"
+      fi
+      ;;
+  esac
+}
+
+FRONTEND_PORT="$(resolve_port "${FRONTEND_PORT:-}" "5173")"
+BACKEND_PORT="$(resolve_port "${BACKEND_PORT:-}" "8000")"
+BACKEND_HEALTH_URL="${BACKEND_HEALTH_URL:-http://localhost:${BACKEND_PORT}/health}"
 APP_DIR="$(CDPATH= cd -- "$(dirname -- "$0")/.." && pwd)"
 
 normalize_pids() {
