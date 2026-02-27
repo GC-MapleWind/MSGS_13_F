@@ -96,19 +96,33 @@ curl http://localhost:8000/health
 
 ### 2. 포트 충돌
 
-**증상**: `Port 5173 is already in use`
+**증상**: `Port 5173 is already in use` 또는 Vite가 자동으로 `5174`로 변경됨
 
 **해결방법**:
 ```bash
-# 실행 중인 프로세스 종료
-# Windows PowerShell
-Get-Process -Id (Get-NetTCPConnection -LocalPort 5173).OwningProcess | Stop-Process
-
-# 또는 다른 포트로 실행
-npm run dev -- --port 5174
+# 기본 실행
+npm run dev
 ```
 
-### 3. 모듈을 찾을 수 없음
+`npm run dev` 실행 시 predev 스크립트가 `5173`의 기존 Vite 프로세스를 자동 정리합니다.  
+다른 프로그램이 `5173`을 점유 중이면 안전을 위해 실패하며, 점유 프로세스를 먼저 종료해야 합니다.
+
+### 3. 백엔드 바인드 충돌
+
+**증상**: `uvicorn` 실행 시 `[Errno 98] address already in use` (`0.0.0.0:8000`)
+
+**해결방법**:
+```bash
+# 이미 실행 중인 백엔드를 재사용할 수 있으면 재사용
+curl http://127.0.0.1:8000/health
+
+# 점유 프로세스 확인 (macOS/Linux)
+lsof -iTCP:8000 -sTCP:LISTEN
+```
+
+프론트엔드의 predev 스크립트는 `8000` 포트를 종료하지 않고 상태만 안내합니다.
+
+### 4. 모듈을 찾을 수 없음
 
 **증상**: `Cannot find module` 에러
 
@@ -119,7 +133,7 @@ rm -rf node_modules package-lock.json
 npm install
 ```
 
-### 4. 환경 변수 안 됨
+### 5. 환경 변수 안 됨
 
 **증상**: API 호출이 안 됨, `PUBLIC_API_URL` 에러
 

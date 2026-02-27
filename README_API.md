@@ -148,6 +148,12 @@ export interface TalkComment {
 2. 환경 변수 확인: `.env` 파일의 `PUBLIC_API_URL`
 3. 네트워크 설정 확인: Docker 사용 시 `host.docker.internal`
 
+### 백엔드 포트 충돌 (`[Errno 98] address already in use`)
+
+1. 기존 프로세스 확인: `lsof -iTCP:8000 -sTCP:LISTEN`
+2. 정상 응답이면 기존 백엔드 재사용: `curl http://127.0.0.1:8000/health`
+3. 프론트엔드 `npm run dev`는 `:8000` 프로세스를 종료하지 않고 상태만 출력
+
 ### 개발 환경 설정
 
 **백엔드 실행**:
