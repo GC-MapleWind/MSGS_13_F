@@ -131,6 +131,42 @@ wait_for_exit() {
   return 1
 }
 
+wait_for_port_free() {
+  port="$1"
+  max_tries="${2:-15}"
+  tries=0
+  while [ "$tries" -lt "$max_tries" ]; do
+    if ! port_has_listener "$port"; then
+      return 0
+    fi
+    sleep 0.2
+    tries=$((tries + 1))
+  done
+  return 1
+}
+
+report_port_conflict() {
+  port="$1"
+  conflict_pids="$(find_listen_pids "$port" || true)"
+  conflict_pids="$(normalize_pids "$conflict_pids")"
+
+  if [ -n "$conflict_pids" ]; then
+    echo "ERROR: Port $port is still busy after graceful shutdown." >&2
+    echo "       Conflicting listener PID(s): $conflict_pids" >&2
+    for conflict_pid in $conflict_pids; do
+      conflict_cmd="$(get_cmd "$conflict_pid")"
+      if [ -n "$conflict_cmd" ]; then
+        echo "       - pid $conflict_pid: $conflict_cmd" >&2
+      fi
+    done
+    echo "       Stop the conflicting process(es), or set FRONTEND_PORT to a free port, then retry." >&2
+    return
+  fi
+
+  echo "ERROR: Port $port still appears busy after graceful shutdown, but listener PID could not be detected." >&2
+  echo "       Check active listeners manually (for example: lsof -iTCP:$port -sTCP:LISTEN) and retry." >&2
+}
+
 frontend_pids="$(find_listen_pids "$FRONTEND_PORT" || true)"
 frontend_pids="$(normalize_pids "$frontend_pids")"
 
@@ -180,6 +216,11 @@ if [ -n "$frontend_pids" ]; then
         exit 1
       fi
     done
+
+    if ! wait_for_port_free "$FRONTEND_PORT" 25; then
+      report_port_conflict "$FRONTEND_PORT"
+      exit 1
+    fi
   fi
 fi
 
