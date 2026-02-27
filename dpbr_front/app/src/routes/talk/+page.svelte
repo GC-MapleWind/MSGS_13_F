@@ -104,6 +104,7 @@
 	}
 
 	function handleDeleteModalKeydown(event: KeyboardEvent) {
+		if (!deleteTarget) return;
 		if (event.key === 'Escape') {
 			event.preventDefault();
 			closeDeleteModal();
@@ -127,6 +128,8 @@
 		}
 	}
 </script>
+
+<svelte:window onkeydown={handleDeleteModalKeydown} />
 
 <svelte:head>
 	<title>메생결산 톡 - 단풍바람</title>
