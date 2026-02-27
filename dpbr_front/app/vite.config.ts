@@ -15,7 +15,7 @@ export default defineConfig(({ mode }) => {
 	return {
 		server: {
 			port: frontendPort,
-			strictPort: false
+			strictPort: true
 		},
 		plugins: [tailwindcss(), sveltekit()]
 	};
