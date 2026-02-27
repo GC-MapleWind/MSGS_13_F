@@ -51,6 +51,34 @@ find_listen_pids() {
   return 1
 }
 
+port_has_listener() {
+  port="$1"
+
+  if command -v ss >/dev/null 2>&1; then
+    if ss -ltn 2>/dev/null | awk -v target_port="$port" '
+      function endpoint_port(endpoint, idx) {
+        idx = match(endpoint, /:[0-9]+$/)
+        if (idx > 0) {
+          return substr(endpoint, idx + 1)
+        }
+        return ""
+      }
+      endpoint_port($4) == target_port { found = 1; exit 0 }
+      END { exit found ? 0 : 1 }
+    '; then
+      return 0
+    fi
+  fi
+
+  if command -v lsof >/dev/null 2>&1; then
+    if lsof -iTCP:"$port" -sTCP:LISTEN >/dev/null 2>&1; then
+      return 0
+    fi
+  fi
+
+  return 1
+}
+
 normalize_pids() {
   # Keep only numeric PIDs and de-duplicate while preserving first-seen order.
   printf '%s\n' "$*" | tr ' ' '\n' | awk '/^[0-9]+$/ && !seen[$1]++ { print }' | tr '\n' ' '
@@ -77,6 +105,17 @@ wait_for_exit() {
 
 frontend_pids="$(find_listen_pids "$FRONTEND_PORT" || true)"
 frontend_pids="$(normalize_pids "$frontend_pids")"
+frontend_has_listener=0
+if port_has_listener "$FRONTEND_PORT"; then
+  frontend_has_listener=1
+fi
+
+if [ "$frontend_has_listener" -eq 1 ] && [ -z "$frontend_pids" ]; then
+  echo "ERROR: Port $FRONTEND_PORT is in use, but owner PID could not be detected."
+  echo "       Free the port manually before running dev server."
+  exit 1
+fi
+
 if [ -n "$frontend_pids" ]; then
   foreign_pids=""
   vite_pids=""
@@ -144,7 +183,20 @@ fi
 
 backend_pids="$(find_listen_pids "$BACKEND_PORT" || true)"
 backend_pids="$(normalize_pids "$backend_pids")"
-if [ -n "$backend_pids" ]; then
+backend_has_listener=0
+if port_has_listener "$BACKEND_PORT"; then
+  backend_has_listener=1
+fi
+
+if [ "$backend_has_listener" -eq 1 ] && [ -z "$backend_pids" ]; then
+  echo "INFO: Backend port :$BACKEND_PORT is in use, but owner PID could not be detected."
+  if command -v curl >/dev/null 2>&1 && curl -fsS --max-time 2 "$BACKEND_HEALTH_URL" >/dev/null 2>&1; then
+    echo "INFO: Backend health check succeeded at $BACKEND_HEALTH_URL"
+  else
+    echo "WARN: Could not verify backend health at $BACKEND_HEALTH_URL"
+    echo "      If you just saw '[Errno 98] address already in use' from uvicorn, reuse existing backend or free :$BACKEND_PORT first."
+  fi
+elif [ -n "$backend_pids" ]; then
   first_backend_pid="$(echo "$backend_pids" | awk '{print $1}')"
   backend_cmd="$(get_cmd "$first_backend_pid")"
 
