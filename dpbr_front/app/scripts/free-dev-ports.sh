@@ -9,6 +9,7 @@ BACKEND_PORT="${BACKEND_PORT:-8000}"
 BACKEND_HEALTH_URL="${BACKEND_HEALTH_URL:-http://127.0.0.1:${BACKEND_PORT}/health}"
 FRONTEND_FORCE_KILL="${FRONTEND_FORCE_KILL:-0}"
 FRONTEND_FORCE_KILL_CONFIRM="${FRONTEND_FORCE_KILL_CONFIRM:-}"
+APP_DIR="$(pwd -P)"
 
 find_listen_pids() {
   port="$1"
@@ -89,6 +90,28 @@ get_cmd() {
   ps -p "$pid" -o command= 2>/dev/null
 }
 
+get_pid_cwd() {
+  pid="$1"
+  if [ -d "/proc/$pid" ] && command -v readlink >/dev/null 2>&1; then
+    readlink "/proc/$pid/cwd" 2>/dev/null
+    return 0
+  fi
+  return 1
+}
+
+is_pid_in_app_dir() {
+  pid="$1"
+  pid_cwd="$(get_pid_cwd "$pid" || true)"
+  if [ -z "$pid_cwd" ]; then
+    return 2
+  fi
+
+  case "$pid_cwd/" in
+    "$APP_DIR/"*) return 0 ;;
+  esac
+  return 1
+}
+
 wait_for_exit() {
   pid="$1"
   max_tries="${2:-10}"
@@ -119,15 +142,32 @@ fi
 if [ -n "$frontend_pids" ]; then
   foreign_pids=""
   vite_pids=""
+  vite_external_pids=""
 
   for pid in $frontend_pids; do
     cmd="$(get_cmd "$pid")"
     if echo "$cmd" | grep -qi "vite"; then
-      vite_pids="$vite_pids $pid"
+      if is_pid_in_app_dir "$pid"; then
+        vite_pids="$vite_pids $pid"
+      else
+        status=$?
+        if [ "$status" -eq 1 ]; then
+          vite_external_pids="$vite_external_pids $pid"
+        else
+          vite_pids="$vite_pids $pid"
+        fi
+      fi
     else
       foreign_pids="$foreign_pids $pid"
     fi
   done
+
+  vite_external_pids="$(normalize_pids "$vite_external_pids")"
+  if [ -n "$vite_external_pids" ]; then
+    echo "ERROR: Port $FRONTEND_PORT is occupied by Vite process(es) from another directory:$vite_external_pids" >&2
+    echo "       Refusing to stop external dev servers. Stop them manually or set FRONTEND_PORT to another port." >&2
+    exit 1
+  fi
 
   if [ -n "$foreign_pids" ]; then
     echo "ERROR: Port $FRONTEND_PORT is already in use by non-Vite process(es):$foreign_pids" >&2
