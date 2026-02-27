@@ -22,7 +22,26 @@ find_listen_pids() {
   fi
 
   if command -v ss >/dev/null 2>&1; then
-    ss_raw="$(ss -ltnp 2>/dev/null | awk -v p=":$port" '$4 ~ p { if (match($0, /pid=[0-9]+/)) { print substr($0, RSTART + 4, RLENGTH - 4) } }')"
+    ss_raw="$(
+      ss -ltnp 2>/dev/null | awk -v target_port="$port" '
+        function endpoint_port(endpoint, idx) {
+          idx = match(endpoint, /:[0-9]+$/)
+          if (idx > 0) {
+            return substr(endpoint, idx + 1)
+          }
+          return ""
+        }
+        {
+          if (endpoint_port($4) == target_port) {
+            line = $0
+            while (match(line, /pid=[0-9]+/)) {
+              print substr(line, RSTART + 4, RLENGTH - 4)
+              line = substr(line, RSTART + RLENGTH)
+            }
+          }
+        }
+      '
+    )"
     if [ "$?" -eq 0 ]; then
       printf '%s' "$ss_raw" | tr '\n' ' '
       return 0
@@ -30,6 +49,11 @@ find_listen_pids() {
   fi
 
   return 1
+}
+
+normalize_pids() {
+  # Keep only numeric PIDs and de-duplicate while preserving first-seen order.
+  printf '%s\n' "$*" | tr ' ' '\n' | awk '/^[0-9]+$/ && !seen[$1]++ { print }' | tr '\n' ' '
 }
 
 get_cmd() {
@@ -52,6 +76,7 @@ wait_for_exit() {
 }
 
 frontend_pids="$(find_listen_pids "$FRONTEND_PORT" || true)"
+frontend_pids="$(normalize_pids "$frontend_pids")"
 if [ -n "$frontend_pids" ]; then
   foreign_pids=""
   vite_pids=""
@@ -71,13 +96,26 @@ if [ -n "$frontend_pids" ]; then
     exit 1
   fi
 
+  vite_pids="$(normalize_pids "$vite_pids")"
+  foreign_pids="$(normalize_pids "$foreign_pids")"
+
   if [ -n "$vite_pids" ]; then
     echo "INFO: Releasing existing Vite process(es) on :$FRONTEND_PORT ($vite_pids)"
     for pid in $vite_pids; do
       cmd_before_kill="$(get_cmd "$pid")"
-      if ! echo "$cmd_before_kill" | grep -qi "vite"; then
+      current_frontend_pids="$(find_listen_pids "$FRONTEND_PORT" || true)"
+      current_frontend_pids="$(normalize_pids "$current_frontend_pids")"
+      pid_still_on_frontend_port=0
+      for current_pid in $current_frontend_pids; do
+        if [ "$current_pid" = "$pid" ]; then
+          pid_still_on_frontend_port=1
+          break
+        fi
+      done
+
+      if [ "$pid_still_on_frontend_port" -ne 1 ] || ! echo "$cmd_before_kill" | grep -qi "vite"; then
         if kill -0 "$pid" >/dev/null 2>&1; then
-          echo "ERROR: Refusing to stop pid $pid because it is no longer recognized as Vite."
+          echo "ERROR: Refusing to stop pid $pid because it is no longer recognized as Vite on :$FRONTEND_PORT."
           echo "       Current command: ${cmd_before_kill:-<unknown>}"
           exit 1
         fi
@@ -105,6 +143,7 @@ if [ -n "$frontend_pids" ]; then
 fi
 
 backend_pids="$(find_listen_pids "$BACKEND_PORT" || true)"
+backend_pids="$(normalize_pids "$backend_pids")"
 if [ -n "$backend_pids" ]; then
   first_backend_pid="$(echo "$backend_pids" | awk '{print $1}')"
   backend_cmd="$(get_cmd "$first_backend_pid")"
