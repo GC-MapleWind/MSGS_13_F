@@ -69,7 +69,7 @@
 			src={character.avatarUrl}
 			alt={character.name}
 			onerror={handleImageError}
-			class="w-3/4 aspect-[5/6] object-cover"
+			class="w-full aspect-square object-contain"
 		/>
 	</div>
 
