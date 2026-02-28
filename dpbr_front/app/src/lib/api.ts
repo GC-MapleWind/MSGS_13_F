@@ -378,7 +378,7 @@ export async function deleteComment(commentId: string): Promise<void> {
 	await apiCall<void>(`/comments/${commentId}`, {
 		method: 'DELETE',
 		headers: accessToken ? { Authorization: `Bearer ${accessToken}` } : undefined,
-		body: JSON.stringify(deleteToken ? { password: deleteToken } : {})
+		body: JSON.stringify(deleteToken ? { password: deleteToken, delete_token: deleteToken } : {})
 	});
 
 	if (deleteToken) {
