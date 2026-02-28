@@ -5,6 +5,7 @@
   "scripts": {
     "predev": "sh ./scripts/free-dev-ports.sh",
     "dev": "vite dev",
+    "dev:clean-all": "DPBR_CLEAN_BACKEND_PORT=1 npm run dev",
     "build": "vite build",
     "preview": "vite preview",
     "check": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json"
