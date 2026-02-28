@@ -1,7 +1,7 @@
 <script lang="ts">
     import { onMount } from "svelte";
     import { env } from "$env/dynamic/public";
-    import { X, MessageCircle } from "lucide-svelte";
+    import { MessageCircle } from "lucide-svelte";
     import InputBox from "$lib/components/InputBox.svelte";
     import Button from "$lib/components/Button.svelte";
     import { toast } from "$lib/stores/toast";
@@ -75,6 +75,7 @@
         }
     }
 
+    /*
     function handleKakaoLogin() {
         const kakaoClientId = env.PUBLIC_KAKAO_CLIENT_ID;
         const kakaoRedirectUri = env.PUBLIC_KAKAO_REDIRECT_URI;
@@ -89,6 +90,7 @@
         const KAKAO_AUTH_URL = `https://kauth.kakao.com/oauth/authorize?client_id=${kakaoClientId}&redirect_uri=${kakaoRedirectUri}&response_type=code`;
         window.location.href = KAKAO_AUTH_URL;
     }
+    */
 
     function showToastMessage(message?: string) {
         toast.show(message || "이름 또는 학번을 확인해 주세요.");
@@ -146,23 +148,29 @@
         <!-- 닫기 버튼 -->
         <div class="w-full flex justify-end">
             <button onclick={handleClose} class="text-white p-2">
-                <X size={24} />
+                <img
+                    src="/images/icons/name=Close, Color=White.svg"
+                    alt="닫기"
+                    class="w-6 h-6"
+                    draggable="false"
+                />
             </button>
         </div>
 
         <!-- 모달 컨텐츠 -->
         <div class="w-full max-w-md flex flex-col items-center mt-2">
-            <!-- 앱 타이틀 -->
-            <h1
-                class="text-3xl font-bold text-white tracking-widest drop-shadow-md mb-8"
-            >
-                단풍바람
-            </h1>
+            <!-- 앱 타이틀 이미지 로고 -->
+            <img
+                src="/images/logos/logo-text-white.svg"
+                alt="단풍바람"
+                class="h-9 object-contain mb-8 mt-1"
+                draggable="false"
+            />
 
             <!-- 입력 폼 -->
-            <div class="w-full flex flex-col gap-4">
+            <div class="w-full flex flex-col">
                 <!-- 입력 필드 그룹 -->
-                <div class="flex flex-col gap-[2px]">
+                <div class="flex flex-col gap-1 mb-2">
                     <!-- 이름 입력 -->
                     <InputBox
                         type="text"
@@ -179,7 +187,7 @@
                     />
 
                     <!-- 학번 입력 -->
-                    <div bind:this={studentIdInputRef} class="mt-2">
+                    <div bind:this={studentIdInputRef}>
                         <InputBox
                             type="tel"
                             placeholder="학번"
@@ -188,7 +196,7 @@
                             inputState={studentIdFocused
                                 ? "focused"
                                 : "default"}
-                            showClearButton={true}
+                            showClearButton={false}
                             onInput={(value) => (studentId = value)}
                             onFocus={handleStudentIdFocus}
                             onBlur={handleStudentIdBlur}
@@ -206,51 +214,53 @@
                     buttonState={isLoading ? "disabled" : "default"}
                     onClick={handleLogin}
                     type="button"
-                    class="bg-white text-[#F87C56] hover:bg-white/90 font-medium py-[14px] mt-2 rounded-lg"
+                    class="bg-white !text-[#F87C56] hover:bg-white/90 font-medium py-[14px] rounded-lg"
                 />
 
                 <!-- 이름 저장 체크박스 -->
-                <label class="flex items-center gap-2 cursor-pointer mt-1 mb-2">
+                <label class="flex items-center gap-2 cursor-pointer mt-2 mb-2">
+                    <input
+                        type="checkbox"
+                        bind:checked={saveName}
+                        class="sr-only"
+                        aria-label="이름 저장"
+                    />
                     <div
                         class="relative flex items-center justify-center w-5 h-5"
                     >
-                        <input
-                            type="checkbox"
-                            bind:checked={saveName}
-                            class="w-full h-full rounded-full border border-white appearance-none checked:bg-transparent checked:border-white transition-all cursor-pointer"
-                            aria-label="이름 저장"
-                        />
                         {#if saveName}
-                            <svg
-                                class="absolute w-3 h-3 text-white pointer-events-none"
-                                fill="none"
-                                viewBox="0 0 24 24"
-                                stroke="currentColor"
-                                stroke-width="3"
-                            >
-                                <path
-                                    stroke-linecap="round"
-                                    stroke-linejoin="round"
-                                    d="M5 13l4 4L19 7"
-                                />
-                            </svg>
+                            <img
+                                src="/images/icons/name=check-enable, Color=White.svg"
+                                alt="저장 활성화"
+                                class="w-full h-full"
+                                draggable="false"
+                            />
+                        {:else}
+                            <img
+                                src="/images/icons/name=check-disable, Color=White.svg"
+                                alt="저장 비활성화"
+                                class="w-full h-full"
+                                draggable="false"
+                            />
                         {/if}
                     </div>
-                    <span class="text-white text-sm font-light">이름 저장</span>
+                    <span class="text-white text-sm font-light select-none"
+                        >이름 저장</span
+                    >
                 </label>
 
                 <!-- 구분선 -->
                 <div class="w-full h-px bg-white/30 my-2"></div>
 
-                <!-- 카카오 로그인 버튼 -->
+                <!-- 카카오 로그인 버튼 주석 처리
                 <button
                     onclick={handleKakaoLogin}
                     class="w-full py-3 px-4 rounded-lg font-medium text-base transition-all bg-[#FEE500] text-black hover:bg-[#FDD835] border-none flex items-center justify-center gap-2"
                 >
-                    <!-- 카카오 로고 대신 MessageCircle 사용 -->
                     <MessageCircle size={18} fill="black" class="text-black" />
                     <span>카카오 로그인</span>
                 </button>
+                -->
             </div>
 
             <!-- 푸터 안내문구 -->

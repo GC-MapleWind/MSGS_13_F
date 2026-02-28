@@ -2,7 +2,6 @@
 	import { onMount } from "svelte";
 	import { goto } from "$app/navigation";
 	import { get } from "svelte/store";
-	import { ChevronLeft, Send } from "lucide-svelte";
 	import CommentItem from "$lib/components/CommentItem.svelte";
 	import BottomSheetLogin from "$lib/components/BottomSheetLogin.svelte";
 	import { getComments, createComment } from "$lib/api";
@@ -131,19 +130,42 @@
 
 <div class="flex flex-col h-full">
 	<!-- Header -->
-	<header class="flex items-center gap-2 bg-primary-dark px-3 py-2">
+	<header
+		class="relative flex items-center justify-between bg-primary-dark px-3 py-2 shrink-0 h-[56px]"
+	>
 		<button
 			onclick={() => goto("/")}
-			class="p-2 text-white"
+			class="p-2 text-white relative z-10"
 			aria-label="뒤로가기"
 		>
-			<ChevronLeft size={24} />
+			<img
+				src="/images/icons/name=Back, Color=White.svg"
+				alt="뒤로가기"
+				class="w-6 h-6"
+				draggable="false"
+			/>
 		</button>
-		<span class="text-base font-medium text-white">메생결산 톡</span>
+
+		<span
+			class="absolute left-1/2 -translate-x-1/2 text-base font-medium text-white"
+		>
+			메생결산 톡
+		</span>
+
+		<div class="relative z-10 flex items-center pr-1">
+			{#if $authStore.isAuthenticated}
+				<button
+					onclick={() => authStore.logout()}
+					class="text-white text-sm font-light"
+				>
+					로그아웃
+				</button>
+			{/if}
+		</div>
 	</header>
 
 	<!-- Comment Count -->
-	<div class="flex items-center bg-white px-6 py-5">
+	<div class="flex items-center bg-white px-6 py-5 mb-2 shrink-0">
 		<div class="flex items-center gap-1">
 			<span class="text-base text-text-primary">톡</span>
 			<span class="text-base text-primary-dark"
@@ -209,7 +231,12 @@
 				{#if submitting}
 					<span class="text-xs">...</span>
 				{:else}
-					<Send size={20} />
+					<img
+						src="/images/icons/name=Send, Color=White.svg"
+						alt="보내기"
+						class="w-5 h-5 ml-[-2px]"
+						draggable="false"
+					/>
 				{/if}
 			</button>
 		{/if}

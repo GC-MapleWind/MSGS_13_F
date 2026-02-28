@@ -1,6 +1,4 @@
 <script lang="ts">
-	import { Menu, MessageCircle, ChevronLeft, X } from "lucide-svelte";
-
 	interface Props {
 		variant?: "main" | "detail" | "close" | "save";
 		title?: string;
@@ -31,11 +29,26 @@
 			class="p-2 text-white"
 			aria-label="메뉴 열기"
 		>
-			<Menu size={24} />
+			<img
+				src="/images/icons/name=Menu, Color=White.svg"
+				alt="메뉴 열기"
+				class="w-6 h-6"
+				draggable="false"
+			/>
 		</button>
-		<span class="text-lg font-bold text-white">단풍바람</span>
+		<img
+			src="/images/logos/logo-text-white.svg"
+			alt="단풍바람"
+			class="h-[18px] object-contain"
+			draggable="false"
+		/>
 		<a href="/talk" class="p-2 text-white" aria-label="톡 페이지">
-			<MessageCircle size={24} />
+			<img
+				src="/images/icons/name=Chat, Color=White.svg"
+				alt="톡 페이지"
+				class="w-6 h-6"
+				draggable="false"
+			/>
 		</a>
 	</header>
 {:else if variant === "detail"}
@@ -47,7 +60,12 @@
 			class="p-2 text-text-primary shrink-0 relative z-10"
 			aria-label="뒤로가기"
 		>
-			<ChevronLeft size={24} />
+			<img
+				src="/images/icons/name=Back, Color=Black.svg"
+				alt="뒤로가기"
+				class="w-6 h-6 opacity-70"
+				draggable="false"
+			/>
 		</button>
 		<div
 			class="absolute inset-0 flex flex-col items-center justify-center pointer-events-none px-12"
@@ -71,7 +89,12 @@
 			class="p-2 text-text-primary"
 			aria-label="닫기"
 		>
-			<X size={24} />
+			<img
+				src="/images/icons/name=Close, Color=Black.svg"
+				alt="닫기"
+				class="w-6 h-6"
+				draggable="false"
+			/>
 		</button>
 	</header>
 {:else if variant === "save"}
@@ -79,7 +102,12 @@
 		class="flex items-center justify-end bg-transparent px-3 py-2 sticky top-0 z-40"
 	>
 		<button onclick={onCloseClick} class="p-2 text-white" aria-label="닫기">
-			<X size={24} />
+			<img
+				src="/images/icons/name=Close, Color=White.svg"
+				alt="닫기"
+				class="w-6 h-6"
+				draggable="false"
+			/>
 		</button>
 	</header>
 {/if}

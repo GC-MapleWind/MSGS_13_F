@@ -16,7 +16,9 @@
 
 <a
 	href="/msg/{item.id}"
-	class="flex items-center gap-4 px-6 py-4 bg-white border-b border-bg-light hover:bg-gray-50 focus:bg-gray-50 transition-none last:border-b-0"
+	class="flex items-center gap-4 px-6 py-4 bg-white border-b border-bg-light hover:bg-gray-50 focus:bg-gray-50 transition-none last:border-b-0 touch-none select-none"
+	style="-webkit-touch-callout: none;"
+	draggable="false"
 >
 	<!-- Thumbnail -->
 	<div

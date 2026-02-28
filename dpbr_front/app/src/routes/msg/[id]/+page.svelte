@@ -13,7 +13,6 @@
 	let error = $state<string | null>(null);
 
 	$effect(() => {
-		// msgId가 변경될 때마다 데이터 로드
 		loadData();
 	});
 
@@ -63,7 +62,6 @@
 		</div>
 	{:else if settlement}
 		<div class="flex-1 flex flex-col bg-white overflow-y-auto">
-			<!-- Main Image -->
 			<div class="flex justify-center items-center bg-white px-6 py-4">
 				<img
 					src={settlement.imageUrl ||
@@ -71,15 +69,15 @@
 					alt={settlement.title}
 					onerror={handleImageError}
 					class={isAdminTeam && !settlement.imageUrl
-						? "w-1/2 object-contain rounded-lg"
-						: "w-full max-h-80 object-cover rounded-lg"}
+						? "w-1/2 h-auto object-contain rounded-lg"
+						: "w-full h-auto object-contain rounded-lg"}
 				/>
 			</div>
 
-			<!-- Info -->
-			<div class="flex flex-col gap-4 px-6 pt-4">
+			<div class="flex flex-col gap-4 px-6 py-4">
 				<div class="flex gap-4">
-					<span class="text-sm font-light text-text-muted shrink-0"
+					<span
+						class="text-sm font-light text-text-muted shrink-0 w-[72px] text-left whitespace-nowrap"
 						>{isAdminTeam ? "직책" : "획득 일자"}</span
 					>
 					<span class="text-base text-text-primary"
@@ -90,9 +88,12 @@
 				</div>
 			</div>
 
-			<div class="flex flex-col gap-4 px-6 pt-4 pb-6">
+			<hr class="border-bg-light mx-6" />
+
+			<div class="flex flex-col gap-4 px-6 py-4">
 				<div class="flex gap-4">
-					<span class="text-sm font-light text-text-muted shrink-0"
+					<span
+						class="text-sm font-light text-text-muted shrink-0 w-[72px] text-left whitespace-nowrap"
 						>상세 내용</span
 					>
 					<span class="text-base text-text-primary leading-relaxed"
@@ -100,6 +101,19 @@
 					>
 				</div>
 			</div>
+
+			<hr class="border-bg-light mx-6" />
+		</div>
+
+		<div
+			class="flex justify-center items-center h-[calc(100dvh*64/874)] bg-white shrink-0 mt-2"
+		>
+			<img
+				src="/images/logos/logo-text-mono.svg"
+				alt="단풍바람"
+				class="h-5 opacity-40 object-contain"
+				draggable="false"
+			/>
 		</div>
 	{:else}
 		<div class="flex-1 flex items-center justify-center">
