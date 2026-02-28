@@ -51,6 +51,7 @@
 		// 로그인 성공 후 데이터 다시 불러오기
 		try {
 			loading = true;
+			error = null;
 			comments = await getComments();
 		} catch (e) {
 			console.error("Failed to reload comments after login:", e);
@@ -75,10 +76,7 @@
 			// 새 댓글을 목록 맨 위에 추가
 			const formattedComment: TalkComment = {
 				id: newComment.id.toString(),
-				userId:
-					newComment.user_id !== null
-						? newComment.user_id.toString()
-						: null,
+				userId: newComment.user_id,
 				author: newComment.author,
 				authorAvatar: "/default-avatar.png",
 				content: newComment.content,

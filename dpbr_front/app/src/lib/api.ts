@@ -1,5 +1,5 @@
 import { env } from '$env/dynamic/public';
-import type { Character, SettlementItem, TalkComment } from './types';
+import type { Character, SettlementItem, TalkComment, TeamMessageItem } from './types';
 
 /**
  * API 기본 URL
@@ -260,7 +260,7 @@ export async function getComments(page: number = 1, limit: number = 20): Promise
 
 	return data.map((comment) => ({
 		id: comment.id.toString(),
-		userId: comment.user_id !== null ? comment.user_id.toString() : null, // 백엔드의 user_id 맵핑
+		userId: comment.user_id,
 		author: comment.author,
 		authorAvatar: '/default-avatar.png',
 		content: comment.content,
@@ -309,40 +309,33 @@ export async function deleteComment(id: string): Promise<void> {
 	});
 }
 
-/**
- * 운영팀 멤버 목록 조회 (SettlementItem 형태로 매핑)
- * id는 'team-{memberId}' 형태로 반환하여 일반 결산과 구분합니다.
- */
-export async function getTeamMembers(): Promise<SettlementItem[]> {
+export async function getTeamMembers(): Promise<TeamMessageItem[]> {
 	const data = await apiCall<TeamMemberResponse[]>('/system/team');
 
 	return data.map((member) => ({
-		id: `team-${member.id}`,
-		characterId: '',
-		title: `${member.name} ${member.role}`,
-		description: '',
-		imageUrl: normalizeAssetUrl(member.profile_img_url),
-		acquiredAt: ''
+		id: member.id.toString(),
+		name: member.name,
+		role: member.role,
+		title: '',
+		content: '',
+		imageUrl: normalizeAssetUrl(member.profile_img_url)
 	}));
 }
 
-/**
- * 운영팀 멤버 상세(한마디) 조회 (SettlementItem 형태로 매핑)
- */
-export async function getTeamMemberDetail(memberId: number): Promise<SettlementItem | null> {
+export async function getTeamMessageDetail(memberId: string): Promise<TeamMessageItem | null> {
 	try {
 		const data = await apiCall<TeamMemberDetailResponse>(`/system/team/${memberId}`);
 
 		return {
-			id: `team-${data.id}`,
-			characterId: '',
-			title: `${data.name} ${data.role}`,
-			description: data.message?.content || '',
-			imageUrl: normalizeAssetUrl(data.message?.detail_img_url || data.profile_img_url),
-			acquiredAt: ''
+			id: data.id.toString(),
+			name: data.name,
+			role: data.role,
+			title: data.message?.title || '',
+			content: data.message?.content || '',
+			imageUrl: normalizeAssetUrl(data.message?.detail_img_url || data.profile_img_url)
 		};
 	} catch (error) {
-		console.error('Failed to fetch team member detail:', error);
+		console.error('Failed to fetch team message detail:', error);
 		return null;
 	}
 }
@@ -353,7 +346,8 @@ export async function getTeamMemberDetail(memberId: number): Promise<SettlementI
 export async function getAdminCharacter(): Promise<{ id: number | null; name?: string }> {
 	try {
 		return await apiCall<{ id: number | null; name?: string }>('/system/admin-character');
-	} catch {
+	} catch (error) {
+		console.error('Failed to fetch admin character:', error);
 		return { id: null };
 	}
 }

@@ -4,10 +4,9 @@
 
 	interface Props {
 		item: SettlementItem;
-		isAdminTeam?: boolean;
 	}
 
-	let { item, isAdminTeam = false }: Props = $props();
+	let { item }: Props = $props();
 
 	function formatDate(dateStr: string): string {
 		const d = new Date(dateStr);
@@ -26,13 +25,10 @@
 		class="w-[4.5rem] h-[4.5rem] shrink-0 rounded-2xl overflow-hidden bg-bg-light shadow-sm"
 	>
 		<img
-			src={item.imageUrl || (isAdminTeam ? "/logo.png" : "")}
+			src={item.imageUrl}
 			alt={item.title}
 			onerror={handleImageError}
-			class={isAdminTeam && !item.imageUrl
-				? "w-10 h-10 object-contain mx-auto mt-5 pointer-events-none"
-				: "w-full h-full aspect-square object-cover object-center pointer-events-none"}
-			draggable="false"
+			class="w-full h-full object-cover"
 		/>
 	</div>
 
@@ -42,10 +38,6 @@
 			class="text-[17px] leading-tight text-text-primary font-semibold truncate"
 			>{item.title}</span
 		>
-		<span class="text-[13px] font-normal text-[#9CA3AF]">
-			{isAdminTeam
-				? item.title.split(" ")[1] || item.title
-				: formatDate(item.acquiredAt)}
-		</span>
+		<span class="text-[13px] font-normal text-[#9CA3AF]">{formatDate(item.acquiredAt)}</span>
 	</div>
 </a>
