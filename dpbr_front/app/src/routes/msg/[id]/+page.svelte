@@ -1,15 +1,14 @@
 <script lang="ts">
 	import { page } from "$app/stores";
 	import Header from "$lib/components/Header.svelte";
-	import { getSettlementById, getCharacterById, getTeamMemberDetail } from "$lib/api";
+	import { getSettlementById, getCharacterById } from "$lib/api";
 	import { handleImageError } from "$lib/utils/image";
 	import type { SettlementItem, Character } from "$lib/types";
 
 	const msgId = $derived($page.params.id ?? "");
 	let settlement = $state<SettlementItem | null>(null);
 	let character = $state<Character | null>(null);
-	let isTeamMember = $state(false);
-	let isAdminTeam = $derived(character?.name === "단풍바람 운영팀" || isTeamMember);
+	let isAdminTeam = $derived(character?.name === "단풍바람 운영팀");
 	let loading = $state(true);
 	let error = $state<string | null>(null);
 
@@ -25,15 +24,9 @@
 		error = null;
 
 		try {
-			if (msgId.startsWith("team-")) {
-				isTeamMember = true;
-				const memberId = parseInt(msgId.slice(5), 10);
-				settlement = await getTeamMemberDetail(memberId);
-			} else {
-				settlement = await getSettlementById(msgId);
-				if (settlement) {
-					character = await getCharacterById(settlement.characterId);
-				}
+			settlement = await getSettlementById(msgId);
+			if (settlement) {
+				character = await getCharacterById(settlement.characterId);
 			}
 		} catch (e) {
 			console.error("Failed to load data:", e);
