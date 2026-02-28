@@ -19,10 +19,57 @@ resolve_port() {
   esac
 }
 
-FRONTEND_PORT="$(resolve_port "${FRONTEND_PORT:-}" "5173")"
-BACKEND_PORT="$(resolve_port "${BACKEND_PORT:-}" "8000")"
-BACKEND_HEALTH_URL="${BACKEND_HEALTH_URL:-http://localhost:${BACKEND_PORT}/health}"
 APP_DIR="$(CDPATH= cd -- "$(dirname -- "$0")/.." && pwd)"
+
+read_env_file_value() {
+  key="$1"
+  file="$2"
+  [ -f "$file" ] || return 1
+
+  awk -v key="$key" '
+    BEGIN { pattern = "^[[:space:]]*" key "[[:space:]]*=" }
+    $0 ~ /^[[:space:]]*#/ { next }
+    $0 ~ pattern {
+      line = $0
+      sub(/^[[:space:]]*/, "", line)
+      sub(/[[:space:]]*=[[:space:]]*/, "=", line)
+      sub("^" key "=", "", line)
+      sub(/\r$/, "", line)
+      sub(/[[:space:]]+#.*$/, "", line)
+      gsub(/^[[:space:]]+|[[:space:]]+$/, "", line)
+      if (line ~ /^".*"$/ || line ~ /^'\''.*'\''$/) {
+        line = substr(line, 2, length(line) - 2)
+      }
+      print line
+      exit
+    }
+  ' "$file"
+}
+
+get_env_or_file_value() {
+  key="$1"
+  provided="$2"
+
+  if [ -n "$provided" ]; then
+    printf '%s\n' "$provided"
+    return 0
+  fi
+
+  for env_file in "$APP_DIR/.env.local" "$APP_DIR/.env"; do
+    value="$(read_env_file_value "$key" "$env_file" || true)"
+    if [ -n "$value" ]; then
+      printf '%s\n' "$value"
+      return 0
+    fi
+  done
+
+  printf '\n'
+}
+
+FRONTEND_PORT="$(resolve_port "$(get_env_or_file_value "FRONTEND_PORT" "${FRONTEND_PORT:-}")" "5173")"
+BACKEND_PORT="$(resolve_port "$(get_env_or_file_value "BACKEND_PORT" "${BACKEND_PORT:-}")" "8000")"
+BACKEND_HEALTH_URL="${BACKEND_HEALTH_URL:-$(get_env_or_file_value "BACKEND_HEALTH_URL" "")}"
+BACKEND_HEALTH_URL="${BACKEND_HEALTH_URL:-http://localhost:${BACKEND_PORT}/health}"
 
 normalize_pids() {
   printf '%s\n' "$*" | tr ' ' '\n' | awk '/^[0-9]+$/ && !seen[$1]++ { print }' | tr '\n' ' '
