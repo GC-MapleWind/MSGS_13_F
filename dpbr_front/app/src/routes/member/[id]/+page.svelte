@@ -151,9 +151,12 @@
 		<div
 			class="flex justify-center items-center h-[calc(100dvh*64/874)] bg-white shrink-0 mt-2"
 		>
-			<span class="text-xl font-black text-[#D1D5DB] tracking-tighter"
-				>단풍바람</span
-			>
+			<img
+				src="/images/logos/logo-text-mono.svg"
+				alt="단풍바람"
+				class="h-5 opacity-40 object-contain"
+				draggable="false"
+			/>
 		</div>
 	</div>
 {:else}

@@ -63,6 +63,7 @@
 		}
 	}
 
+	/*
 	function handleKakaoLogin() {
 		const kakaoClientId = env.PUBLIC_KAKAO_CLIENT_ID;
 		const kakaoRedirectUri = env.PUBLIC_KAKAO_REDIRECT_URI;
@@ -77,6 +78,7 @@
 		const KAKAO_AUTH_URL = `https://kauth.kakao.com/oauth/authorize?client_id=${kakaoClientId}&redirect_uri=${kakaoRedirectUri}&response_type=code`;
 		window.location.href = KAKAO_AUTH_URL;
 	}
+	*/
 
 	function showToastMessage(message?: string) {
 		toast.show(message || "이름 또는 학번을 확인해 주세요.");
@@ -128,12 +130,13 @@
 	<!-- 메인 컨텐츠 -->
 	<div class="flex-1 flex items-center justify-center">
 		<div class="w-full max-w-md flex flex-col items-center gap-12">
-			<!-- 앱 타이틀 -->
-			<h1
-				class="text-4xl font-bold text-white tracking-widest drop-shadow-sm"
-			>
-				단풍바람
-			</h1>
+			<!-- 앱 타이틀 이미지 로고 -->
+			<img
+				src="/images/logos/logo-text-white.svg"
+				alt="단풍바람"
+				class="h-10 object-contain drop-shadow-sm mb-4"
+				draggable="false"
+			/>
 
 			<!-- 입력 폼 -->
 			<div class="w-full flex flex-col gap-4">
@@ -197,7 +200,7 @@
 					<span class="text-white text-sm">이름 저장</span>
 				</label>
 
-				<!-- 카카오 로그인 버튼 -->
+				<!-- 카카오 로그인 버튼 주석 처리
 				<div class="w-full pt-4 border-t border-white/20 mt-2">
 					<Button
 						label="카카오 계정으로 로그인"
@@ -207,6 +210,7 @@
 						class="bg-[#FEE500] text-black hover:bg-[#FDD835] font-medium border-none"
 					/>
 				</div>
+				-->
 			</div>
 		</div>
 	</div>

@@ -17,7 +17,9 @@
 
 <a
 	href="/msg/{item.id}"
-	class="flex items-center gap-4 px-6 py-4 bg-white border-b border-bg-light hover:bg-gray-50 focus:bg-gray-50 transition-none last:border-b-0"
+	class="flex items-center gap-4 px-6 py-4 bg-white border-b border-bg-light hover:bg-gray-50 focus:bg-gray-50 transition-none last:border-b-0 touch-none select-none"
+	style="-webkit-touch-callout: none;"
+	draggable="false"
 >
 	<!-- Thumbnail -->
 	<div
@@ -28,8 +30,9 @@
 			alt={item.title}
 			onerror={handleImageError}
 			class={isAdminTeam && !item.imageUrl
-				? "w-10 h-10 object-contain mx-auto mt-5"
-				: "w-full h-full object-cover"}
+				? "w-10 h-10 object-contain mx-auto mt-5 pointer-events-none"
+				: "w-full h-full aspect-square object-cover object-center pointer-events-none"}
+			draggable="false"
 		/>
 	</div>
 

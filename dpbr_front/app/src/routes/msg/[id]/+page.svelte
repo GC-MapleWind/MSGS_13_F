@@ -1,7 +1,11 @@
 <script lang="ts">
 	import { page } from "$app/stores";
 	import Header from "$lib/components/Header.svelte";
-	import { getSettlementById, getCharacterById, getTeamMemberDetail } from "$lib/api";
+	import {
+		getSettlementById,
+		getCharacterById,
+		getTeamMemberDetail,
+	} from "$lib/api";
 	import { handleImageError } from "$lib/utils/image";
 	import type { SettlementItem, Character } from "$lib/types";
 
@@ -9,7 +13,9 @@
 	let settlement = $state<SettlementItem | null>(null);
 	let character = $state<Character | null>(null);
 	let isTeamMember = $state(false);
-	let isAdminTeam = $derived(character?.name === "단풍바람 운영팀" || isTeamMember);
+	let isAdminTeam = $derived(
+		character?.name === "단풍바람 운영팀" || isTeamMember,
+	);
 	let loading = $state(true);
 	let error = $state<string | null>(null);
 
@@ -78,15 +84,16 @@
 					alt={settlement.title}
 					onerror={handleImageError}
 					class={isAdminTeam && !settlement.imageUrl
-						? "w-1/2 object-contain rounded-lg"
-						: "w-full max-h-80 object-cover rounded-lg"}
+						? "w-1/2 h-auto object-contain rounded-lg"
+						: "w-full h-auto object-contain rounded-lg"}
 				/>
 			</div>
 
 			<!-- Info -->
-			<div class="flex flex-col gap-4 px-6 pt-4">
+			<div class="flex flex-col gap-4 px-6 py-4">
 				<div class="flex gap-4">
-					<span class="text-sm font-light text-text-muted shrink-0"
+					<span
+						class="text-sm font-light text-text-muted shrink-0 w-[72px] text-left whitespace-nowrap"
 						>{isAdminTeam ? "직책" : "획득 일자"}</span
 					>
 					<span class="text-base text-text-primary"
@@ -97,9 +104,12 @@
 				</div>
 			</div>
 
-			<div class="flex flex-col gap-4 px-6 pt-4 pb-6">
+			<hr class="border-bg-light mx-6" />
+
+			<div class="flex flex-col gap-4 px-6 py-4">
 				<div class="flex gap-4">
-					<span class="text-sm font-light text-text-muted shrink-0"
+					<span
+						class="text-sm font-light text-text-muted shrink-0 w-[72px] text-left whitespace-nowrap"
 						>상세 내용</span
 					>
 					<span class="text-base text-text-primary leading-relaxed"
@@ -107,6 +117,20 @@
 					>
 				</div>
 			</div>
+
+			<hr class="border-bg-light mx-6" />
+		</div>
+
+		<!-- Footer Logo (Fixed) -->
+		<div
+			class="flex justify-center items-center h-[calc(100dvh*64/874)] bg-white shrink-0 mt-2"
+		>
+			<img
+				src="/images/logos/logo-text-mono.svg"
+				alt="단풍바람"
+				class="h-5 opacity-40 object-contain"
+				draggable="false"
+			/>
 		</div>
 	{:else}
 		<div class="flex-1 flex items-center justify-center">
