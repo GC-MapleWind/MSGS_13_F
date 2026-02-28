@@ -33,7 +33,7 @@
 
         const savedName = getSavedName();
         if (savedName) {
-            name = savedName;
+            name = savedName.slice(0, 3);
             saveName = true;
         }
     });

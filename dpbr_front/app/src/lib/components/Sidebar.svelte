@@ -19,14 +19,28 @@
 		isLoading: false,
 	});
 	let adminTeamId = $state<string | null>(null);
+	const sidebarPeriodText = "메생결산 기록";
 
-	authStore.subscribe((state) => {
+	const unsubscribeAuth = authStore.subscribe((state) => {
 		authState = state;
 	});
 
-	onMount(async () => {
-		const result = await getAdminCharacter();
-		adminTeamId = result.id !== null ? result.id.toString() : null;
+	onMount(() => {
+		const loadAdminCharacter = async () => {
+			try {
+				const result = await getAdminCharacter();
+				adminTeamId = result.id !== null ? result.id.toString() : null;
+			} catch (error) {
+				console.error("Failed to load admin character:", error);
+				adminTeamId = null;
+			}
+		};
+
+		void loadAdminCharacter();
+
+		return () => {
+			unsubscribeAuth();
+		};
 	});
 
 	async function handleLogout() {
@@ -85,15 +99,13 @@
 				>
 					메생결산 소식
 				</a>
-				{#if adminTeamId}
-					<a
-						href="/member/{adminTeamId}"
-						class="flex items-center px-6 py-3 text-base text-text-primary hover:bg-bg-light transition-colors"
-						onclick={onClose}
-					>
-						운영팀 한마디
-					</a>
-				{/if}
+				<a
+					href="/member/{adminTeamId || 'admin-team'}"
+					class="flex items-center px-6 py-3 text-base text-text-primary hover:bg-bg-light transition-colors"
+					onclick={onClose}
+				>
+					운영팀 한마디
+				</a>
 			</nav>
 		</div>
 	</div>
@@ -101,7 +113,7 @@
 	<!-- Footer -->
 	<div class="flex items-end gap-2 bg-bg-light p-6">
 		<span class="text-sm font-medium text-text-accent"
-			>2025년 0월 0일~0월 0일의 기록</span
+			>{sidebarPeriodText}</span
 		>
 	</div>
 </aside>

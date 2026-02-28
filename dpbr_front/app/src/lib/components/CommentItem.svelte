@@ -51,7 +51,7 @@
 				>{comment.author}</span
 			>
 		</div>
-		{#if $authStore.isAuthenticated && $authStore.user?.id?.toString() === comment.userId}
+		{#if $authStore.isAuthenticated && $authStore.user?.id === comment.userId}
 			<button
 				onclick={handleDeleteClick}
 				disabled={isDeleting}

@@ -4,18 +4,37 @@
 	import { goto } from "$app/navigation";
 	import Header from "$lib/components/Header.svelte";
 	import SettlementListItem from "$lib/components/SettlementListItem.svelte";
+	import TeamMessageListItem from "$lib/components/TeamMessageListItem.svelte";
 	import {
+		getAdminCharacter,
 		getCharacterById,
 		getSettlementsByCharacterId,
 		getTeamMembers,
 	} from "$lib/api";
 	import { handleImageError } from "$lib/utils/image";
-	import type { Character, SettlementItem } from "$lib/types";
+	import type { Character, SettlementItem, TeamMessageItem } from "$lib/types";
+
+	const ADMIN_TEAM_NAME = "단풍바람 운영팀";
+const ADMIN_TEAM_FALLBACK_ID = "admin-team";
+
+	const fallbackAdminCharacter: Character = {
+		id: ADMIN_TEAM_FALLBACK_ID,
+		name: ADMIN_TEAM_NAME,
+		nickname: "운영팀",
+		avatarUrl: "/logo.png",
+		level: 0,
+		job: "운영",
+		club: "단풍바람",
+		server: "-",
+	};
 
 	const characterId = $derived($page.params.id ?? "");
 	let character = $state<Character | null>(null);
-	let isAdminTeam = $derived(character?.name === "단풍바람 운영팀");
+	let isAdminTeam = $derived(
+		characterId === ADMIN_TEAM_FALLBACK_ID || character?.name === ADMIN_TEAM_NAME,
+	);
 	let settlements = $state<SettlementItem[]>([]);
+	let teamMessages = $state<TeamMessageItem[]>([]);
 	let loading = $state(true);
 	let error = $state<string | null>(null);
 
@@ -31,13 +50,33 @@
 		error = null;
 
 		try {
+			if (characterId === ADMIN_TEAM_FALLBACK_ID) {
+				const adminCharacter = await getAdminCharacter();
+				if (adminCharacter.id !== null) {
+					const adminData = await getCharacterById(adminCharacter.id.toString());
+					character = adminData || fallbackAdminCharacter;
+				} else {
+					character = fallbackAdminCharacter;
+				}
+				teamMessages = await getTeamMembers();
+				settlements = [];
+				return;
+			}
+
 			const charData = await getCharacterById(characterId);
 			character = charData;
+			if (!charData) {
+				settlements = [];
+				teamMessages = [];
+				return;
+			}
 
-			if (charData?.name === "단풍바람 운영팀") {
-				settlements = await getTeamMembers();
+			if (charData.name === ADMIN_TEAM_NAME) {
+				teamMessages = await getTeamMembers();
+				settlements = [];
 			} else {
 				settlements = await getSettlementsByCharacterId(characterId);
+				teamMessages = [];
 			}
 		} catch (e) {
 			console.error("Failed to load character data:", e);
@@ -99,7 +138,9 @@
 					>
 						<span
 							>{isAdminTeam
-								? character.level + "기"
+								? character.level > 0
+									? character.level + "기"
+									: "운영팀"
 								: "Lv. " + character.level}</span
 						>
 						<div class="w-px h-1.5 bg-border-dark"></div>
@@ -118,7 +159,6 @@
 				{/if}
 			</div>
 
-			<!-- Settlement List -->
 			<div class="bg-white flex flex-col pb-2">
 				<div
 					class="flex items-center px-6 py-5 border-b border-bg-light"
@@ -130,10 +170,16 @@
 					>
 				</div>
 				<div class="flex flex-col">
-					{#if settlements.length > 0}
-						{#each settlements as item (item.id)}
-							<SettlementListItem {item} {isAdminTeam} />
-						{/each}
+					{#if isAdminTeam ? teamMessages.length > 0 : settlements.length > 0}
+						{#if isAdminTeam}
+							{#each teamMessages as item (item.id)}
+								<TeamMessageListItem {item} />
+							{/each}
+						{:else}
+							{#each settlements as item (item.id)}
+								<SettlementListItem {item} />
+							{/each}
+						{/if}
 					{:else}
 						<div class="flex items-center justify-center py-8">
 							<p class="text-text-muted">
