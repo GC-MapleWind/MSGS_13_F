@@ -20,13 +20,26 @@
 	});
 	let adminTeamId = $state<string | null>(null);
 
-	authStore.subscribe((state) => {
+	const unsubscribeAuth = authStore.subscribe((state) => {
 		authState = state;
 	});
 
-	onMount(async () => {
-		const result = await getAdminCharacter();
-		adminTeamId = result.id !== null ? result.id.toString() : null;
+	onMount(() => {
+		const loadAdminTeamCharacter = async () => {
+			try {
+				const result = await getAdminCharacter();
+				adminTeamId = result.id !== null ? result.id.toString() : null;
+			} catch (error) {
+				console.error("Failed to load admin team character:", error);
+				adminTeamId = null;
+			}
+		};
+
+		void loadAdminTeamCharacter();
+
+		return () => {
+			unsubscribeAuth();
+		};
 	});
 
 	async function handleLogout() {

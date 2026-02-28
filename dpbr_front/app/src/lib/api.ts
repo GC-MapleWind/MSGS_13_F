@@ -31,6 +31,13 @@ function buildApiUrl(endpoint: string): string {
 	return `${getApiBaseUrl()}${getApiPrefix()}${normalizedEndpoint}`;
 }
 
+function normalizeAssetUrl(url: string | null | undefined): string {
+	if (!url) return '/default-avatar.png';
+	if (/^https?:\/\//i.test(url)) return url;
+	if (url.startsWith('/')) return `${getApiBaseUrl()}${url}`;
+	return `${getApiBaseUrl()}/${url}`;
+}
+
 function normalizeApiErrorDetail(detail: unknown): string {
 	if (typeof detail !== 'string') return '';
 
@@ -289,11 +296,17 @@ export async function createComment(content: string): Promise<CommentResponse> {
  * 댓글 삭제 (스켈레톤 함수 - 프론트엔드 작업용)
  */
 export async function deleteComment(id: string): Promise<void> {
-	// [WARNING] 실제 배포 전에 반드시 실제 API 호출 로직으로 복구해야 합니다.
-	// TODO: accessToken 검증 및 apiCall('/comments/${id}', { method: 'DELETE' }) 등 백엔드 연동 로직 활성화 필요.
-	// 현재는 프론트엔드 UI/UX 작업 편의를 위한 임시 목업(Mock) 처리 상태입니다.
-	console.log(`[API Mock] Deleting comment ID: ${id}`);
-	await new Promise((resolve) => setTimeout(resolve, 300));
+	const accessToken = getAccessToken();
+	if (!accessToken) {
+		throw new Error('로그인이 필요합니다.');
+	}
+
+	await apiCall(`/comments/${id}`, {
+		method: 'DELETE',
+		headers: {
+			Authorization: `Bearer ${accessToken}`
+		}
+	});
 }
 
 /**
@@ -308,7 +321,7 @@ export async function getTeamMembers(): Promise<SettlementItem[]> {
 		characterId: '',
 		title: `${member.name} ${member.role}`,
 		description: '',
-		imageUrl: member.profile_img_url || '',
+		imageUrl: normalizeAssetUrl(member.profile_img_url),
 		acquiredAt: ''
 	}));
 }
@@ -325,7 +338,7 @@ export async function getTeamMemberDetail(memberId: number): Promise<SettlementI
 			characterId: '',
 			title: `${data.name} ${data.role}`,
 			description: data.message?.content || '',
-			imageUrl: data.message?.detail_img_url || data.profile_img_url || '',
+			imageUrl: normalizeAssetUrl(data.message?.detail_img_url || data.profile_img_url),
 			acquiredAt: ''
 		};
 	} catch (error) {

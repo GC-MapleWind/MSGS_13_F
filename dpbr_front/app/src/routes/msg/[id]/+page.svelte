@@ -29,11 +29,17 @@
 
 		loading = true;
 		error = null;
+		isTeamMember = false;
 
 		try {
 			if (msgId.startsWith("team-")) {
 				isTeamMember = true;
 				const memberId = parseInt(msgId.slice(5), 10);
+				if (Number.isNaN(memberId)) {
+					settlement = null;
+					error = "유효하지 않은 운영팀 멤버 ID입니다.";
+					return;
+				}
 				settlement = await getTeamMemberDetail(memberId);
 			} else {
 				settlement = await getSettlementById(msgId);
@@ -80,7 +86,7 @@
 			<div class="flex justify-center items-center bg-white px-6 py-4">
 				<img
 					src={settlement.imageUrl ||
-						(isAdminTeam ? "/logo.png" : "")}
+						(isAdminTeam ? "/logo.png" : "/default-avatar.png")}
 					alt={settlement.title}
 					onerror={handleImageError}
 					class={isAdminTeam && !settlement.imageUrl

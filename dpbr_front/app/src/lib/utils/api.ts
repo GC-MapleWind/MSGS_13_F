@@ -140,7 +140,7 @@ function toUserFromToken(
 	}
 
 	const id =
-		(typeof payload.id === 'number' && payload.id) ||
+		(typeof payload.id === 'number' && Number.isFinite(payload.id) ? payload.id : null) ||
 		(typeof payload.sub === 'string' && parseInt(payload.sub, 10)) ||
 		0;
 	const name =

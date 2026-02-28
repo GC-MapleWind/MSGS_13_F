@@ -31,7 +31,7 @@
 		>
 			<img
 				src="/images/icons/name=Menu, Color=White.svg"
-				alt="메뉴 닫기"
+				alt="메뉴 열기"
 				class="w-6 h-6"
 				draggable="false"
 			/>
