@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { onDestroy } from 'svelte';
 	import type { TalkComment } from '$lib/types';
 
 	interface Props {
@@ -38,6 +39,10 @@
 		}
 		pointerStart = null;
 	}
+
+	onDestroy(() => {
+		clearLongPress();
+	});
 
 	function handleKeydown(event: KeyboardEvent) {
 		if (!comment.isMine) return;
