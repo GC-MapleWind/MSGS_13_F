@@ -18,6 +18,15 @@ export interface SettlementItem {
 	acquiredAt: string;
 }
 
+export interface TeamMessageItem {
+	id: string;
+	name: string;
+	role: string;
+	title: string;
+	content: string;
+	imageUrl: string;
+}
+
 export interface TalkComment {
 	id: string;
 	userId: string | null;  // 작성자의 고유 ID (비회원 등 null일 수 있음)
