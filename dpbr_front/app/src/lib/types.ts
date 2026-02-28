@@ -29,7 +29,7 @@ export interface TeamMessageItem {
 
 export interface TalkComment {
 	id: string;
-	userId: string | null;  // 작성자의 고유 ID (비회원 등 null일 수 있음)
+	userId: number | null;
 	author: string;
 	authorAvatar: string;
 	content: string;
