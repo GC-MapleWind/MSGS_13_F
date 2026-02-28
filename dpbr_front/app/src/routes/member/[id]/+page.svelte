@@ -6,6 +6,7 @@
 	import SettlementListItem from "$lib/components/SettlementListItem.svelte";
 	import TeamMessageListItem from "$lib/components/TeamMessageListItem.svelte";
 	import {
+		getAdminCharacter,
 		getCharacterById,
 		getSettlementsByCharacterId,
 		getTeamMembers,
@@ -14,10 +15,24 @@
 	import type { Character, SettlementItem, TeamMessageItem } from "$lib/types";
 
 	const ADMIN_TEAM_NAME = "단풍바람 운영팀";
+const ADMIN_TEAM_FALLBACK_ID = "admin-team";
+
+	const fallbackAdminCharacter: Character = {
+		id: ADMIN_TEAM_FALLBACK_ID,
+		name: ADMIN_TEAM_NAME,
+		nickname: "운영팀",
+		avatarUrl: "/logo.png",
+		level: 0,
+		job: "운영",
+		club: "단풍바람",
+		server: "-",
+	};
 
 	const characterId = $derived($page.params.id ?? "");
 	let character = $state<Character | null>(null);
-	let isAdminTeam = $derived(character?.name === ADMIN_TEAM_NAME);
+	let isAdminTeam = $derived(
+		characterId === ADMIN_TEAM_FALLBACK_ID || character?.name === ADMIN_TEAM_NAME,
+	);
 	let settlements = $state<SettlementItem[]>([]);
 	let teamMessages = $state<TeamMessageItem[]>([]);
 	let loading = $state(true);
@@ -35,6 +50,19 @@
 		error = null;
 
 		try {
+			if (characterId === ADMIN_TEAM_FALLBACK_ID) {
+				const adminCharacter = await getAdminCharacter();
+				if (adminCharacter.id !== null) {
+					const adminData = await getCharacterById(adminCharacter.id.toString());
+					character = adminData || fallbackAdminCharacter;
+				} else {
+					character = fallbackAdminCharacter;
+				}
+				teamMessages = await getTeamMembers();
+				settlements = [];
+				return;
+			}
+
 			const charData = await getCharacterById(characterId);
 			character = charData;
 			if (!charData) {
@@ -110,7 +138,9 @@
 					>
 						<span
 							>{isAdminTeam
-								? character.level + "기"
+								? character.level > 0
+									? character.level + "기"
+									: "운영팀"
 								: "Lv. " + character.level}</span
 						>
 						<div class="w-px h-1.5 bg-border-dark"></div>
