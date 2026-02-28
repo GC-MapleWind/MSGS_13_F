@@ -65,7 +65,9 @@
 			<div class="flex justify-center items-center bg-white px-6 py-4">
 				<img
 					src={settlement.imageUrl ||
-						(isAdminTeam ? "/logo.png" : "/default-avatar.png")}
+						(isAdminTeam
+							? "/logo.png"
+							: character?.avatarUrl || "/default-avatar.png")}
 					alt={settlement.title}
 					onerror={handleImageError}
 					class={isAdminTeam && !settlement.imageUrl

@@ -109,7 +109,8 @@
 							style="margin-top: {bgHeight / 24}px;"
 						>
 							<img
-								src="/default-avatar.png"
+								src={character.avatarUrl ||
+									"/default-avatar.png"}
 								alt={character.name}
 								onerror={handleImageError}
 								class="w-auto h-auto object-contain drop-shadow-lg"
