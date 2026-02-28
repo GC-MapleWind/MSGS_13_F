@@ -13,9 +13,11 @@
 	import { handleImageError } from "$lib/utils/image";
 	import type { Character, SettlementItem, TeamMessageItem } from "$lib/types";
 
+	const ADMIN_TEAM_NAME = "단풍바람 운영팀";
+
 	const characterId = $derived($page.params.id ?? "");
 	let character = $state<Character | null>(null);
-	let isAdminTeam = $derived(character?.name === "단풍바람 운영팀");
+	let isAdminTeam = $derived(character?.name === ADMIN_TEAM_NAME);
 	let settlements = $state<SettlementItem[]>([]);
 	let teamMessages = $state<TeamMessageItem[]>([]);
 	let loading = $state(true);
@@ -35,8 +37,13 @@
 		try {
 			const charData = await getCharacterById(characterId);
 			character = charData;
+			if (!charData) {
+				settlements = [];
+				teamMessages = [];
+				return;
+			}
 
-			if (charData?.name === "단풍바람 운영팀") {
+			if (charData.name === ADMIN_TEAM_NAME) {
 				teamMessages = await getTeamMembers();
 				settlements = [];
 			} else {

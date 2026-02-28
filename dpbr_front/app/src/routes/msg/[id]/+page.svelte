@@ -67,7 +67,7 @@
 			<div class="flex justify-center items-center bg-white px-6 py-4">
 				<img
 					src={settlement.imageUrl ||
-						(isAdminTeam ? "/logo.png" : "")}
+						(isAdminTeam ? "/logo.png" : "/default-avatar.png")}
 					alt={settlement.title}
 					onerror={handleImageError}
 					class={isAdminTeam && !settlement.imageUrl
@@ -96,7 +96,7 @@
 						>상세 내용</span
 					>
 					<span class="text-base text-text-primary leading-relaxed"
-						>{settlement.title}</span
+						>{settlement.description || settlement.title}</span
 					>
 				</div>
 			</div>
