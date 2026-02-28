@@ -1,4 +1,6 @@
 <script lang="ts">
+	import { onMount } from "svelte";
+
     interface Props {
         title: string;
         cancelText?: string;
@@ -18,6 +20,19 @@
     function handleContainerClick(e: Event) {
         e.stopPropagation();
     }
+
+	function handleKeydown(e: KeyboardEvent) {
+		if (e.key === "Escape") {
+			onCancel();
+		}
+	}
+
+	onMount(() => {
+		window.addEventListener("keydown", handleKeydown);
+		return () => {
+			window.removeEventListener("keydown", handleKeydown);
+		};
+	});
 </script>
 
 <!-- svelte-ignore a11y_click_events_have_key_events -->
@@ -25,6 +40,9 @@
 <div
     class="fixed inset-0 z-50 flex items-center justify-center bg-black/40"
     onclick={onCancel}
+    role="dialog"
+    aria-modal="true"
+    tabindex="-1"
 >
     <div
         class="w-[272px] bg-white rounded-2xl flex flex-col items-center"

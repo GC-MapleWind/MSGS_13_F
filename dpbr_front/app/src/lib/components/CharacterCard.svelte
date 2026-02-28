@@ -38,6 +38,7 @@
 	}
 
 	let logoPath = $derived(getWorldLogoPath(character.server));
+	let isWorldLogoLoadFailed = $state(false);
 </script>
 
 <a
@@ -46,14 +47,13 @@
 >
 	<!-- Badge area (World Logo) -->
 	<div class="h-4 flex items-center mb-1">
-		{#if logoPath}
+		{#if logoPath && !isWorldLogoLoadFailed}
 			<img
 				src={logoPath}
 				alt={character.server}
 				class="h-full object-contain"
-				onerror={(e) => {
-					// 이미지 로드 실패시 요소 안보이게 처리
-					(e.target as HTMLImageElement).style.display = "none";
+				onerror={() => {
+					isWorldLogoLoadFailed = true;
 				}}
 			/>
 		{:else}

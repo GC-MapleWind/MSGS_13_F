@@ -31,11 +31,12 @@
             isVisible = true;
         }, 10);
 
-        const savedName = getSavedName();
-        if (savedName) {
-            name = savedName;
-        }
-    });
+		const savedName = getSavedName();
+		if (savedName) {
+			name = savedName.slice(0, 3);
+			saveName = true;
+		}
+	});
 
     function handleClose(e?: Event) {
         e?.stopPropagation();
