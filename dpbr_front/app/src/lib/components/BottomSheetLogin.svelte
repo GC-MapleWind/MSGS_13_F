@@ -34,6 +34,7 @@
         const savedName = getSavedName();
         if (savedName) {
             name = savedName;
+            saveName = true;
         }
     });
 

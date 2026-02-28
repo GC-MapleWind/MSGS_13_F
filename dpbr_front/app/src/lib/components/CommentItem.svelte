@@ -47,7 +47,7 @@
 >
 	<div class="flex justify-between items-center">
 		<div class="flex items-center gap-2">
-			<span class="text-xs font-light text-text-primary"
+			<span class="text-xs font-bold text-text-primary"
 				>{comment.author}</span
 			>
 		</div>
@@ -63,7 +63,7 @@
 		{/if}
 	</div>
 	<div class="pb-4 border-b border-border flex flex-col gap-1">
-		<p class="text-sm font-light text-text-primary">{comment.content}</p>
+		<p class="text-sm font-medium text-text-primary">{comment.content}</p>
 		<span class="text-xs font-light text-text-muted text-left"
 			>{comment.createdAt}</span
 		>

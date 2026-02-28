@@ -53,7 +53,7 @@
 	</header>
 {:else if variant === "detail"}
 	<header
-		class="relative flex items-center bg-white px-2 py-3 sticky top-0 z-30 border-b border-gray-100"
+		class="relative flex items-center bg-white px-3 py-2 sticky top-0 z-30 border-b border-gray-100"
 	>
 		<button
 			onclick={onBackClick}

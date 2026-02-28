@@ -157,7 +157,10 @@
 		<div class="relative z-10 flex items-center pr-1">
 			{#if $authStore.isAuthenticated}
 				<button
-					onclick={() => authStore.logout()}
+					onclick={async () => {
+						await authStore.logout();
+						await goto("/");
+					}}
 					class="text-white text-sm font-light"
 				>
 					로그아웃
