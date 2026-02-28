@@ -19,23 +19,24 @@
 		isLoading: false,
 	});
 	let adminTeamId = $state<string | null>(null);
+	const sidebarPeriodText = "메생결산 기록";
 
 	const unsubscribeAuth = authStore.subscribe((state) => {
 		authState = state;
 	});
 
 	onMount(() => {
-		const loadAdminTeamCharacter = async () => {
+		const loadAdminCharacter = async () => {
 			try {
 				const result = await getAdminCharacter();
 				adminTeamId = result.id !== null ? result.id.toString() : null;
 			} catch (error) {
-				console.error("Failed to load admin team character:", error);
+				console.error("Failed to load admin character:", error);
 				adminTeamId = null;
 			}
 		};
 
-		void loadAdminTeamCharacter();
+		void loadAdminCharacter();
 
 		return () => {
 			unsubscribeAuth();
@@ -114,7 +115,7 @@
 	<!-- Footer -->
 	<div class="flex items-end gap-2 bg-bg-light p-6">
 		<span class="text-sm font-medium text-text-accent"
-			>2025년 0월 0일~0월 0일의 기록</span
+			>{sidebarPeriodText}</span
 		>
 	</div>
 </aside>
