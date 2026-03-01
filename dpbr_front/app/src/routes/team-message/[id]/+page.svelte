@@ -75,7 +75,7 @@
 			<div class="flex flex-col gap-4 px-6 pt-4 pb-6">
 				<div class="flex gap-4">
 					<span class="text-sm font-light text-text-muted shrink-0">상세 내용</span>
-					<span class="text-base text-text-primary leading-relaxed"
+					<span class="text-base text-text-primary leading-relaxed whitespace-pre-line"
 						>{teamMessage.content || teamMessage.title}</span
 					>
 				</div>
