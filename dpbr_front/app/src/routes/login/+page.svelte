@@ -7,9 +7,8 @@
 	import { toast } from "$lib/stores/toast";
 	import { authStore, getSavedName } from "$lib/stores/auth";
 
-	// TODO: 개발용 임시 로그인 정보. Push 전에 지울 것!
-	let name = $state("김단바");
-	let studentId = $state("000000000");
+	let name = $state("");
+	let studentId = $state("");
 	let saveName = $state(false);
 	let nameFocused = $state(false);
 	let studentIdFocused = $state(false);

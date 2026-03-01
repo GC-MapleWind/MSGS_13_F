@@ -17,6 +17,12 @@
 		TeamMessageItem,
 	} from "$lib/types";
 
+	const ADMIN_TEAM_INFO = {
+		generation: "13기",
+		university: "가천대학교",
+		role: "운영팀",
+	};
+
 	const ADMIN_TEAM_NAME = "단풍바람 운영팀";
 	const ADMIN_TEAM_FALLBACK_ID = "admin-team";
 
@@ -201,17 +207,21 @@
 					>
 						<span
 							>{isAdminTeam
-								? "13기"
+								? ADMIN_TEAM_INFO.generation
 								: "Lv. " + character.level}</span
 						>
 						<div class="w-px h-1.5 bg-border-dark"></div>
 						<span
 							>{isAdminTeam
-								? "가천대학교"
+								? ADMIN_TEAM_INFO.university
 								: character.server}</span
 						>
 						<div class="w-px h-1.5 bg-border-dark"></div>
-						<span>{isAdminTeam ? "운영팀" : character.job}</span>
+						<span
+							>{isAdminTeam
+								? ADMIN_TEAM_INFO.role
+								: character.job}</span
+						>
 					</div>
 				</div>
 				{#if !isAdminTeam}

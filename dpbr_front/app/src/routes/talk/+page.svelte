@@ -236,7 +236,7 @@
 					<span class="text-xs">...</span>
 				{:else}
 					<img
-						src="/images/icons/name=Send, Color=White copy.svg"
+						src="/images/icons/send-icon-white.svg"
 						alt="보내기"
 						class="w-5 h-5 ml-[-2px]"
 						draggable="false"

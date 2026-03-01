@@ -1,0 +1,12 @@
+﻿Loading svelte-check in workspace: c:\?꾩꽦\?⑤컮\MGMS\MSGS_13_F\dpbr_front\app
+Getting Svelte diagnostics...
+
+c:\?꾩꽦\?⑤컮\MGMS\MSGS_13_F\dpbr_front\app\[32msrc\routes\+page.svelte[39m:5:28
+[31mError[39m: Cannot find module '$lib/components/CharacterCard.svelte' or its corresponding type declarations. (ts)
+[36m	import Sidebar from "$lib/components/Sidebar.svelte";
+	import CharacterCard from [35m"$lib/components/CharacterCard.svelte"[36m;
+	import { getCharactersPaginated } from "$lib/api";[39m
+
+====================================
+[31msvelte-check found 1 error and 0 warnings in 1 file
+[39m
