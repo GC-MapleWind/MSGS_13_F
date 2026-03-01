@@ -101,6 +101,20 @@ interface SettlementResponse {
 	acquired_at: string;
 }
 
+interface CharactersPaginationResponse {
+	items: CharacterResponse[];
+	total: number;
+	page: number;
+	limit: number;
+}
+
+interface SettlementsPaginationResponse {
+	items: SettlementResponse[];
+	total: number;
+	page: number;
+	limit: number;
+}
+
 interface CommentResponse {
 	id: number;
 	user_id: number | null;
@@ -185,7 +199,27 @@ async function apiCall<T>(endpoint: string, options?: RequestInit): Promise<T> {
 export async function getCharacters(): Promise<Character[]> {
 	const data = await apiCall<CharacterResponse[]>('/characters');
 
-	return data.map((char) => ({
+	return data.map(mapCharacterResponse);
+}
+
+export async function getCharactersPaginated(
+	page: number = 1,
+	limit: number = 10
+): Promise<{ items: Character[]; total: number; page: number; limit: number }> {
+	const data = await apiCall<CharactersPaginationResponse>(
+		`/characters/pagination?page=${page}&limit=${limit}`
+	);
+
+	return {
+		items: data.items.map(mapCharacterResponse),
+		total: data.total,
+		page: data.page,
+		limit: data.limit
+	};
+}
+
+function mapCharacterResponse(char: CharacterResponse): Character {
+	return {
 		id: char.id.toString(),
 		name: char.name,
 		nickname: char.detail_txt || char.name,
@@ -194,7 +228,18 @@ export async function getCharacters(): Promise<Character[]> {
 		job: char.job,
 		club: '단풍바람',
 		server: char.server
-	}));
+	};
+}
+
+function mapSettlementResponse(settlement: SettlementResponse): SettlementItem {
+	return {
+		id: settlement.id.toString(),
+		characterId: settlement.character_id.toString(),
+		title: settlement.title,
+		description: settlement.description || '',
+		imageUrl: settlement.img_url ? `${getApiBaseUrl()}${settlement.img_url}` : '/default-avatar.png',
+		acquiredAt: settlement.acquired_at
+	};
 }
 
 /**
@@ -228,14 +273,24 @@ export async function getSettlementsByCharacterId(characterId: string): Promise<
 		`/characters/${characterId}/settlements`
 	);
 
-	return data.map((settlement) => ({
-		id: settlement.id.toString(),
-		characterId: settlement.character_id.toString(),
-		title: settlement.title,
-		description: settlement.description || '',
-		imageUrl: settlement.img_url ? `${getApiBaseUrl()}${settlement.img_url}` : '/default-avatar.png',
-		acquiredAt: settlement.acquired_at
-	}));
+	return data.map(mapSettlementResponse);
+}
+
+export async function getSettlementsByCharacterIdPaginated(
+	characterId: string,
+	page: number = 1,
+	limit: number = 10
+): Promise<{ items: SettlementItem[]; total: number; page: number; limit: number }> {
+	const data = await apiCall<SettlementsPaginationResponse>(
+		`/characters/${characterId}/settlements/pagination?page=${page}&limit=${limit}`
+	);
+
+	return {
+		items: data.items.map(mapSettlementResponse),
+		total: data.total,
+		page: data.page,
+		limit: data.limit
+	};
 }
 
 /**
