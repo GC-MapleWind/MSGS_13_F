@@ -1,5 +1,4 @@
 <script lang="ts">
-	import { onMount } from "svelte";
 	import { page } from "$app/stores";
 	import { goto } from "$app/navigation";
 	import Header from "$lib/components/Header.svelte";
@@ -8,7 +7,7 @@
 	import {
 		getAdminCharacter,
 		getCharacterById,
-		getSettlementsByCharacterId,
+		getSettlementsByCharacterIdPaginated,
 		getTeamMembers,
 	} from "$lib/api";
 	import { handleImageError } from "$lib/utils/image";
@@ -34,6 +33,11 @@ const ADMIN_TEAM_FALLBACK_ID = "admin-team";
 		characterId === ADMIN_TEAM_FALLBACK_ID || character?.name === ADMIN_TEAM_NAME,
 	);
 	let settlements = $state<SettlementItem[]>([]);
+	let settlementsLoadingMore = $state(false);
+	let settlementsHasMore = $state(false);
+	let settlementsPage = 1;
+	const settlementsLimit = 10;
+	let settlementsSentinel = $state<HTMLDivElement | null>(null);
 	let teamMessages = $state<TeamMessageItem[]>([]);
 	let loading = $state(true);
 	let error = $state<string | null>(null);
@@ -60,6 +64,7 @@ const ADMIN_TEAM_FALLBACK_ID = "admin-team";
 				}
 				teamMessages = await getTeamMembers();
 				settlements = [];
+				settlementsHasMore = false;
 				return;
 			}
 
@@ -67,6 +72,7 @@ const ADMIN_TEAM_FALLBACK_ID = "admin-team";
 			character = charData;
 			if (!charData) {
 				settlements = [];
+				settlementsHasMore = false;
 				teamMessages = [];
 				return;
 			}
@@ -74,9 +80,13 @@ const ADMIN_TEAM_FALLBACK_ID = "admin-team";
 			if (charData.name === ADMIN_TEAM_NAME) {
 				teamMessages = await getTeamMembers();
 				settlements = [];
+				settlementsHasMore = false;
 			} else {
-				settlements = await getSettlementsByCharacterId(characterId);
 				teamMessages = [];
+				settlements = [];
+				settlementsPage = 1;
+				settlementsHasMore = true;
+				await loadMoreSettlements(characterId);
 			}
 		} catch (e) {
 			console.error("Failed to load character data:", e);
@@ -85,6 +95,51 @@ const ADMIN_TEAM_FALLBACK_ID = "admin-team";
 			loading = false;
 		}
 	}
+
+	async function loadMoreSettlements(targetCharacterId: string) {
+		if (settlementsLoadingMore || !settlementsHasMore) return;
+
+		settlementsLoadingMore = true;
+		try {
+			const result = await getSettlementsByCharacterIdPaginated(
+				targetCharacterId,
+				settlementsPage,
+				settlementsLimit,
+			);
+
+			settlements = [...settlements, ...result.items];
+			settlementsHasMore = settlements.length < result.total && result.items.length > 0;
+			if (result.items.length > 0) {
+				settlementsPage += 1;
+			}
+		} catch (e) {
+			console.error("Failed to load settlements:", e);
+			error = "데이터를 불러오는데 실패했습니다.";
+			settlementsHasMore = false;
+		} finally {
+			settlementsLoadingMore = false;
+		}
+	}
+
+	$effect(() => {
+		if (!settlementsSentinel || !settlementsHasMore || isAdminTeam) return;
+
+		const currentCharacterId = characterId;
+		const observer = new IntersectionObserver(
+			(entries) => {
+				if (entries[0]?.isIntersecting) {
+					void loadMoreSettlements(currentCharacterId);
+				}
+			},
+			{ rootMargin: "160px 0px" },
+		);
+
+		observer.observe(settlementsSentinel);
+
+		return () => {
+			observer.disconnect();
+		};
+	});
 </script>
 
 <svelte:head>
@@ -179,6 +234,13 @@ const ADMIN_TEAM_FALLBACK_ID = "admin-team";
 							{#each settlements as item (item.id)}
 								<SettlementListItem {item} />
 							{/each}
+							{#if settlementsHasMore}
+								<div bind:this={settlementsSentinel} class="py-4 flex items-center justify-center">
+									{#if settlementsLoadingMore}
+										<p class="text-text-muted text-sm">불러오는 중...</p>
+									{/if}
+								</div>
+							{/if}
 						{/if}
 					{:else}
 						<div class="flex items-center justify-center py-8">
