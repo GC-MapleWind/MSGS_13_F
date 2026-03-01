@@ -32,6 +32,9 @@
 	const currentPath = $derived(normalizePath($page.url.pathname));
 	const isLoginRoute = $derived(currentPath.startsWith("/login"));
 	const isSignupRoute = $derived(currentPath.startsWith("/auth/signup"));
+	const MOBILE_MIN_WIDTH = 320;
+	const MOBILE_MAX_WIDTH = 768;
+	const MOBILE_BASE_HEIGHT = 874;
 	let hasCheckedAuth = $state(false);
 	let navigationInFlight = false;
 
@@ -92,8 +95,9 @@
 >
 	<div
 		class="bg-[#FAFAFA] shadow-2xl relative flex flex-col h-full mx-auto overflow-hidden
-		w-full min-w-[calc(100dvh*320/874)] max-w-[calc(100dvh*768/874)]
+		w-full
 		md:min-w-[calc(100dvh*9/16)] md:max-w-[calc(100dvh*9/16)] md:w-[calc(100dvh*9/16)]"
+		style={`min-width: calc(100dvh*${MOBILE_MIN_WIDTH}/${MOBILE_BASE_HEIGHT}); max-width: calc(100dvh*${MOBILE_MAX_WIDTH}/${MOBILE_BASE_HEIGHT});`}
 	>
 		<Toast />
 		{@render children()}

@@ -78,7 +78,7 @@
 			aria-label="입력 내용 삭제"
 		>
 			<img
-				src="/images/icons/name=Close, Color=Black.svg"
+				src="/images/icons/name%3DClose%2C%20Color%3DBlack.svg"
 				alt="지우기"
 				class="w-3.5 h-3.5 opacity-70"
 				draggable="false"

@@ -21,6 +21,7 @@
     let studentIdFocused = $state(false);
     let isLoading = $state(false);
     let studentIdInputRef: HTMLDivElement | undefined = $state();
+    let dialogEl: HTMLDivElement | undefined = $state();
 
     // 애니메이션을 위한 상태
     let isVisible = $state(false);
@@ -36,6 +37,18 @@
 			name = savedName.slice(0, 3);
 			saveName = true;
 		}
+
+		dialogEl?.focus();
+		const handleEscape = (e: KeyboardEvent) => {
+			if (e.key === "Escape") {
+				handleClose();
+			}
+		};
+
+		window.addEventListener("keydown", handleEscape);
+		return () => {
+			window.removeEventListener("keydown", handleEscape);
+		};
 	});
 
     function handleClose(e?: Event) {
@@ -134,10 +147,15 @@
 <!-- svelte-ignore a11y_click_events_have_key_events -->
 <!-- svelte-ignore a11y_no_static_element_interactions -->
 <div
+    bind:this={dialogEl}
     class="absolute inset-0 z-50 flex flex-col justify-end bg-black/40 transition-opacity duration-300 {isVisible
         ? 'opacity-100'
         : 'opacity-0'}"
     onclick={handleClose}
+    role="dialog"
+    aria-modal="true"
+    aria-label="로그인"
+    tabindex="-1"
 >
     <div
         class="w-full h-[72%] bg-gradient-to-b from-[#FCDDA5] to-[#F1A470] rounded-t-3xl pt-4 pb-8 px-6 flex flex-col items-center shadow-lg transition-transform duration-300 {isVisible

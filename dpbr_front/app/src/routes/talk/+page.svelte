@@ -55,6 +55,7 @@
 			comments = await getComments();
 		} catch (e) {
 			console.error("Failed to reload comments after login:", e);
+			error = "톡을 불러오는데 실패했습니다.";
 		} finally {
 			loading = false;
 		}

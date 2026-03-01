@@ -163,6 +163,15 @@ async function apiCall<T>(endpoint: string, options?: RequestInit): Promise<T> {
 			);
 		}
 
+		if (response.status === 204) {
+			return undefined as T;
+		}
+
+		const responseContentType = response.headers.get('content-type') ?? '';
+		if (!responseContentType.includes('application/json')) {
+			return undefined as T;
+		}
+
 		return await response.json();
 	} catch (error) {
 		console.error('API Call Error:', error);

@@ -21,6 +21,8 @@
         e.stopPropagation();
     }
 
+	let dialogEl: HTMLDivElement | undefined = $state();
+
 	function handleKeydown(e: KeyboardEvent) {
 		if (e.key === "Escape") {
 			onCancel();
@@ -28,21 +30,20 @@
 	}
 
 	onMount(() => {
-		window.addEventListener("keydown", handleKeydown);
-		return () => {
-			window.removeEventListener("keydown", handleKeydown);
-		};
+		dialogEl?.focus();
 	});
 </script>
 
 <!-- svelte-ignore a11y_click_events_have_key_events -->
 <!-- svelte-ignore a11y_no_static_element_interactions -->
 <div
-    class="fixed inset-0 z-50 flex items-center justify-center bg-black/40"
-    onclick={onCancel}
-    role="dialog"
-    aria-modal="true"
-    tabindex="-1"
+    bind:this={dialogEl}
+	class="fixed inset-0 z-50 flex items-center justify-center bg-black/40"
+	onclick={onCancel}
+	onkeydown={handleKeydown}
+	role="dialog"
+	aria-modal="true"
+	tabindex="-1"
 >
     <div
         class="w-[272px] bg-white rounded-2xl flex flex-col items-center"

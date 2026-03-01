@@ -11,7 +11,9 @@
 	let error = $state<string | null>(null);
 
 	$effect(() => {
-		loadData();
+		if (teamMessageId) {
+			loadData();
+		}
 	});
 
 	async function loadData() {

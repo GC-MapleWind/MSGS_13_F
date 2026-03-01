@@ -97,7 +97,7 @@
 						>상세 내용</span
 					>
 					<span class="text-base text-text-primary leading-relaxed"
-						>{settlement.description || settlement.title}</span
+						>{settlement.title || settlement.description}</span
 					>
 				</div>
 			</div>
