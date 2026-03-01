@@ -65,21 +65,44 @@
 				/>
 			</div>
 
-			<div class="flex flex-col gap-4 px-6 pt-4">
+			<div class="flex flex-col gap-4 px-6 py-4">
 				<div class="flex gap-4">
-					<span class="text-sm font-light text-text-muted shrink-0">직책</span>
-					<span class="text-base text-text-primary">{teamMessage.role}</span>
+					<span
+						class="w-[72px] shrink-0 text-left whitespace-nowrap text-sm font-light text-text-muted"
+						>직책</span
+					>
+					<span class="text-base text-text-primary"
+						>{teamMessage.role}</span
+					>
 				</div>
 			</div>
 
-			<div class="flex flex-col gap-4 px-6 pt-4 pb-6">
+			<hr class="border-bg-light mx-6" />
+
+			<div class="flex flex-col gap-4 px-6 py-4">
 				<div class="flex gap-4">
-					<span class="text-sm font-light text-text-muted shrink-0">상세 내용</span>
+					<span
+						class="w-[72px] shrink-0 text-left whitespace-nowrap text-sm font-light text-text-muted"
+						>상세 내용</span
+					>
 					<span class="text-base text-text-primary leading-relaxed"
 						>{teamMessage.content || teamMessage.title}</span
 					>
 				</div>
 			</div>
+
+			<hr class="border-bg-light mx-6" />
+		</div>
+
+		<div
+			class="flex justify-center items-center h-[calc(100dvh*64/874)] bg-white shrink-0 mt-2"
+		>
+			<img
+				src="/images/logos/logo-text-mono.svg"
+				alt="단풍바람"
+				class="h-5 opacity-40 object-contain"
+				draggable="false"
+			/>
 		</div>
 	{:else}
 		<div class="flex-1 flex items-center justify-center">

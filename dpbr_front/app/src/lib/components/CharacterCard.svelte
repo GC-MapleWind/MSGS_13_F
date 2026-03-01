@@ -64,12 +64,12 @@
 	</div>
 
 	<!-- Avatar -->
-	<div class="flex justify-center items-center py-2 h-40">
+	<div class="flex justify-center items-center py-2">
 		<img
 			src={character.avatarUrl}
 			alt={character.name}
 			onerror={handleImageError}
-			class="w-3/4 aspect-[5/6] object-cover [image-rendering:pixelated]"
+			class="w-full aspect-square object-contain"
 		/>
 	</div>
 
