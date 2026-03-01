@@ -7,6 +7,7 @@
 	import {
 		getAdminCharacter,
 		getCharacterById,
+		getSettlementsByCharacterId,
 		getSettlementsByCharacterIdPaginated,
 		getTeamMembers,
 	} from "$lib/api";
@@ -127,6 +128,17 @@
 				settlementsPage += 1;
 			}
 		} catch (e) {
+			if (
+				e instanceof Error &&
+				e.message.includes("API Error: 404") &&
+				settlementsPage === 1
+			) {
+				const fallbackItems = await getSettlementsByCharacterId(targetCharacterId);
+				settlements = fallbackItems;
+				settlementsHasMore = false;
+				return;
+			}
+
 			console.error("Failed to load settlements:", e);
 			error = "데이터를 불러오는데 실패했습니다.";
 			settlementsHasMore = false;
