@@ -127,10 +127,14 @@ export function getSavedName(): string | null {
 }
 
 /**
- * 이름 저장
+ * 이름 저장 또는 삭제
  */
-export function saveName(name: string): void {
-	setStorageItem(SAVED_NAME_KEY, name);
+export function saveName(name: string | null): void {
+	if (name && name.trim()) {
+		setStorageItem(SAVED_NAME_KEY, name.trim());
+	} else {
+		removeStorageItem(SAVED_NAME_KEY);
+	}
 }
 
 /**
@@ -154,11 +158,6 @@ export async function login(name: string, studentId: string, saveNameFlag = fals
 
 		// 새로운 setAuthData 함수 사용
 		setAuthData(token, user);
-
-		// 이름 저장 옵션이 체크되어 있으면 저장
-		if (saveNameFlag) {
-			saveName(user.name);
-		}
 	} catch (error) {
 		update((state) => ({ ...state, isLoading: false }));
 		throw error;

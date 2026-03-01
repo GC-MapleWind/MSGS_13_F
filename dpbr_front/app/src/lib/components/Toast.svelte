@@ -1,45 +1,18 @@
 <script lang="ts">
-	import { fade } from 'svelte/transition';
-
-	interface Props {
-		message: string;
-		duration?: number;
-		show: boolean;
-		onClose: () => void;
-	}
-
-	let { message, duration = 3000, show, onClose }: Props = $props();
-
-	let timeoutId: ReturnType<typeof setTimeout> | null = null;
-
-	$effect(() => {
-		if (show) {
-			// 기존 타이머 클리어
-			if (timeoutId) {
-				clearTimeout(timeoutId);
-			}
-
-			// duration 후 자동으로 닫기
-			timeoutId = setTimeout(() => {
-				onClose();
-			}, duration);
-		}
-
-		return () => {
-			if (timeoutId) {
-				clearTimeout(timeoutId);
-			}
-		};
-	});
+	import { toast } from "$lib/stores/toast";
+	import { fade, slide } from "svelte/transition";
 </script>
 
-{#if show}
-	<div
-		class="fixed top-[54px] left-1/2 -translate-x-1/2 z-50 px-4 py-3 bg-gray-600 text-white rounded-lg shadow-lg max-w-[90%]"
-		transition:fade={{ duration: 0.5 }}
-		role="alert"
-		aria-live="assertive"
-	>
-		{message}
-	</div>
-{/if}
+<div
+	class="fixed top-12 left-0 right-0 z-50 flex flex-col items-center pointer-events-none gap-2 px-4"
+>
+	{#each $toast as { id, message } (id)}
+		<div
+			in:slide={{ duration: 250 }}
+			out:fade={{ duration: 200 }}
+			class="bg-[rgba(124,107,89,0.95)] text-white px-6 py-3 rounded-full shadow-md text-sm text-center max-w-[90%] pointer-events-auto"
+		>
+			{message}
+		</div>
+	{/each}
+</div>

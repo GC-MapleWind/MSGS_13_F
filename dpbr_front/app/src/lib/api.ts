@@ -1,5 +1,5 @@
 import { env } from '$env/dynamic/public';
-import type { Character, SettlementItem, TalkComment } from './types';
+import type { Character, SettlementItem, TalkComment, TeamMessageItem } from './types';
 
 /**
  * API 기본 URL
@@ -29,6 +29,13 @@ function getApiPrefix(): string {
 function buildApiUrl(endpoint: string): string {
 	const normalizedEndpoint = endpoint.startsWith('/') ? endpoint : `/${endpoint}`;
 	return `${getApiBaseUrl()}${getApiPrefix()}${normalizedEndpoint}`;
+}
+
+function normalizeAssetUrl(url: string | null | undefined): string {
+	if (!url) return '/default-avatar.png';
+	if (/^https?:\/\//i.test(url)) return url;
+	if (url.startsWith('/')) return `${getApiBaseUrl()}${url}`;
+	return `${getApiBaseUrl()}/${url}`;
 }
 
 function normalizeApiErrorDetail(detail: unknown): string {
@@ -102,12 +109,28 @@ interface CommentResponse {
 	created_at: string;
 }
 
+interface TeamMemberResponse {
+	id: number;
+	name: string;
+	role: string;
+	profile_img_url: string | null;
+}
+
+interface TeamMemberDetailResponse extends TeamMemberResponse {
+	message: {
+		id: number;
+		title: string;
+		content: string;
+		detail_img_url: string | null;
+	} | null;
+}
+
 /**
  * API 호출 유틸리티
  */
 async function apiCall<T>(endpoint: string, options?: RequestInit): Promise<T> {
 	const url = buildApiUrl(endpoint);
-	
+
 	try {
 		const response = await fetch(url, {
 			...options,
@@ -140,6 +163,15 @@ async function apiCall<T>(endpoint: string, options?: RequestInit): Promise<T> {
 			);
 		}
 
+		if (response.status === 204) {
+			return undefined as T;
+		}
+
+		const responseContentType = response.headers.get('content-type') ?? '';
+		if (!responseContentType.includes('application/json')) {
+			return undefined as T;
+		}
+
 		return await response.json();
 	} catch (error) {
 		console.error('API Call Error:', error);
@@ -152,12 +184,12 @@ async function apiCall<T>(endpoint: string, options?: RequestInit): Promise<T> {
  */
 export async function getCharacters(): Promise<Character[]> {
 	const data = await apiCall<CharacterResponse[]>('/characters');
-	
+
 	return data.map((char) => ({
 		id: char.id.toString(),
 		name: char.name,
 		nickname: char.detail_txt || char.name,
-		avatarUrl: char.avatar_url || '/default-avatar.png',
+		avatarUrl: normalizeAssetUrl(char.avatar_url),
 		level: char.level,
 		job: char.job,
 		club: '단풍바람',
@@ -171,12 +203,12 @@ export async function getCharacters(): Promise<Character[]> {
 export async function getCharacterById(id: string): Promise<Character | null> {
 	try {
 		const data = await apiCall<CharacterResponse>(`/characters/${id}`);
-		
+
 		return {
 			id: data.id.toString(),
 			name: data.name,
 			nickname: data.detail_txt || data.name,
-			avatarUrl: data.avatar_url || '/default-avatar.png',
+			avatarUrl: normalizeAssetUrl(data.avatar_url),
 			level: data.level,
 			job: data.job,
 			club: '단풍바람',
@@ -195,13 +227,13 @@ export async function getSettlementsByCharacterId(characterId: string): Promise<
 	const data = await apiCall<SettlementResponse[]>(
 		`/characters/${characterId}/settlements`
 	);
-	
+
 	return data.map((settlement) => ({
 		id: settlement.id.toString(),
 		characterId: settlement.character_id.toString(),
 		title: settlement.title,
 		description: settlement.description || '',
-		imageUrl: settlement.img_url || '/default-avatar.png',
+		imageUrl: settlement.img_url ? `${getApiBaseUrl()}${settlement.img_url}` : '/default-avatar.png',
 		acquiredAt: settlement.acquired_at
 	}));
 }
@@ -212,13 +244,13 @@ export async function getSettlementsByCharacterId(characterId: string): Promise<
 export async function getSettlementById(id: string): Promise<SettlementItem | null> {
 	try {
 		const data = await apiCall<SettlementResponse>(`/settlements/${id}`);
-		
+
 		return {
 			id: data.id.toString(),
 			characterId: data.character_id.toString(),
 			title: data.title,
 			description: data.description || '',
-			imageUrl: data.img_url || '/default-avatar.png',
+			imageUrl: data.img_url ? `${getApiBaseUrl()}${data.img_url}` : '/default-avatar.png',
 			acquiredAt: data.acquired_at
 		};
 	} catch (error) {
@@ -234,9 +266,10 @@ export async function getComments(page: number = 1, limit: number = 20): Promise
 	const data = await apiCall<CommentResponse[]>(
 		`/comments?page=${page}&limit=${limit}`
 	);
-	
+
 	return data.map((comment) => ({
 		id: comment.id.toString(),
+		userId: comment.user_id,
 		author: comment.author,
 		authorAvatar: '/default-avatar.png',
 		content: comment.content,
@@ -266,6 +299,66 @@ export async function createComment(content: string): Promise<CommentResponse> {
 		},
 		body: JSON.stringify({ content })
 	});
+}
+
+/**
+ * 댓글 삭제 (스켈레톤 함수 - 프론트엔드 작업용)
+ */
+export async function deleteComment(id: string): Promise<void> {
+	const accessToken = getAccessToken();
+	if (!accessToken) {
+		throw new Error('로그인이 필요합니다.');
+	}
+
+	await apiCall(`/comments/${id}`, {
+		method: 'DELETE',
+		headers: {
+			Authorization: `Bearer ${accessToken}`
+		}
+	});
+}
+
+export async function getTeamMembers(): Promise<TeamMessageItem[]> {
+	const data = await apiCall<TeamMemberResponse[]>('/system/team');
+
+	return data.map((member) => ({
+		id: member.id.toString(),
+		name: member.name,
+		role: member.role,
+		title: '',
+		content: '',
+		imageUrl: normalizeAssetUrl(member.profile_img_url)
+	}));
+}
+
+export async function getTeamMessageDetail(memberId: string): Promise<TeamMessageItem | null> {
+	try {
+		const data = await apiCall<TeamMemberDetailResponse>(`/system/team/${memberId}`);
+
+		return {
+			id: data.id.toString(),
+			name: data.name,
+			role: data.role,
+			title: data.message?.title || '',
+			content: data.message?.content || '',
+			imageUrl: normalizeAssetUrl(data.message?.detail_img_url || data.profile_img_url)
+		};
+	} catch (error) {
+		console.error('Failed to fetch team message detail:', error);
+		return null;
+	}
+}
+
+/**
+ * 사이드바용: 운영팀 캐릭터 ID 조회
+ */
+export async function getAdminCharacter(): Promise<{ id: number | null; name?: string }> {
+	try {
+		return await apiCall<{ id: number | null; name?: string }>('/system/admin-character');
+	} catch (error) {
+		console.error('Failed to fetch admin character:', error);
+		return { id: null };
+	}
 }
 
 /**

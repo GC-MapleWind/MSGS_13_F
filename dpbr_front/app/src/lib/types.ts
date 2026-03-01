@@ -18,8 +18,18 @@ export interface SettlementItem {
 	acquiredAt: string;
 }
 
+export interface TeamMessageItem {
+	id: string;
+	name: string;
+	role: string;
+	title: string;
+	content: string;
+	imageUrl: string;
+}
+
 export interface TalkComment {
 	id: string;
+	userId: number | null;
 	author: string;
 	authorAvatar: string;
 	content: string;
@@ -27,6 +37,7 @@ export interface TalkComment {
 }
 
 export interface User {
+	id: number;           // 백엔드 회원 고유 번호
 	name: string;
 	studentId: string;
 }

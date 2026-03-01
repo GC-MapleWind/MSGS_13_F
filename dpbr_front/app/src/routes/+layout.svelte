@@ -4,6 +4,7 @@
 	import { page } from "$app/stores";
 	import { goto } from "$app/navigation";
 	import type { Snippet } from "svelte";
+	import Toast from "$lib/components/Toast.svelte";
 	import { authStore } from "$lib/stores/auth";
 	import type { AuthState } from "$lib/types";
 
@@ -31,6 +32,9 @@
 	const currentPath = $derived(normalizePath($page.url.pathname));
 	const isLoginRoute = $derived(currentPath.startsWith("/login"));
 	const isSignupRoute = $derived(currentPath.startsWith("/auth/signup"));
+	const MOBILE_MIN_WIDTH = 320;
+	const MOBILE_MAX_WIDTH = 768;
+	const MOBILE_BASE_HEIGHT = 874;
 	let hasCheckedAuth = $state(false);
 	let navigationInFlight = false;
 
@@ -87,11 +91,15 @@
 </script>
 
 <div
-	class="h-screen bg-bg-app flex justify-center items-center overflow-hidden"
+	class="h-[100dvh] w-full bg-[#FFFBF5] flex justify-center items-center overflow-hidden"
 >
 	<div
-		class="bg-white shadow-lg relative flex flex-col h-full w-full max-w-3xl overflow-hidden"
+		class="bg-[#FAFAFA] shadow-2xl relative flex flex-col h-full mx-auto overflow-hidden
+		w-full
+		md:min-w-[calc(100dvh*9/16)] md:max-w-[calc(100dvh*9/16)] md:w-[calc(100dvh*9/16)]"
+		style={`min-width: calc(100dvh*${MOBILE_MIN_WIDTH}/${MOBILE_BASE_HEIGHT}); max-width: calc(100dvh*${MOBILE_MAX_WIDTH}/${MOBILE_BASE_HEIGHT});`}
 	>
+		<Toast />
 		{@render children()}
 	</div>
 </div>

@@ -4,7 +4,7 @@
 	import { env } from "$env/dynamic/public";
 	import InputBox from "$lib/components/InputBox.svelte";
 	import Button from "$lib/components/Button.svelte";
-	import Toast from "$lib/components/Toast.svelte";
+	import { toast } from "$lib/stores/toast";
 	import { authStore, getSavedName } from "$lib/stores/auth";
 
 	let name = $state("");
@@ -12,16 +12,25 @@
 	let saveName = $state(false);
 	let nameFocused = $state(false);
 	let studentIdFocused = $state(false);
-	let showToast = $state(false);
-	let toastMessage = $state("이름 또는 학번을 확인해 주세요.");
 	let isLoading = $state(false);
 	let studentIdInputRef: HTMLDivElement | undefined = $state();
 
-	// 저장된 이름이 있으면 자동 입력
+	// 저장된 이름이 있으면 자동 입력 및 체크박스 활성화
 	onMount(() => {
 		const savedName = getSavedName();
 		if (savedName) {
-			name = savedName;
+			// 직접 수정을 대비해 최대 3글자까지만 수용
+			name = savedName.slice(0, 3);
+			saveName = true;
+		}
+	});
+
+	// 이름 저장 실시간 처리 ($effect: Svelte 5)
+	$effect(() => {
+		if (saveName) {
+			authStore.saveName(name);
+		} else {
+			authStore.saveName(null); // 체크 해제 시 삭제
 		}
 	});
 
@@ -54,28 +63,25 @@
 		}
 	}
 
+	/*
 	function handleKakaoLogin() {
 		const kakaoClientId = env.PUBLIC_KAKAO_CLIENT_ID;
 		const kakaoRedirectUri = env.PUBLIC_KAKAO_REDIRECT_URI;
 
 		if (!kakaoClientId || !kakaoRedirectUri) {
-			showToastMessage("카카오 로그인 설정이 누락되었습니다. 관리자에게 문의해주세요.");
+			showToastMessage(
+				"카카오 로그인 설정이 누락되었습니다. 관리자에게 문의해주세요.",
+			);
 			return;
 		}
 
 		const KAKAO_AUTH_URL = `https://kauth.kakao.com/oauth/authorize?client_id=${kakaoClientId}&redirect_uri=${kakaoRedirectUri}&response_type=code`;
 		window.location.href = KAKAO_AUTH_URL;
 	}
+	*/
 
 	function showToastMessage(message?: string) {
-		if (message) {
-			toastMessage = message;
-		}
-		showToast = true;
-	}
-
-	function handleToastClose() {
-		showToast = false;
+		toast.show(message || "이름 또는 학번을 확인해 주세요.");
 	}
 
 	function handleNameFocus() {
@@ -120,25 +126,17 @@
 	<title>로그인 - 단풍바람</title>
 </svelte:head>
 
-<div
-	class="min-h-screen bg-gradient-to-b from-[#FCDDA5] to-[#F1A470] flex flex-col px-4 py-8"
->
-	<!-- Toast 메시지 -->
-	<Toast
-		message={toastMessage}
-		show={showToast}
-		onClose={handleToastClose}
-	/>
-
+<div class="min-h-screen bg-transparent flex flex-col px-4 py-8">
 	<!-- 메인 컨텐츠 -->
 	<div class="flex-1 flex items-center justify-center">
 		<div class="w-full max-w-md flex flex-col items-center gap-12">
-			<!-- 앱 타이틀 -->
-			<h1
-				class="text-4xl font-bold text-white tracking-widest drop-shadow-sm"
-			>
-				단풍바람
-			</h1>
+			<!-- 앱 타이틀 이미지 로고 -->
+			<img
+				src="/images/logos/logo-text-white.svg"
+				alt="단풍바람"
+				class="h-10 object-contain drop-shadow-sm mb-4"
+				draggable="false"
+			/>
 
 			<!-- 입력 폼 -->
 			<div class="w-full flex flex-col gap-4">
@@ -166,7 +164,9 @@
 							placeholder="학번"
 							value={studentId}
 							maxLength={9}
-							inputState={studentIdFocused ? "focused" : "default"}
+							inputState={studentIdFocused
+								? "focused"
+								: "default"}
 							showClearButton={true}
 							onInput={(value) => (studentId = value)}
 							onFocus={handleStudentIdFocus}
@@ -200,7 +200,7 @@
 					<span class="text-white text-sm">이름 저장</span>
 				</label>
 
-				<!-- 카카오 로그인 버튼 -->
+				<!-- 카카오 로그인 버튼 주석 처리
 				<div class="w-full pt-4 border-t border-white/20 mt-2">
 					<Button
 						label="카카오 계정으로 로그인"
@@ -210,6 +210,7 @@
 						class="bg-[#FEE500] text-black hover:bg-[#FDD835] font-medium border-none"
 					/>
 				</div>
+				-->
 			</div>
 		</div>
 	</div>
