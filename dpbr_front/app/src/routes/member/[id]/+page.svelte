@@ -115,7 +115,8 @@
 			);
 
 			settlements = [...settlements, ...result.items];
-			settlementsHasMore = settlements.length < result.total && result.items.length > 0;
+			settlementsHasMore =
+				settlements.length < result.total && result.items.length > 0;
 			if (result.items.length > 0) {
 				settlementsPage += 1;
 			}
@@ -200,15 +201,17 @@
 					>
 						<span
 							>{isAdminTeam
-								? character.level > 0
-									? character.level + "기"
-									: "운영팀"
+								? "13기"
 								: "Lv. " + character.level}</span
 						>
 						<div class="w-px h-1.5 bg-border-dark"></div>
-						<span>{character.server}</span>
+						<span
+							>{isAdminTeam
+								? "가천대학교"
+								: character.server}</span
+						>
 						<div class="w-px h-1.5 bg-border-dark"></div>
-						<span>{character.job}</span>
+						<span>{isAdminTeam ? "운영팀" : character.job}</span>
 					</div>
 				</div>
 				{#if !isAdminTeam}
@@ -242,9 +245,14 @@
 								<SettlementListItem {item} />
 							{/each}
 							{#if settlementsHasMore}
-								<div bind:this={settlementsSentinel} class="py-4 flex items-center justify-center">
+								<div
+									bind:this={settlementsSentinel}
+									class="py-4 flex items-center justify-center"
+								>
 									{#if settlementsLoadingMore}
-										<p class="text-text-muted text-sm">불러오는 중...</p>
+										<p class="text-text-muted text-sm">
+											불러오는 중...
+										</p>
 									{/if}
 								</div>
 							{/if}

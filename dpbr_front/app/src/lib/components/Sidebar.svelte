@@ -111,9 +111,9 @@
 	</div>
 
 	<!-- Footer -->
-	<div class="flex items-end gap-2 bg-bg-light p-6">
-		<span class="text-sm font-medium text-text-accent"
-			>{sidebarPeriodText}</span
+	<div class="flex items-center gap-2 bg-bg-light p-6">
+		<span class="text-xs font-medium text-text-secondary"
+			>'25년 8월 25일 ~ '26년 2월 22일의 기록</span
 		>
 	</div>
 </aside>
