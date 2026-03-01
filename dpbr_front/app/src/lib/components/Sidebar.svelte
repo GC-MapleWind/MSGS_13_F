@@ -46,7 +46,7 @@
 	async function handleLogout() {
 		await authStore.logout();
 		onClose();
-		await goto("/login");
+		await goto("/");
 	}
 </script>
 

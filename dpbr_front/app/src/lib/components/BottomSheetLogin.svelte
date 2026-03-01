@@ -32,24 +32,24 @@
             isVisible = true;
         }, 10);
 
-		const savedName = getSavedName();
-		if (savedName) {
-			name = savedName.slice(0, 3);
-			saveName = true;
-		}
+        const savedName = getSavedName();
+        if (savedName) {
+            name = savedName.slice(0, 3);
+            saveName = true;
+        }
 
-		dialogEl?.focus();
-		const handleEscape = (e: KeyboardEvent) => {
-			if (e.key === "Escape") {
-				handleClose();
-			}
-		};
+        dialogEl?.focus();
+        const handleEscape = (e: KeyboardEvent) => {
+            if (e.key === "Escape") {
+                handleClose();
+            }
+        };
 
-		window.addEventListener("keydown", handleEscape);
-		return () => {
-			window.removeEventListener("keydown", handleEscape);
-		};
-	});
+        window.addEventListener("keydown", handleEscape);
+        return () => {
+            window.removeEventListener("keydown", handleEscape);
+        };
+    });
 
     function handleClose(e?: Event) {
         e?.stopPropagation();
