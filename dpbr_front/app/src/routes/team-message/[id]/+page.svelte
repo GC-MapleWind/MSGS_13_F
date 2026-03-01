@@ -81,16 +81,12 @@
 
 			<div class="flex flex-col gap-4 px-6 py-4">
 				<div class="flex gap-4">
-<<<<<<< HEAD
 					<span
 						class="w-[72px] shrink-0 text-left whitespace-nowrap text-sm font-light text-text-muted"
 						>상세 내용</span
 					>
-					<span class="text-base text-text-primary leading-relaxed"
-=======
-					<span class="text-sm font-light text-text-muted shrink-0">상세 내용</span>
-					<span class="text-base text-text-primary leading-relaxed whitespace-pre-line"
->>>>>>> 9511ada04831b28e946fff232bacb1d04de14a22
+					<span
+						class="text-base text-text-primary leading-relaxed whitespace-pre-line"
 						>{teamMessage.content || teamMessage.title}</span
 					>
 				</div>
