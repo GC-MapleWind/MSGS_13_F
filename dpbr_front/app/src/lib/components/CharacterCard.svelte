@@ -69,7 +69,7 @@
 			src={character.avatarUrl}
 			alt={character.name}
 			onerror={handleImageError}
-			class="w-full aspect-square object-contain"
+			class="w-full aspect-square object-contain [image-rendering:pixelated]"
 		/>
 	</div>
 

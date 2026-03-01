@@ -11,10 +11,14 @@
 		getTeamMembers,
 	} from "$lib/api";
 	import { handleImageError } from "$lib/utils/image";
-	import type { Character, SettlementItem, TeamMessageItem } from "$lib/types";
+	import type {
+		Character,
+		SettlementItem,
+		TeamMessageItem,
+	} from "$lib/types";
 
 	const ADMIN_TEAM_NAME = "단풍바람 운영팀";
-const ADMIN_TEAM_FALLBACK_ID = "admin-team";
+	const ADMIN_TEAM_FALLBACK_ID = "admin-team";
 
 	const fallbackAdminCharacter: Character = {
 		id: ADMIN_TEAM_FALLBACK_ID,
@@ -30,7 +34,8 @@ const ADMIN_TEAM_FALLBACK_ID = "admin-team";
 	const characterId = $derived($page.params.id ?? "");
 	let character = $state<Character | null>(null);
 	let isAdminTeam = $derived(
-		characterId === ADMIN_TEAM_FALLBACK_ID || character?.name === ADMIN_TEAM_NAME,
+		characterId === ADMIN_TEAM_FALLBACK_ID ||
+			character?.name === ADMIN_TEAM_NAME,
 	);
 	let settlements = $state<SettlementItem[]>([]);
 	let settlementsLoadingMore = $state(false);
@@ -57,7 +62,9 @@ const ADMIN_TEAM_FALLBACK_ID = "admin-team";
 			if (characterId === ADMIN_TEAM_FALLBACK_ID) {
 				const adminCharacter = await getAdminCharacter();
 				if (adminCharacter.id !== null) {
-					const adminData = await getCharacterById(adminCharacter.id.toString());
+					const adminData = await getCharacterById(
+						adminCharacter.id.toString(),
+					);
 					character = adminData || fallbackAdminCharacter;
 				} else {
 					character = fallbackAdminCharacter;
@@ -174,7 +181,7 @@ const ADMIN_TEAM_FALLBACK_ID = "admin-team";
 						onerror={handleImageError}
 						class={isAdminTeam
 							? "w-10 h-10 object-contain"
-							: "w-full h-full object-cover"}
+							: "w-full h-full object-cover [image-rendering:pixelated]"}
 					/>
 				</div>
 				<div class="flex flex-col grow min-w-0">

@@ -160,7 +160,7 @@
 						await authStore.logout();
 						await goto("/");
 					}}
-					class="text-white text-sm font-light"
+					class="text-white text-[12px] font-light underline hover:opacity-80 transition-opacity"
 				>
 					로그아웃
 				</button>
