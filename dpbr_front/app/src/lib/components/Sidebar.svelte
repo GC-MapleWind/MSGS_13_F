@@ -21,11 +21,11 @@
 	let adminTeamId = $state<string | null>(null);
 	const sidebarPeriodText = "메생결산 기록";
 
-	const unsubscribeAuth = authStore.subscribe((state) => {
-		authState = state;
-	});
-
 	onMount(() => {
+		const unsubscribeAuth = authStore.subscribe((state) => {
+			authState = state;
+		});
+
 		const loadAdminCharacter = async () => {
 			try {
 				const result = await getAdminCharacter();

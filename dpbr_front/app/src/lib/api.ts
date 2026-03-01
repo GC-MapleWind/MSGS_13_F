@@ -163,6 +163,15 @@ async function apiCall<T>(endpoint: string, options?: RequestInit): Promise<T> {
 			);
 		}
 
+		if (response.status === 204) {
+			return undefined as T;
+		}
+
+		const responseContentType = response.headers.get('content-type') ?? '';
+		if (!responseContentType.includes('application/json')) {
+			return undefined as T;
+		}
+
 		return await response.json();
 	} catch (error) {
 		console.error('API Call Error:', error);
@@ -180,7 +189,7 @@ export async function getCharacters(): Promise<Character[]> {
 		id: char.id.toString(),
 		name: char.name,
 		nickname: char.detail_txt || char.name,
-		avatarUrl: char.avatar_url ? `${getApiBaseUrl()}${char.avatar_url}` : '/default-avatar.png',
+		avatarUrl: normalizeAssetUrl(char.avatar_url),
 		level: char.level,
 		job: char.job,
 		club: '단풍바람',
@@ -199,7 +208,7 @@ export async function getCharacterById(id: string): Promise<Character | null> {
 			id: data.id.toString(),
 			name: data.name,
 			nickname: data.detail_txt || data.name,
-			avatarUrl: data.avatar_url ? `${getApiBaseUrl()}${data.avatar_url}` : '/default-avatar.png',
+			avatarUrl: normalizeAssetUrl(data.avatar_url),
 			level: data.level,
 			job: data.job,
 			club: '단풍바람',
