@@ -31,7 +31,7 @@
 			aria-label="메뉴 열기"
 		>
 			<img
-				src="/images/icons/name=Menu, Color=White.svg"
+				src="/images/icons/menu-icon-white.svg"
 				alt=""
 				aria-hidden="true"
 				class="w-6 h-6"
@@ -46,7 +46,7 @@
 		/>
 		<a href="/talk" class="p-2 text-white" aria-label="톡 페이지">
 			<img
-				src="/images/icons/name=Chat, Color=White.svg"
+				src="/images/icons/chat-icon-white.svg"
 				alt=""
 				aria-hidden="true"
 				class="w-6 h-6"
@@ -65,7 +65,7 @@
 			aria-label="뒤로가기"
 		>
 			<img
-				src="/images/icons/name=Back, Color=Black.svg"
+				src="/images/icons/back-icon-black.svg"
 				alt=""
 				aria-hidden="true"
 				class="w-6 h-6 opacity-70"
@@ -96,7 +96,7 @@
 			aria-label="닫기"
 		>
 			<img
-				src="/images/icons/name=Close, Color=Black.svg"
+				src="/images/icons/close-icon-black.svg"
 				alt=""
 				aria-hidden="true"
 				class="w-6 h-6"
@@ -108,9 +108,14 @@
 	<header
 		class="flex items-center justify-end bg-transparent px-3 py-2 sticky top-0 z-40"
 	>
-		<button type="button" onclick={onCloseClick} class="p-2 text-white" aria-label="닫기">
+		<button
+			type="button"
+			onclick={onCloseClick}
+			class="p-2 text-white"
+			aria-label="닫기"
+		>
 			<img
-				src="/images/icons/name=Close, Color=White.svg"
+				src="/images/icons/close-icon-white.svg"
 				alt=""
 				aria-hidden="true"
 				class="w-6 h-6"

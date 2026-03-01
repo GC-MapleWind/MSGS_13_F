@@ -173,7 +173,7 @@
         <div class="w-full flex justify-end">
             <button onclick={handleClose} class="text-white p-2">
                 <img
-                    src="/images/icons/name=Close, Color=White.svg"
+                    src="/images/icons/close-icon-white.svg"
                     alt="닫기"
                     class="w-6 h-6"
                     draggable="false"
@@ -267,14 +267,14 @@
                     >
                         {#if saveName}
                             <img
-                                src="/images/icons/name=check-enable, Color=White.svg"
+                                src="/images/icons/check-enable-icon.svg"
                                 alt="저장 활성화"
                                 class="w-full h-full"
                                 draggable="false"
                             />
                         {:else}
                             <img
-                                src="/images/icons/name=check-disable, Color=White.svg"
+                                src="/images/icons/check-disable-icon.svg"
                                 alt="저장 비활성화"
                                 class="w-full h-full"
                                 draggable="false"
