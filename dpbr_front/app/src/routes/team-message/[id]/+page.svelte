@@ -60,8 +60,8 @@
 					alt={teamMessage.name}
 					onerror={handleImageError}
 					class={teamMessage.imageUrl
-						? "w-full max-h-80 object-cover rounded-lg"
-						: "w-1/2 object-contain rounded-lg"}
+						? "w-full h-auto object-contain rounded-lg"
+						: "w-1/2 h-auto object-contain rounded-lg"}
 				/>
 			</div>
 
