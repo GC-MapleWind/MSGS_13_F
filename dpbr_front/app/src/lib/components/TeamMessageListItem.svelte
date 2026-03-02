@@ -26,11 +26,13 @@
 		/>
 	</div>
 
-	<div class="flex flex-col grow min-w-0 gap-1.5 ml-2">
+	<div class="flex flex-col grow min-w-0 gap-1 ml-2">
 		<span
 			class="text-[17px] leading-tight text-text-primary font-semibold truncate"
-			>{item.name}</span
+			>{item.title}</span
 		>
-		<span class="text-[13px] font-normal text-[#9CA3AF]">{item.role}</span>
+		<span class="text-[13px] font-normal text-[#9CA3AF]"
+			>{item.name} {item.role}</span
+		>
 	</div>
 </a>

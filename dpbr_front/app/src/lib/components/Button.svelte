@@ -49,7 +49,9 @@
 	aria-label={label}
 >
 	<span class="relative z-10">{label}</span>
-	{#if isPressed || buttonState === "focused"}
-		<div class="absolute inset-0 bg-black/4 rounded-lg"></div>
-	{/if}
+	<div
+		class="absolute inset-0 bg-black/4 rounded-lg transition-opacity duration-100"
+		class:opacity-100={isPressed || buttonState === "focused"}
+		class:opacity-0={!isPressed && buttonState !== "focused"}
+	></div>
 </button>

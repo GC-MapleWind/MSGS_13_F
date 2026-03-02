@@ -76,7 +76,21 @@
 				} else {
 					character = fallbackAdminCharacter;
 				}
-				teamMessages = await getTeamMembers();
+				const members = await getTeamMembers();
+				const rolePriority: Record<string, number> = {
+					인사팀원: 1,
+					행사팀원: 2,
+					홍보팀원: 3,
+					인사팀장: 4,
+					행사팀장: 5,
+					홍보팀장: 6,
+					회장: 7,
+				};
+				teamMessages = members.sort(
+					(a, b) =>
+						(rolePriority[a.role] || 99) -
+						(rolePriority[b.role] || 99),
+				);
 				settlements = [];
 				settlementsHasMore = false;
 				return;
@@ -92,7 +106,21 @@
 			}
 
 			if (charData.name === ADMIN_TEAM_NAME) {
-				teamMessages = await getTeamMembers();
+				const members = await getTeamMembers();
+				const rolePriority: Record<string, number> = {
+					인사팀원: 1,
+					행사팀원: 2,
+					홍보팀원: 3,
+					인사팀장: 4,
+					행사팀장: 5,
+					홍보팀장: 6,
+					회장: 7,
+				};
+				teamMessages = members.sort(
+					(a, b) =>
+						(rolePriority[a.role] || 99) -
+						(rolePriority[b.role] || 99),
+				);
 				settlements = [];
 				settlementsHasMore = false;
 			} else {
@@ -133,7 +161,8 @@
 				e.message.includes("API Error: 404") &&
 				settlementsPage === 1
 			) {
-				const fallbackItems = await getSettlementsByCharacterId(targetCharacterId);
+				const fallbackItems =
+					await getSettlementsByCharacterId(targetCharacterId);
 				settlements = fallbackItems;
 				settlementsHasMore = false;
 				return;

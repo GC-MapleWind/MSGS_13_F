@@ -158,7 +158,7 @@
 				<button
 					onclick={async () => {
 						await authStore.logout();
-						await goto("/");
+						toast.show("로그아웃 되었습니다.");
 					}}
 					class="text-white text-[12px] font-light underline hover:opacity-80 transition-opacity"
 				>

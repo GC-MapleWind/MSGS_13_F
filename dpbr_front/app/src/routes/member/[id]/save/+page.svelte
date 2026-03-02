@@ -135,7 +135,7 @@
 							</p>
 
 							<div
-								class="mt-3 px-3 py-1 bg-white/20 rounded-full backdrop-blur-sm border border-white/10 flex items-center justify-center"
+								class="mt-3 px-3 py-1 bg-white/20 rounded-full backdrop-blur-sm border border-white/10 flex items-center justify-center overflow-hidden"
 							>
 								<img
 									src="/images/단풍바람 13기.svg"
