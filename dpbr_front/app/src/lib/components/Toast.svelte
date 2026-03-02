@@ -29,7 +29,7 @@
 		<div
 			in:slide={{ duration: 300, axis: "y" }}
 			out:fade={{ duration: 200 }}
-			class="bg-black/80 text-white px-8 py-6 rounded-3xl shadow-2xl text-[16px] font-medium text-center max-w-[90%] border border-white/20 pointer-events-auto whitespace-pre-line leading-relaxed"
+			class="bg-black/80 text-white px-8 py-6 rounded-3xl shadow-2xl text-[14px] font-medium text-center max-w-[90%] border border-white/20 pointer-events-auto whitespace-pre-line leading-relaxed"
 		>
 			{message}
 		</div>
