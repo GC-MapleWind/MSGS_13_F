@@ -22,9 +22,7 @@
     let isLoading = $state(false);
     let studentIdInputRef: HTMLDivElement | undefined = $state();
     let dialogEl: HTMLDivElement | undefined = $state();
-
-    // 에러 메시지 상태
-    let errorMessage = $state("");
+    let infoMessage = $state("");
 
     // 애니메이션을 위한 상태
     let isVisible = $state(false);
@@ -65,7 +63,7 @@
 
     async function handleLogin() {
         if (!name.trim() || !studentId.trim()) {
-            showToastMessage();
+            showInfoMessage("이름 또는 학번을 확인해 주세요.");
             return;
         }
 
@@ -74,12 +72,13 @@
         try {
             await authStore.login(name.trim(), studentId.trim(), saveName);
             // 로그인 성공 시 콜백 호출
+            showInfoMessage("로그인 되었습니다.");
             handleClose();
             setTimeout(() => {
                 onSuccess();
             }, 300);
         } catch (error) {
-            showToastMessage();
+            showInfoMessage("이름 또는 학번을 확인해 주세요.");
             studentId = "";
             studentIdFocused = true;
             setTimeout(() => {
@@ -108,10 +107,10 @@
     }
     */
 
-    function showToastMessage(message?: string) {
-        errorMessage = message || "이름 또는 학번을 확인해 주세요.";
+    function showInfoMessage(message: string) {
+        infoMessage = message;
         setTimeout(() => {
-            errorMessage = "";
+            infoMessage = "";
         }, 3000);
     }
 
@@ -164,9 +163,9 @@
     tabindex="-1"
 >
     <div
-        class="w-full shrink-0 h-[72vh] bg-gradient-to-b from-[#FCDDA5] to-[#F1A470] rounded-t-3xl pt-4 pb-8 px-6 flex flex-col items-center shadow-lg transition-transform duration-300 {isVisible
-            ? 'translate-y-0'
-            : 'translate-y-full'}"
+        class="w-full shrink-0 bg-gradient-to-b from-[#FCDDA5] to-[#F1A470] rounded-t-3xl pt-4 pb-8 px-6 flex flex-col items-center shadow-lg transition-all duration-300 {isVisible
+            ? 'h-[72vh] translate-y-0'
+            : 'h-[72vh] translate-y-full'}"
         onclick={(e) => e.stopPropagation()}
     >
         <!-- 닫기 버튼 -->
@@ -192,7 +191,13 @@
             />
 
             <!-- 입력 폼 -->
-            <div class="w-full flex flex-col">
+            <form
+                class="w-full flex flex-col"
+                onsubmit={(e) => {
+                    e.preventDefault();
+                    handleLogin();
+                }}
+            >
                 <!-- 입력 필드 그룹 -->
                 <div class="flex flex-col gap-1 mb-2">
                     <!-- 이름 입력 -->
@@ -233,14 +238,14 @@
 
                 <!-- 로그인 버튼 -->
                 <div class="relative w-full">
-                    {#if errorMessage}
+                    {#if infoMessage}
                         <div
-                            class="absolute bottom-[calc(100%+8px)] left-0 w-full flex justify-center z-[60] pointer-events-none"
+                            class="absolute bottom-full left-1/2 -translate-x-1/2 mb-4 z-[60] pointer-events-none"
                         >
                             <span
                                 class="bg-black/60 text-white text-[15px] px-5 py-2.5 rounded-3xl shadow-md font-medium whitespace-nowrap pointer-events-auto"
                             >
-                                {errorMessage}
+                                {infoMessage}
                             </span>
                         </div>
                     {/if}
@@ -248,8 +253,8 @@
                         label="메생결산 톡 입장"
                         variant="primary"
                         buttonState={isLoading ? "disabled" : "default"}
-                        onClick={handleLogin}
-                        type="button"
+                        onClick={() => {}}
+                        type="submit"
                         class="bg-white !text-[#F87C56] hover:bg-white/90 font-medium py-[14px] rounded-lg w-full"
                     />
                 </div>
@@ -298,7 +303,7 @@
                     <span>카카오 로그인</span>
                 </button>
                 -->
-            </div>
+            </form>
 
             <!-- 푸터 안내문구 -->
             <div class="mt-12 mb-4 flex justify-center">

@@ -16,7 +16,7 @@
 
 <a
 	href="/msg/{item.id}"
-	class="flex items-center gap-4 px-6 py-4 bg-white border-b border-bg-light hover:bg-gray-50 focus:bg-gray-50 transition-none last:border-b-0 touch-none select-none"
+	class="flex items-center gap-4 px-6 py-4 bg-white border-b border-bg-light hover:bg-gray-50 focus:bg-gray-50 transition-none last:border-b-0 select-none"
 	style="-webkit-touch-callout: none;"
 	draggable="false"
 >
@@ -38,6 +38,8 @@
 			class="text-[17px] leading-tight text-text-primary font-semibold truncate"
 			>{item.title}</span
 		>
-		<span class="text-[13px] font-normal text-[#9CA3AF]">{formatDate(item.acquiredAt)}</span>
+		<span class="text-[13px] font-normal text-[#9CA3AF]"
+			>{formatDate(item.acquiredAt)}</span
+		>
 	</div>
 </a>

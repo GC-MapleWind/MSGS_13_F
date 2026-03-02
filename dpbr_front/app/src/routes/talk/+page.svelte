@@ -4,7 +4,7 @@
 	import { get } from "svelte/store";
 	import CommentItem from "$lib/components/CommentItem.svelte";
 	import BottomSheetLogin from "$lib/components/BottomSheetLogin.svelte";
-	import { getComments, createComment } from "$lib/api";
+	import { getComments, createComment, formatCommentDateTime } from "$lib/api";
 	import { authStore } from "$lib/stores/auth";
 	import { toast } from "$lib/stores/toast";
 	import type { TalkComment } from "$lib/types";
@@ -81,16 +81,7 @@
 				author: newComment.author,
 				authorAvatar: "/default-avatar.png",
 				content: newComment.content,
-				createdAt: new Date(newComment.created_at).toLocaleString(
-					"ko-KR",
-					{
-						year: "2-digit",
-						month: "2-digit",
-						day: "2-digit",
-						hour: "2-digit",
-						minute: "2-digit",
-					},
-				),
+				createdAt: formatCommentDateTime(newComment.created_at),
 			};
 
 			comments = [formattedComment, ...comments];
@@ -158,7 +149,7 @@
 				<button
 					onclick={async () => {
 						await authStore.logout();
-						await goto("/");
+						toast.show("로그아웃 되었습니다.");
 					}}
 					class="text-white text-[12px] font-light underline hover:opacity-80 transition-opacity"
 				>
