@@ -128,6 +128,10 @@ interface TeamMemberResponse {
 	name: string;
 	role: string;
 	profile_img_url: string | null;
+	message: {
+		title: string;
+		content: string;
+	} | null;
 }
 
 interface TeamMemberDetailResponse extends TeamMemberResponse {
@@ -380,8 +384,8 @@ export async function getTeamMembers(): Promise<TeamMessageItem[]> {
 		id: member.id.toString(),
 		name: member.name,
 		role: member.role,
-		title: '',
-		content: '',
+		title: member.message?.title || '',
+		content: member.message?.content || '',
 		imageUrl: normalizeAssetUrl(member.profile_img_url)
 	}));
 }

@@ -5,6 +5,7 @@
 	import { authStore } from "$lib/stores/auth";
 	import { getAdminCharacter } from "$lib/api";
 	import type { AuthState } from "$lib/types";
+	import { toast } from "$lib/stores/toast";
 
 	interface Props {
 		open: boolean;
@@ -46,8 +47,8 @@
 
 	async function handleLogout() {
 		await authStore.logout();
+		toast.show("로그아웃 되었습니다.");
 		onClose();
-		await goto("/");
 	}
 </script>
 
@@ -59,31 +60,34 @@
 	aria-hidden={!open}
 >
 	<div class="flex flex-col gap-3 pt-16">
-		<!-- Title Section -->
-		<div class="flex flex-col gap-1 px-6 py-4">
-			<span class="text-xs text-text-muted">단풍바람 메생결산 정보</span>
-			<span class="text-xl font-medium text-primary-dark"
-				>단풍바람 13기 메생결산</span
-			>
-		</div>
-
-		<!-- User Info Section -->
-		{#if authState.user}
-			<div
-				class="flex items-center justify-between px-6 py-3 border-b border-border-dark"
-			>
-				<span class="text-lg font-medium text-text-primary"
-					>{authState.user.name}</span
+		<!-- Top Info Group -->
+		<div class="flex flex-col gap-0">
+			<!-- Title Section -->
+			<div class="flex flex-col gap-1 px-6 py-4">
+				<span class="text-xs text-text-muted"
+					>단풍바람 메생결산 정보</span
 				>
-				<button
-					onclick={handleLogout}
-					class="px-3 py-1.5 text-sm text-text-secondary hover:text-text-primary hover:bg-bg-light rounded transition-colors"
-					aria-label="로그아웃"
+				<span class="text-xl font-medium text-primary-dark"
+					>단풍바람 13기 메생결산</span
 				>
-					로그아웃
-				</button>
 			</div>
-		{/if}
+
+			<!-- User Info Section -->
+			{#if authState.user}
+				<div class="flex items-center justify-between px-6 py-3">
+					<span class="text-lg font-medium text-text-primary"
+						>{authState.user.name}</span
+					>
+					<button
+						onclick={handleLogout}
+						class="px-3 py-1.5 text-sm text-text-secondary hover:text-text-primary hover:bg-bg-light rounded transition-colors"
+						aria-label="로그아웃"
+					>
+						로그아웃
+					</button>
+				</div>
+			{/if}
+		</div>
 
 		<!-- Menu -->
 		<div class="flex flex-col gap-2">
