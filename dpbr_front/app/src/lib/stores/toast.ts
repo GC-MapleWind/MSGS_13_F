@@ -3,6 +3,7 @@ import { writable } from 'svelte/store';
 export interface ToastMessage {
     id: number;
     message: string;
+    type?: 'default' | 'center';
 }
 
 function createToastStore() {
@@ -12,9 +13,9 @@ function createToastStore() {
 
     return {
         subscribe,
-        show: (message: string, duration = 3000) => {
+        show: (message: string, duration = 3000, type: 'default' | 'center' = 'default') => {
             const id = nextId++;
-            update((toasts) => [...toasts, { id, message }]);
+            update((toasts) => [...toasts, { id, message, type }]);
 
             setTimeout(() => {
                 update((toasts) => toasts.filter((t) => t.id !== id));
