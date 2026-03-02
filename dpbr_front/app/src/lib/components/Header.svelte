@@ -41,7 +41,7 @@
 				"\nBackend Engineer\n배승민 서민성 이서윤",
 				"\nServer Engineer\n김형규",
 			].join("\n");
-			toast.show(credits, 2500, "center");
+			toast.show(credits, 5000, "center");
 			logoClickCount = 0;
 		}
 	}
