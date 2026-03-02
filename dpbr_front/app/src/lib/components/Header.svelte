@@ -23,8 +23,11 @@
 
 	let logoClickCount = $state(0);
 	let lastLogoClickTime = 0;
+	let isEasterEggActive = false;
 
 	function handleLogoClick() {
+		if (isEasterEggActive) return;
+
 		const now = Date.now();
 		if (now - lastLogoClickTime < 500) {
 			logoClickCount += 1;
@@ -34,6 +37,7 @@
 		lastLogoClickTime = now;
 
 		if (logoClickCount === 3) {
+			isEasterEggActive = true;
 			const credits = [
 				"Fullstack DevOps & PM\n강민",
 				"\nDesigner & PM\n강민아",
@@ -43,6 +47,10 @@
 			].join("\n");
 			toast.show(credits, 5000, "center");
 			logoClickCount = 0;
+
+			setTimeout(() => {
+				isEasterEggActive = false;
+			}, 5000);
 		}
 	}
 </script>
