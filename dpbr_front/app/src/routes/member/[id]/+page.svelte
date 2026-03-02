@@ -1,5 +1,4 @@
 <script lang="ts">
-	import { onMount } from "svelte";
 	import { page } from "$app/stores";
 	import { goto } from "$app/navigation";
 	import Header from "$lib/components/Header.svelte";
@@ -9,13 +8,24 @@
 		getAdminCharacter,
 		getCharacterById,
 		getSettlementsByCharacterId,
+		getSettlementsByCharacterIdPaginated,
 		getTeamMembers,
 	} from "$lib/api";
 	import { handleImageError } from "$lib/utils/image";
-	import type { Character, SettlementItem, TeamMessageItem } from "$lib/types";
+	import type {
+		Character,
+		SettlementItem,
+		TeamMessageItem,
+	} from "$lib/types";
+
+	const ADMIN_TEAM_INFO = {
+		generation: "13기",
+		university: "가천대학교",
+		role: "운영팀",
+	};
 
 	const ADMIN_TEAM_NAME = "단풍바람 운영팀";
-const ADMIN_TEAM_FALLBACK_ID = "admin-team";
+	const ADMIN_TEAM_FALLBACK_ID = "admin-team";
 
 	const fallbackAdminCharacter: Character = {
 		id: ADMIN_TEAM_FALLBACK_ID,
@@ -31,9 +41,15 @@ const ADMIN_TEAM_FALLBACK_ID = "admin-team";
 	const characterId = $derived($page.params.id ?? "");
 	let character = $state<Character | null>(null);
 	let isAdminTeam = $derived(
-		characterId === ADMIN_TEAM_FALLBACK_ID || character?.name === ADMIN_TEAM_NAME,
+		characterId === ADMIN_TEAM_FALLBACK_ID ||
+			character?.name === ADMIN_TEAM_NAME,
 	);
 	let settlements = $state<SettlementItem[]>([]);
+	let settlementsLoadingMore = $state(false);
+	let settlementsHasMore = $state(false);
+	let settlementsPage = 1;
+	const settlementsLimit = 10;
+	let settlementsSentinel = $state<HTMLDivElement | null>(null);
 	let teamMessages = $state<TeamMessageItem[]>([]);
 	let loading = $state(true);
 	let error = $state<string | null>(null);
@@ -53,13 +69,16 @@ const ADMIN_TEAM_FALLBACK_ID = "admin-team";
 			if (characterId === ADMIN_TEAM_FALLBACK_ID) {
 				const adminCharacter = await getAdminCharacter();
 				if (adminCharacter.id !== null) {
-					const adminData = await getCharacterById(adminCharacter.id.toString());
+					const adminData = await getCharacterById(
+						adminCharacter.id.toString(),
+					);
 					character = adminData || fallbackAdminCharacter;
 				} else {
 					character = fallbackAdminCharacter;
 				}
 				teamMessages = await getTeamMembers();
 				settlements = [];
+				settlementsHasMore = false;
 				return;
 			}
 
@@ -67,6 +86,7 @@ const ADMIN_TEAM_FALLBACK_ID = "admin-team";
 			character = charData;
 			if (!charData) {
 				settlements = [];
+				settlementsHasMore = false;
 				teamMessages = [];
 				return;
 			}
@@ -74,9 +94,13 @@ const ADMIN_TEAM_FALLBACK_ID = "admin-team";
 			if (charData.name === ADMIN_TEAM_NAME) {
 				teamMessages = await getTeamMembers();
 				settlements = [];
+				settlementsHasMore = false;
 			} else {
-				settlements = await getSettlementsByCharacterId(characterId);
 				teamMessages = [];
+				settlements = [];
+				settlementsPage = 1;
+				settlementsHasMore = true;
+				await loadMoreSettlements(characterId);
 			}
 		} catch (e) {
 			console.error("Failed to load character data:", e);
@@ -85,6 +109,63 @@ const ADMIN_TEAM_FALLBACK_ID = "admin-team";
 			loading = false;
 		}
 	}
+
+	async function loadMoreSettlements(targetCharacterId: string) {
+		if (settlementsLoadingMore || !settlementsHasMore) return;
+
+		settlementsLoadingMore = true;
+		try {
+			const result = await getSettlementsByCharacterIdPaginated(
+				targetCharacterId,
+				settlementsPage,
+				settlementsLimit,
+			);
+
+			settlements = [...settlements, ...result.items];
+			settlementsHasMore =
+				settlements.length < result.total && result.items.length > 0;
+			if (result.items.length > 0) {
+				settlementsPage += 1;
+			}
+		} catch (e) {
+			if (
+				e instanceof Error &&
+				e.message.includes("API Error: 404") &&
+				settlementsPage === 1
+			) {
+				const fallbackItems = await getSettlementsByCharacterId(targetCharacterId);
+				settlements = fallbackItems;
+				settlementsHasMore = false;
+				return;
+			}
+
+			console.error("Failed to load settlements:", e);
+			error = "데이터를 불러오는데 실패했습니다.";
+			settlementsHasMore = false;
+		} finally {
+			settlementsLoadingMore = false;
+		}
+	}
+
+	$effect(() => {
+		if (!settlementsSentinel || !settlementsHasMore || isAdminTeam) return;
+
+		const currentCharacterId = characterId;
+		const observer = new IntersectionObserver(
+			(entries) => {
+				if (entries[0]?.isIntersecting) {
+					void loadMoreSettlements(currentCharacterId);
+				}
+			},
+			{ rootMargin: "160px 0px" },
+		);
+
+		observer.observe(settlementsSentinel);
+
+		return () => {
+			observer.disconnect();
+		};
+	});
 </script>
 
 <svelte:head>
@@ -119,7 +200,7 @@ const ADMIN_TEAM_FALLBACK_ID = "admin-team";
 						onerror={handleImageError}
 						class={isAdminTeam
 							? "w-10 h-10 object-contain"
-							: "w-full h-full object-cover"}
+							: "w-full h-full object-cover [image-rendering:pixelated]"}
 					/>
 				</div>
 				<div class="flex flex-col grow min-w-0">
@@ -138,15 +219,21 @@ const ADMIN_TEAM_FALLBACK_ID = "admin-team";
 					>
 						<span
 							>{isAdminTeam
-								? character.level > 0
-									? character.level + "기"
-									: "운영팀"
+								? ADMIN_TEAM_INFO.generation
 								: "Lv. " + character.level}</span
 						>
 						<div class="w-px h-1.5 bg-border-dark"></div>
-						<span>{character.server}</span>
+						<span
+							>{isAdminTeam
+								? ADMIN_TEAM_INFO.university
+								: character.server}</span
+						>
 						<div class="w-px h-1.5 bg-border-dark"></div>
-						<span>{character.job}</span>
+						<span
+							>{isAdminTeam
+								? ADMIN_TEAM_INFO.role
+								: character.job}</span
+						>
 					</div>
 				</div>
 				{#if !isAdminTeam}
@@ -179,6 +266,18 @@ const ADMIN_TEAM_FALLBACK_ID = "admin-team";
 							{#each settlements as item (item.id)}
 								<SettlementListItem {item} />
 							{/each}
+							{#if settlementsHasMore}
+								<div
+									bind:this={settlementsSentinel}
+									class="py-4 flex items-center justify-center"
+								>
+									{#if settlementsLoadingMore}
+										<p class="text-text-muted text-sm">
+											불러오는 중...
+										</p>
+									{/if}
+								</div>
+							{/if}
 						{/if}
 					{:else}
 						<div class="flex items-center justify-center py-8">

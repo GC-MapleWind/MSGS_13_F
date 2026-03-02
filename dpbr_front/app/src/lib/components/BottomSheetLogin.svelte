@@ -23,6 +23,9 @@
     let studentIdInputRef: HTMLDivElement | undefined = $state();
     let dialogEl: HTMLDivElement | undefined = $state();
 
+    // 에러 메시지 상태
+    let errorMessage = $state("");
+
     // 애니메이션을 위한 상태
     let isVisible = $state(false);
 
@@ -32,24 +35,24 @@
             isVisible = true;
         }, 10);
 
-		const savedName = getSavedName();
-		if (savedName) {
-			name = savedName.slice(0, 3);
-			saveName = true;
-		}
+        const savedName = getSavedName();
+        if (savedName) {
+            name = savedName.slice(0, 3);
+            saveName = true;
+        }
 
-		dialogEl?.focus();
-		const handleEscape = (e: KeyboardEvent) => {
-			if (e.key === "Escape") {
-				handleClose();
-			}
-		};
+        dialogEl?.focus();
+        const handleEscape = (e: KeyboardEvent) => {
+            if (e.key === "Escape") {
+                handleClose();
+            }
+        };
 
-		window.addEventListener("keydown", handleEscape);
-		return () => {
-			window.removeEventListener("keydown", handleEscape);
-		};
-	});
+        window.addEventListener("keydown", handleEscape);
+        return () => {
+            window.removeEventListener("keydown", handleEscape);
+        };
+    });
 
     function handleClose(e?: Event) {
         e?.stopPropagation();
@@ -106,7 +109,10 @@
     */
 
     function showToastMessage(message?: string) {
-        toast.show(message || "이름 또는 학번을 확인해 주세요.");
+        errorMessage = message || "이름 또는 학번을 확인해 주세요.";
+        setTimeout(() => {
+            errorMessage = "";
+        }, 3000);
     }
 
     // Focus/Blur 핸들러들
@@ -158,7 +164,7 @@
     tabindex="-1"
 >
     <div
-        class="w-full h-[72%] bg-gradient-to-b from-[#FCDDA5] to-[#F1A470] rounded-t-3xl pt-4 pb-8 px-6 flex flex-col items-center shadow-lg transition-transform duration-300 {isVisible
+        class="w-full shrink-0 h-[72vh] bg-gradient-to-b from-[#FCDDA5] to-[#F1A470] rounded-t-3xl pt-4 pb-8 px-6 flex flex-col items-center shadow-lg transition-transform duration-300 {isVisible
             ? 'translate-y-0'
             : 'translate-y-full'}"
         onclick={(e) => e.stopPropagation()}
@@ -167,7 +173,7 @@
         <div class="w-full flex justify-end">
             <button onclick={handleClose} class="text-white p-2">
                 <img
-                    src="/images/icons/name=Close, Color=White.svg"
+                    src="/images/icons/close-icon-white.svg"
                     alt="닫기"
                     class="w-6 h-6"
                     draggable="false"
@@ -226,14 +232,27 @@
                 </div>
 
                 <!-- 로그인 버튼 -->
-                <Button
-                    label="메생결산 톡 입장"
-                    variant="primary"
-                    buttonState={isLoading ? "disabled" : "default"}
-                    onClick={handleLogin}
-                    type="button"
-                    class="bg-white !text-[#F87C56] hover:bg-white/90 font-medium py-[14px] rounded-lg"
-                />
+                <div class="relative w-full">
+                    {#if errorMessage}
+                        <div
+                            class="absolute bottom-[calc(100%+8px)] left-0 w-full flex justify-center z-[60] pointer-events-none"
+                        >
+                            <span
+                                class="bg-black/60 text-white text-[15px] px-5 py-2.5 rounded-3xl shadow-md font-medium whitespace-nowrap pointer-events-auto"
+                            >
+                                {errorMessage}
+                            </span>
+                        </div>
+                    {/if}
+                    <Button
+                        label="메생결산 톡 입장"
+                        variant="primary"
+                        buttonState={isLoading ? "disabled" : "default"}
+                        onClick={handleLogin}
+                        type="button"
+                        class="bg-white !text-[#F87C56] hover:bg-white/90 font-medium py-[14px] rounded-lg w-full"
+                    />
+                </div>
 
                 <!-- 이름 저장 체크박스 -->
                 <label class="flex items-center gap-2 cursor-pointer mt-2 mb-2">
@@ -248,14 +267,14 @@
                     >
                         {#if saveName}
                             <img
-                                src="/images/icons/name=check-enable, Color=White.svg"
+                                src="/images/icons/check-enable-icon.svg"
                                 alt="저장 활성화"
                                 class="w-full h-full"
                                 draggable="false"
                             />
                         {:else}
                             <img
-                                src="/images/icons/name=check-disable, Color=White.svg"
+                                src="/images/icons/check-disable-icon.svg"
                                 alt="저장 비활성화"
                                 class="w-full h-full"
                                 draggable="false"

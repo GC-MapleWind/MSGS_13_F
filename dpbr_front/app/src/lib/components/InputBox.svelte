@@ -62,6 +62,8 @@
 		{placeholder}
 		maxlength={maxLength}
 		value={valueProp}
+		spellcheck="false"
+		autocomplete="off"
 		oninput={handleInput}
 		onfocus={onFocus}
 		onblur={onBlur}

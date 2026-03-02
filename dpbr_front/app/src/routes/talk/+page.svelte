@@ -156,8 +156,11 @@
 		<div class="relative z-10 flex items-center pr-1">
 			{#if $authStore.isAuthenticated}
 				<button
-					onclick={() => authStore.logout()}
-					class="text-white text-sm font-light"
+					onclick={async () => {
+						await authStore.logout();
+						await goto("/");
+					}}
+					class="text-white text-[12px] font-light underline hover:opacity-80 transition-opacity"
 				>
 					로그아웃
 				</button>
@@ -233,7 +236,7 @@
 					<span class="text-xs">...</span>
 				{:else}
 					<img
-						src="/images/icons/name=Send, Color=White.svg"
+						src="/images/icons/send-icon-white.svg"
 						alt="보내기"
 						class="w-5 h-5 ml-[-2px]"
 						draggable="false"

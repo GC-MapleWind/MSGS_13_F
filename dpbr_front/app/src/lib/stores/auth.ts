@@ -156,6 +156,13 @@ export async function login(name: string, studentId: string, saveNameFlag = fals
 
 		const { token, user } = response.data;
 
+		// 이름 저장 로직
+		if (saveNameFlag) {
+			saveName(name);
+		} else {
+			saveName(null);
+		}
+
 		// 새로운 setAuthData 함수 사용
 		setAuthData(token, user);
 	} catch (error) {
