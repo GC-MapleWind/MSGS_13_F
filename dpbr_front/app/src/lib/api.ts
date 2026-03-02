@@ -47,6 +47,28 @@ function normalizeApiErrorDetail(detail: unknown): string {
 	return collapsed.slice(0, 200);
 }
 
+function parseApiDateTime(raw: string): Date {
+	const normalized = raw.includes(' ') ? raw.replace(' ', 'T') : raw;
+	const hasTimezone = /(?:Z|[+-]\d{2}:?\d{2})$/i.test(normalized);
+	return new Date(hasTimezone ? normalized : `${normalized}Z`);
+}
+
+export function formatCommentDateTime(raw: string): string {
+	const parsed = parseApiDateTime(raw);
+	if (Number.isNaN(parsed.getTime())) {
+		return raw;
+	}
+
+	return parsed.toLocaleString('ko-KR', {
+		timeZone: 'Asia/Seoul',
+		year: '2-digit',
+		month: '2-digit',
+		day: '2-digit',
+		hour: '2-digit',
+		minute: '2-digit',
+	});
+}
+
 function isExpiredJwt(token: string): boolean {
 	try {
 		const payload = token.split('.')[1];
@@ -332,13 +354,7 @@ export async function getComments(page: number = 1, limit: number = 20): Promise
 		author: comment.author,
 		authorAvatar: '/default-avatar.png',
 		content: comment.content,
-		createdAt: new Date(comment.created_at).toLocaleString('ko-KR', {
-			year: '2-digit',
-			month: '2-digit',
-			day: '2-digit',
-			hour: '2-digit',
-			minute: '2-digit'
-		})
+		createdAt: formatCommentDateTime(comment.created_at)
 	}));
 }
 
