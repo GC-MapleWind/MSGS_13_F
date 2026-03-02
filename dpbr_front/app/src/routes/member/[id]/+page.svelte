@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { tick } from "svelte";
 	import { page } from "$app/stores";
 	import { goto } from "$app/navigation";
 	import Header from "$lib/components/Header.svelte";
@@ -85,7 +86,11 @@
 		if (restoredCharacterId === characterId && character) {
 			loading = false;
 			if (scrollContainer && restoredScrollTop > 0) {
-				scrollContainer.scrollTop = restoredScrollTop;
+				tick().then(() => {
+					if (scrollContainer) {
+						scrollContainer.scrollTop = restoredScrollTop;
+					}
+				});
 			}
 			// Reset restored ID after use to allow normal loads if ID changes later
 			restoredCharacterId = "";

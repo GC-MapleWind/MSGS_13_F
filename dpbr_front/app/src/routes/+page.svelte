@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { onMount } from "svelte";
+	import { onMount, tick } from "svelte";
 	import Header from "$lib/components/Header.svelte";
 	import Sidebar from "$lib/components/Sidebar.svelte";
 	import CharacterCard from "$lib/components/CharacterCard.svelte";
@@ -61,12 +61,13 @@
 		}
 	}
 
-	onMount(() => {
+	onMount(async () => {
 		if (characters.length === 0) {
 			void loadMoreCharacters();
 		} else {
 			loading = false;
 			if (scrollContainer && restoredScrollTop > 0) {
+				await tick();
 				scrollContainer.scrollTop = restoredScrollTop;
 			}
 		}
