@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { tick } from "svelte";
 	import { page } from "$app/stores";
 	import { goto } from "$app/navigation";
 	import Header from "$lib/components/Header.svelte";
@@ -17,6 +18,7 @@
 		SettlementItem,
 		TeamMessageItem,
 	} from "$lib/types";
+	import type { Snapshot } from "./$types";
 
 	const ADMIN_TEAM_INFO = {
 		generation: "13기",
@@ -47,15 +49,53 @@
 	let settlements = $state<SettlementItem[]>([]);
 	let settlementsLoadingMore = $state(false);
 	let settlementsHasMore = $state(false);
-	let settlementsPage = 1;
+	let settlementsPage = $state(1);
 	const settlementsLimit = 10;
 	let settlementsSentinel = $state<HTMLDivElement | null>(null);
 	let teamMessages = $state<TeamMessageItem[]>([]);
 	let loading = $state(true);
 	let error = $state<string | null>(null);
 
+	let scrollContainer = $state<HTMLDivElement | null>(null);
+	let restoredScrollTop = 0;
+	let restoredCharacterId = "";
+
+	export const snapshot: Snapshot = {
+		capture: () => ({
+			character,
+			settlements,
+			settlementsPage,
+			settlementsHasMore,
+			teamMessages,
+			scrollTop: scrollContainer?.scrollTop ?? 0,
+			charId: characterId,
+		}),
+		restore: (value) => {
+			character = value.character;
+			settlements = value.settlements;
+			settlementsPage = value.settlementsPage;
+			settlementsHasMore = value.settlementsHasMore;
+			teamMessages = value.teamMessages;
+			restoredScrollTop = value.scrollTop;
+			restoredCharacterId = value.charId;
+		},
+	};
+
 	$effect(() => {
 		// characterId가 변경될 때마다 데이터 로드
+		if (restoredCharacterId === characterId && character) {
+			loading = false;
+			if (scrollContainer && restoredScrollTop > 0) {
+				tick().then(() => {
+					if (scrollContainer) {
+						scrollContainer.scrollTop = restoredScrollTop;
+					}
+				});
+			}
+			// Reset restored ID after use to allow normal loads if ID changes later
+			restoredCharacterId = "";
+			return;
+		}
 		loadData();
 	});
 
@@ -76,21 +116,8 @@
 				} else {
 					character = fallbackAdminCharacter;
 				}
-				const members = await getTeamMembers();
-				const rolePriority: Record<string, number> = {
-					인사팀원: 1,
-					행사팀원: 2,
-					홍보팀원: 3,
-					인사팀장: 4,
-					행사팀장: 5,
-					홍보팀장: 6,
-					회장: 7,
-				};
-				teamMessages = members.sort(
-					(a, b) =>
-						(rolePriority[a.role] || 99) -
-						(rolePriority[b.role] || 99),
-				);
+				teamMessages = await getTeamMembers();
+
 				settlements = [];
 				settlementsHasMore = false;
 				return;
@@ -106,21 +133,8 @@
 			}
 
 			if (charData.name === ADMIN_TEAM_NAME) {
-				const members = await getTeamMembers();
-				const rolePriority: Record<string, number> = {
-					인사팀원: 1,
-					행사팀원: 2,
-					홍보팀원: 3,
-					인사팀장: 4,
-					행사팀장: 5,
-					홍보팀장: 6,
-					회장: 7,
-				};
-				teamMessages = members.sort(
-					(a, b) =>
-						(rolePriority[a.role] || 99) -
-						(rolePriority[b.role] || 99),
-				);
+				teamMessages = await getTeamMembers();
+
 				settlements = [];
 				settlementsHasMore = false;
 			} else {
@@ -214,10 +228,13 @@
 		<Header
 			variant="detail"
 			title={isAdminTeam ? "운영팀 한마디 상세" : "메생결산 상세"}
-			onBackClick={() => goto("/")}
+			onBackClick={() => history.back()}
 		/>
 
-		<div class="flex-1 overflow-y-auto flex flex-col gap-2 pb-8">
+		<div
+			bind:this={scrollContainer}
+			class="flex-1 overflow-y-auto flex flex-col gap-2 pb-8"
+		>
 			<!-- Character Info -->
 			<div class="flex items-center gap-4 bg-white px-6 py-5">
 				<div

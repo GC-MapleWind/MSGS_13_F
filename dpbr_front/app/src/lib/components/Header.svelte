@@ -1,4 +1,6 @@
 <script lang="ts">
+	import { toast } from "$lib/stores/toast";
+
 	interface Props {
 		variant?: "main" | "detail" | "close" | "save";
 		title?: string;
@@ -18,6 +20,39 @@
 		onCloseClick,
 		onTalkClick,
 	}: Props = $props();
+
+	let logoClickCount = $state(0);
+	let lastLogoClickTime = 0;
+	let isEasterEggActive = false;
+
+	function handleLogoClick() {
+		if (isEasterEggActive) return;
+
+		const now = Date.now();
+		if (now - lastLogoClickTime < 500) {
+			logoClickCount += 1;
+		} else {
+			logoClickCount = 1;
+		}
+		lastLogoClickTime = now;
+
+		if (logoClickCount === 3) {
+			isEasterEggActive = true;
+			const credits = [
+				"Fullstack DevOps & PM\n강민",
+				"\nDesigner & PM\n강민아",
+				"\nFrontend Engineer\n황현성",
+				"\nBackend Engineer\n배승민 서민성 이서윤",
+				"\nServer Engineer\n김형규",
+			].join("\n");
+			toast.show(credits, 5000, "center");
+			logoClickCount = 0;
+
+			setTimeout(() => {
+				isEasterEggActive = false;
+			}, 5000);
+		}
+	}
 </script>
 
 {#if variant === "main"}
@@ -38,12 +73,19 @@
 				draggable="false"
 			/>
 		</button>
-		<img
-			src="/images/logos/logo-text-white.svg"
-			alt="단풍바람"
-			class="h-[18px] object-contain"
-			draggable="false"
-		/>
+		<button
+			type="button"
+			onclick={handleLogoClick}
+			class="flex items-center justify-center h-full active:scale-95 transition-transform"
+			aria-label="단풍바람 로고"
+		>
+			<img
+				src="/images/logos/logo-text-white.svg"
+				alt="단풍바람"
+				class="h-[18px] object-contain"
+				draggable="false"
+			/>
+		</button>
 		<a href="/talk" class="p-2 text-white" aria-label="톡 페이지">
 			<img
 				src="/images/icons/chat-icon-white.svg"

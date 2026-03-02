@@ -1,10 +1,11 @@
 <script lang="ts">
-	import { onMount } from "svelte";
+	import { onMount, tick } from "svelte";
 	import Header from "$lib/components/Header.svelte";
 	import Sidebar from "$lib/components/Sidebar.svelte";
 	import CharacterCard from "$lib/components/CharacterCard.svelte";
 	import { getCharactersPaginated } from "$lib/api";
 	import type { Character } from "$lib/types";
+	import type { Snapshot } from "./$types";
 
 	let sidebarOpen = $state(false);
 	let characters = $state<Character[]>([]);
@@ -12,9 +13,26 @@
 	let loadingMore = $state(false);
 	let hasMore = $state(true);
 	let error = $state<string | null>(null);
-	let page = 1;
+	let page = $state(1);
 	const limit = 12;
 	let sentinel = $state<HTMLDivElement | null>(null);
+	let scrollContainer = $state<HTMLDivElement | null>(null);
+	let restoredScrollTop = 0;
+
+	export const snapshot: Snapshot = {
+		capture: () => ({
+			characters,
+			page,
+			hasMore,
+			scrollTop: scrollContainer?.scrollTop ?? 0,
+		}),
+		restore: (value) => {
+			characters = value.characters;
+			page = value.page;
+			hasMore = value.hasMore;
+			restoredScrollTop = value.scrollTop;
+		},
+	};
 
 	async function loadMoreCharacters() {
 		if (loadingMore || !hasMore) return;
@@ -28,7 +46,8 @@
 				characters = [...characters, ...result.items];
 			}
 
-			hasMore = characters.length < result.total && result.items.length > 0;
+			hasMore =
+				characters.length < result.total && result.items.length > 0;
 			if (result.items.length > 0) {
 				page += 1;
 			}
@@ -42,8 +61,16 @@
 		}
 	}
 
-	onMount(() => {
-		void loadMoreCharacters();
+	onMount(async () => {
+		if (characters.length === 0) {
+			void loadMoreCharacters();
+		} else {
+			loading = false;
+			if (scrollContainer && restoredScrollTop > 0) {
+				await tick();
+				scrollContainer.scrollTop = restoredScrollTop;
+			}
+		}
 	});
 
 	$effect(() => {
@@ -78,7 +105,10 @@
 	<Header variant="main" onMenuClick={() => (sidebarOpen = true)} />
 
 	<!-- Character Grid -->
-	<div class="flex-1 px-4 py-6 overflow-y-auto min-h-0">
+	<div
+		bind:this={scrollContainer}
+		class="flex-1 px-4 py-6 overflow-y-auto min-h-0"
+	>
 		{#if loading}
 			<div class="flex items-center justify-center h-full">
 				<p class="text-white">로딩 중...</p>
@@ -94,7 +124,10 @@
 				{/each}
 			</div>
 			{#if hasMore}
-				<div bind:this={sentinel} class="h-10 flex items-center justify-center">
+				<div
+					bind:this={sentinel}
+					class="h-10 flex items-center justify-center"
+				>
 					{#if loadingMore}
 						<p class="text-white text-sm">불러오는 중...</p>
 					{/if}
