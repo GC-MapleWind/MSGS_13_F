@@ -164,9 +164,7 @@
 >
     <div
         class="w-full shrink-0 bg-gradient-to-b from-[#FCDDA5] to-[#F1A470] rounded-t-3xl pt-4 pb-8 px-6 flex flex-col items-center shadow-lg transition-all duration-300 {isVisible
-            ? nameFocused || studentIdFocused
-                ? 'h-[88vh] translate-y-0'
-                : 'h-[72vh] translate-y-0'
+            ? 'h-[72vh] translate-y-0'
             : 'h-[72vh] translate-y-full'}"
         onclick={(e) => e.stopPropagation()}
     >
