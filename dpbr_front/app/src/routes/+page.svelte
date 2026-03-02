@@ -19,6 +19,15 @@
 	let scrollContainer = $state<HTMLDivElement | null>(null);
 	let restoredScrollTop = 0;
 
+	function uniqueById<T extends { id: string }>(items: T[]): T[] {
+		const seen = new Set<string>();
+		return items.filter((item) => {
+			if (seen.has(item.id)) return false;
+			seen.add(item.id);
+			return true;
+		});
+	}
+
 	export const snapshot: Snapshot = {
 		capture: () => ({
 			characters,
@@ -27,7 +36,7 @@
 			scrollTop: scrollContainer?.scrollTop ?? 0,
 		}),
 		restore: (value) => {
-			characters = value.characters;
+			characters = uniqueById(value.characters);
 			page = value.page;
 			hasMore = value.hasMore;
 			restoredScrollTop = value.scrollTop;
@@ -41,9 +50,9 @@
 		try {
 			const result = await getCharactersPaginated(page, limit);
 			if (page === 1) {
-				characters = result.items;
+				characters = uniqueById(result.items);
 			} else {
-				characters = [...characters, ...result.items];
+				characters = uniqueById([...characters, ...result.items]);
 			}
 
 			hasMore =

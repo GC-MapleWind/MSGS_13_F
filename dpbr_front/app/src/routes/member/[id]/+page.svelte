@@ -60,6 +60,15 @@
 	let restoredScrollTop = 0;
 	let restoredCharacterId = "";
 
+	function uniqueById<T extends { id: string }>(items: T[]): T[] {
+		const seen = new Set<string>();
+		return items.filter((item) => {
+			if (seen.has(item.id)) return false;
+			seen.add(item.id);
+			return true;
+		});
+	}
+
 	export const snapshot: Snapshot = {
 		capture: () => ({
 			character,
@@ -72,10 +81,10 @@
 		}),
 		restore: (value) => {
 			character = value.character;
-			settlements = value.settlements;
+			settlements = uniqueById(value.settlements);
 			settlementsPage = value.settlementsPage;
 			settlementsHasMore = value.settlementsHasMore;
-			teamMessages = value.teamMessages;
+			teamMessages = uniqueById(value.teamMessages);
 			restoredScrollTop = value.scrollTop;
 			restoredCharacterId = value.charId;
 		},
@@ -116,7 +125,7 @@
 				} else {
 					character = fallbackAdminCharacter;
 				}
-				teamMessages = await getTeamMembers();
+				teamMessages = uniqueById(await getTeamMembers());
 
 				settlements = [];
 				settlementsHasMore = false;
@@ -133,7 +142,7 @@
 			}
 
 			if (charData.name === ADMIN_TEAM_NAME) {
-				teamMessages = await getTeamMembers();
+				teamMessages = uniqueById(await getTeamMembers());
 
 				settlements = [];
 				settlementsHasMore = false;
@@ -163,7 +172,7 @@
 				settlementsLimit,
 			);
 
-			settlements = [...settlements, ...result.items];
+			settlements = uniqueById([...settlements, ...result.items]);
 			settlementsHasMore =
 				settlements.length < result.total && result.items.length > 0;
 			if (result.items.length > 0) {
@@ -177,7 +186,7 @@
 			) {
 				const fallbackItems =
 					await getSettlementsByCharacterId(targetCharacterId);
-				settlements = fallbackItems;
+				settlements = uniqueById(fallbackItems);
 				settlementsHasMore = false;
 				return;
 			}
