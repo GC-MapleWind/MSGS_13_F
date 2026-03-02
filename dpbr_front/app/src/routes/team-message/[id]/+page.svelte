@@ -60,26 +60,50 @@
 					alt={teamMessage.name}
 					onerror={handleImageError}
 					class={teamMessage.imageUrl
-						? "w-full max-h-80 object-cover rounded-lg"
-						: "w-1/2 object-contain rounded-lg"}
+						? "w-full h-auto object-contain rounded-lg"
+						: "w-1/2 h-auto object-contain rounded-lg"}
 				/>
 			</div>
 
-			<div class="flex flex-col gap-4 px-6 pt-4">
+			<div class="flex flex-col gap-4 px-6 py-4">
 				<div class="flex gap-4">
-					<span class="text-sm font-light text-text-muted shrink-0">직책</span>
-					<span class="text-base text-text-primary">{teamMessage.role}</span>
+					<span
+						class="w-[72px] shrink-0 text-left whitespace-nowrap text-sm font-light text-text-muted"
+						>직책</span
+					>
+					<span class="text-base text-text-primary"
+						>{teamMessage.role}</span
+					>
 				</div>
 			</div>
 
-			<div class="flex flex-col gap-4 px-6 pt-4 pb-6">
+			<hr class="border-bg-light mx-6" />
+
+			<div class="flex flex-col gap-4 px-6 py-4">
 				<div class="flex gap-4">
-					<span class="text-sm font-light text-text-muted shrink-0">상세 내용</span>
-					<span class="text-base text-text-primary leading-relaxed whitespace-pre-line"
+					<span
+						class="w-[72px] shrink-0 text-left whitespace-nowrap text-sm font-light text-text-muted"
+						>상세 내용</span
+					>
+					<span
+						class="text-base text-text-primary leading-relaxed whitespace-pre-line"
 						>{teamMessage.content || teamMessage.title}</span
 					>
 				</div>
 			</div>
+
+			<hr class="border-bg-light mx-6" />
+		</div>
+
+		<div
+			class="flex justify-center items-center h-[calc(100dvh*64/874)] bg-white shrink-0 mt-2"
+		>
+			<img
+				src="/images/logos/logo-text-mono.svg"
+				alt="단풍바람"
+				class="h-5 opacity-40 object-contain"
+				draggable="false"
+			/>
 		</div>
 	{:else}
 		<div class="flex-1 flex items-center justify-center">

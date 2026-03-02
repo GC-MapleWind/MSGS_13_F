@@ -12,10 +12,20 @@
 		getTeamMembers,
 	} from "$lib/api";
 	import { handleImageError } from "$lib/utils/image";
-	import type { Character, SettlementItem, TeamMessageItem } from "$lib/types";
+	import type {
+		Character,
+		SettlementItem,
+		TeamMessageItem,
+	} from "$lib/types";
+
+	const ADMIN_TEAM_INFO = {
+		generation: "13기",
+		university: "가천대학교",
+		role: "운영팀",
+	};
 
 	const ADMIN_TEAM_NAME = "단풍바람 운영팀";
-const ADMIN_TEAM_FALLBACK_ID = "admin-team";
+	const ADMIN_TEAM_FALLBACK_ID = "admin-team";
 
 	const fallbackAdminCharacter: Character = {
 		id: ADMIN_TEAM_FALLBACK_ID,
@@ -31,7 +41,8 @@ const ADMIN_TEAM_FALLBACK_ID = "admin-team";
 	const characterId = $derived($page.params.id ?? "");
 	let character = $state<Character | null>(null);
 	let isAdminTeam = $derived(
-		characterId === ADMIN_TEAM_FALLBACK_ID || character?.name === ADMIN_TEAM_NAME,
+		characterId === ADMIN_TEAM_FALLBACK_ID ||
+			character?.name === ADMIN_TEAM_NAME,
 	);
 	let settlements = $state<SettlementItem[]>([]);
 	let settlementsLoadingMore = $state(false);
@@ -58,7 +69,9 @@ const ADMIN_TEAM_FALLBACK_ID = "admin-team";
 			if (characterId === ADMIN_TEAM_FALLBACK_ID) {
 				const adminCharacter = await getAdminCharacter();
 				if (adminCharacter.id !== null) {
-					const adminData = await getCharacterById(adminCharacter.id.toString());
+					const adminData = await getCharacterById(
+						adminCharacter.id.toString(),
+					);
 					character = adminData || fallbackAdminCharacter;
 				} else {
 					character = fallbackAdminCharacter;
@@ -109,7 +122,8 @@ const ADMIN_TEAM_FALLBACK_ID = "admin-team";
 			);
 
 			settlements = [...settlements, ...result.items];
-			settlementsHasMore = settlements.length < result.total && result.items.length > 0;
+			settlementsHasMore =
+				settlements.length < result.total && result.items.length > 0;
 			if (result.items.length > 0) {
 				settlementsPage += 1;
 			}
@@ -186,7 +200,7 @@ const ADMIN_TEAM_FALLBACK_ID = "admin-team";
 						onerror={handleImageError}
 						class={isAdminTeam
 							? "w-10 h-10 object-contain"
-							: "w-full h-full object-cover"}
+							: "w-full h-full object-cover [image-rendering:pixelated]"}
 					/>
 				</div>
 				<div class="flex flex-col grow min-w-0">
@@ -205,15 +219,21 @@ const ADMIN_TEAM_FALLBACK_ID = "admin-team";
 					>
 						<span
 							>{isAdminTeam
-								? character.level > 0
-									? character.level + "기"
-									: "운영팀"
+								? ADMIN_TEAM_INFO.generation
 								: "Lv. " + character.level}</span
 						>
 						<div class="w-px h-1.5 bg-border-dark"></div>
-						<span>{character.server}</span>
+						<span
+							>{isAdminTeam
+								? ADMIN_TEAM_INFO.university
+								: character.server}</span
+						>
 						<div class="w-px h-1.5 bg-border-dark"></div>
-						<span>{character.job}</span>
+						<span
+							>{isAdminTeam
+								? ADMIN_TEAM_INFO.role
+								: character.job}</span
+						>
 					</div>
 				</div>
 				{#if !isAdminTeam}
@@ -247,9 +267,14 @@ const ADMIN_TEAM_FALLBACK_ID = "admin-team";
 								<SettlementListItem {item} />
 							{/each}
 							{#if settlementsHasMore}
-								<div bind:this={settlementsSentinel} class="py-4 flex items-center justify-center">
+								<div
+									bind:this={settlementsSentinel}
+									class="py-4 flex items-center justify-center"
+								>
 									{#if settlementsLoadingMore}
-										<p class="text-text-muted text-sm">불러오는 중...</p>
+										<p class="text-text-muted text-sm">
+											불러오는 중...
+										</p>
 									{/if}
 								</div>
 							{/if}

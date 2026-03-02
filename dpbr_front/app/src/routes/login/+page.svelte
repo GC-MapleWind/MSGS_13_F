@@ -13,6 +13,7 @@
 	let nameFocused = $state(false);
 	let studentIdFocused = $state(false);
 	let isLoading = $state(false);
+	let errorMessage = $state("");
 	let studentIdInputRef: HTMLDivElement | undefined = $state();
 
 	// 저장된 이름이 있으면 자동 입력 및 체크박스 활성화
@@ -81,7 +82,10 @@
 	*/
 
 	function showToastMessage(message?: string) {
-		toast.show(message || "이름 또는 학번을 확인해 주세요.");
+		errorMessage = message || "이름 또는 학번을 확인해 주세요.";
+		setTimeout(() => {
+			errorMessage = "";
+		}, 3000);
 	}
 
 	function handleNameFocus() {
@@ -179,14 +183,27 @@
 				</div>
 
 				<!-- 로그인 버튼 -->
-				<Button
-					label="메생결산 입장"
-					variant="primary"
-					buttonState={isLoading ? "disabled" : "default"}
-					onClick={handleLogin}
-					type="button"
-					class="bg-white text-primary-dark hover:bg-white/90 font-medium"
-				/>
+				<div class="relative w-full">
+					{#if errorMessage}
+						<div
+							class="absolute bottom-[calc(100%+8px)] left-0 w-full flex justify-center z-[60] pointer-events-none"
+						>
+							<span
+								class="bg-black/60 text-white text-[15px] px-5 py-2.5 rounded-3xl shadow-md font-medium whitespace-nowrap pointer-events-auto"
+							>
+								{errorMessage}
+							</span>
+						</div>
+					{/if}
+					<Button
+						label="메생결산 입장"
+						variant="primary"
+						buttonState={isLoading ? "disabled" : "default"}
+						onClick={handleLogin}
+						type="button"
+						class="bg-white text-primary-dark hover:bg-white/90 font-medium w-full"
+					/>
+				</div>
 
 				<!-- 이름 저장 체크박스 -->
 				<label class="flex items-center gap-2 cursor-pointer mt-2">

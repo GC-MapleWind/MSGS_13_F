@@ -20,6 +20,7 @@
 	});
 	let adminTeamId = $state<string | null>(null);
 	const sidebarPeriodText = "메생결산 기록";
+	const SIDEBAR_RECORD_PERIOD = "'25년 8월 25일 ~ '26년 2월 22일의 기록";
 
 	onMount(() => {
 		const unsubscribeAuth = authStore.subscribe((state) => {
@@ -111,9 +112,9 @@
 	</div>
 
 	<!-- Footer -->
-	<div class="flex items-end gap-2 bg-bg-light p-6">
-		<span class="text-sm font-medium text-text-accent"
-			>{sidebarPeriodText}</span
+	<div class="flex items-center gap-2 bg-bg-light p-6">
+		<span class="text-xs font-medium text-text-secondary"
+			>{SIDEBAR_RECORD_PERIOD}</span
 		>
 	</div>
 </aside>
