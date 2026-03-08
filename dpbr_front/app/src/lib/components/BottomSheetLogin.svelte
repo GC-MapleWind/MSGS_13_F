@@ -1,7 +1,5 @@
 <script lang="ts">
     import { onMount } from "svelte";
-    import { env } from "$env/dynamic/public";
-    import { MessageCircle } from "lucide-svelte";
     import InputBox from "$lib/components/InputBox.svelte";
     import Button from "$lib/components/Button.svelte";
     import { toast } from "$lib/stores/toast";
