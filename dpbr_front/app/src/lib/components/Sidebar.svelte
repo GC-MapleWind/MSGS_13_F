@@ -3,7 +3,6 @@
 	import { fade } from "svelte/transition";
 	import { goto } from "$app/navigation";
 	import { authStore } from "$lib/stores/auth";
-	import { getAdminCharacter } from "$lib/api";
 	import type { AuthState } from "$lib/types";
 
 	interface Props {
@@ -18,25 +17,12 @@
 		user: null,
 		isLoading: false,
 	});
-	let adminTeamId = $state<string | null>(null);
 	const sidebarPeriodText = "메생결산 기록";
 
 	onMount(() => {
 		const unsubscribeAuth = authStore.subscribe((state) => {
 			authState = state;
 		});
-
-		const loadAdminCharacter = async () => {
-			try {
-				const result = await getAdminCharacter();
-				adminTeamId = result.id !== null ? result.id.toString() : null;
-			} catch (error) {
-				console.error("Failed to load admin character:", error);
-				adminTeamId = null;
-			}
-		};
-
-		void loadAdminCharacter();
 
 		return () => {
 			unsubscribeAuth();
@@ -98,13 +84,6 @@
 					onclick={onClose}
 				>
 					메생결산 소식
-				</a>
-				<a
-					href="/member/{adminTeamId || 'admin-team'}"
-					class="flex items-center px-6 py-3 text-base text-text-primary hover:bg-bg-light transition-colors"
-					onclick={onClose}
-				>
-					운영팀 한마디
 				</a>
 			</nav>
 		</div>

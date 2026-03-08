@@ -3,43 +3,22 @@
 	import { goto } from "$app/navigation";
 	import Header from "$lib/components/Header.svelte";
 	import SettlementListItem from "$lib/components/SettlementListItem.svelte";
-	import TeamMessageListItem from "$lib/components/TeamMessageListItem.svelte";
 	import {
-		getAdminCharacter,
 		getCharacterById,
 		getSettlementsByCharacterId,
 		getSettlementsByCharacterIdPaginated,
-		getTeamMembers,
 	} from "$lib/api";
 	import { handleImageError } from "$lib/utils/image";
-	import type { Character, SettlementItem, TeamMessageItem } from "$lib/types";
-
-	const ADMIN_TEAM_NAME = "단풍바람 운영팀";
-const ADMIN_TEAM_FALLBACK_ID = "admin-team";
-
-	const fallbackAdminCharacter: Character = {
-		id: ADMIN_TEAM_FALLBACK_ID,
-		name: ADMIN_TEAM_NAME,
-		nickname: "운영팀",
-		avatarUrl: "/logo.png",
-		level: 0,
-		job: "운영",
-		club: "단풍바람",
-		server: "-",
-	};
+	import type { Character, SettlementItem } from "$lib/types";
 
 	const characterId = $derived($page.params.id ?? "");
 	let character = $state<Character | null>(null);
-	let isAdminTeam = $derived(
-		characterId === ADMIN_TEAM_FALLBACK_ID || character?.name === ADMIN_TEAM_NAME,
-	);
 	let settlements = $state<SettlementItem[]>([]);
 	let settlementsLoadingMore = $state(false);
 	let settlementsHasMore = $state(false);
 	let settlementsPage = 1;
 	const settlementsLimit = 10;
 	let settlementsSentinel = $state<HTMLDivElement | null>(null);
-	let teamMessages = $state<TeamMessageItem[]>([]);
 	let loading = $state(true);
 	let error = $state<string | null>(null);
 
@@ -55,40 +34,18 @@ const ADMIN_TEAM_FALLBACK_ID = "admin-team";
 		error = null;
 
 		try {
-			if (characterId === ADMIN_TEAM_FALLBACK_ID) {
-				const adminCharacter = await getAdminCharacter();
-				if (adminCharacter.id !== null) {
-					const adminData = await getCharacterById(adminCharacter.id.toString());
-					character = adminData || fallbackAdminCharacter;
-				} else {
-					character = fallbackAdminCharacter;
-				}
-				teamMessages = await getTeamMembers();
-				settlements = [];
-				settlementsHasMore = false;
-				return;
-			}
-
 			const charData = await getCharacterById(characterId);
 			character = charData;
 			if (!charData) {
 				settlements = [];
 				settlementsHasMore = false;
-				teamMessages = [];
 				return;
 			}
 
-			if (charData.name === ADMIN_TEAM_NAME) {
-				teamMessages = await getTeamMembers();
-				settlements = [];
-				settlementsHasMore = false;
-			} else {
-				teamMessages = [];
-				settlements = [];
-				settlementsPage = 1;
-				settlementsHasMore = true;
-				await loadMoreSettlements(characterId);
-			}
+			settlements = [];
+			settlementsPage = 1;
+			settlementsHasMore = true;
+			await loadMoreSettlements(characterId);
 		} catch (e) {
 			console.error("Failed to load character data:", e);
 			error = "데이터를 불러오는데 실패했습니다.";
@@ -134,7 +91,7 @@ const ADMIN_TEAM_FALLBACK_ID = "admin-team";
 	}
 
 	$effect(() => {
-		if (!settlementsSentinel || !settlementsHasMore || isAdminTeam) return;
+		if (!settlementsSentinel || !settlementsHasMore) return;
 
 		const currentCharacterId = characterId;
 		const observer = new IntersectionObserver(
@@ -170,7 +127,7 @@ const ADMIN_TEAM_FALLBACK_ID = "admin-team";
 	<div class="flex flex-col h-full bg-bg-light">
 		<Header
 			variant="detail"
-			title={isAdminTeam ? "운영팀 한마디 상세" : "메생결산 상세"}
+			title="메생결산 상세"
 			onBackClick={() => goto("/")}
 		/>
 
@@ -181,12 +138,10 @@ const ADMIN_TEAM_FALLBACK_ID = "admin-team";
 					class="w-14 h-14 rounded-full overflow-hidden shrink-0 bg-bg-light flex items-center justify-center"
 				>
 					<img
-						src={isAdminTeam ? "/logo.png" : character.avatarUrl}
+						src={character.avatarUrl}
 						alt={character.name}
 						onerror={handleImageError}
-						class={isAdminTeam
-							? "w-10 h-10 object-contain"
-							: "w-full h-full object-cover"}
+						class="w-full h-full object-cover"
 					/>
 				</div>
 				<div class="flex flex-col grow min-w-0">
@@ -194,73 +149,49 @@ const ADMIN_TEAM_FALLBACK_ID = "admin-team";
 						<span class="text-base text-text-primary font-medium"
 							>{character.name}</span
 						>
-						{#if !isAdminTeam}
-							<span class="text-base text-text-primary"
-								>{character.nickname}</span
-							>
-						{/if}
+						<span class="text-base text-text-primary"
+							>{character.nickname}</span
+						>
 					</div>
 					<div
 						class="flex items-center gap-1 text-xs text-text-muted"
 					>
-						<span
-							>{isAdminTeam
-								? character.level > 0
-									? character.level + "기"
-									: "운영팀"
-								: "Lv. " + character.level}</span
-						>
+						<span>{"Lv. " + character.level}</span>
 						<div class="w-px h-1.5 bg-border-dark"></div>
 						<span>{character.server}</span>
 						<div class="w-px h-1.5 bg-border-dark"></div>
 						<span>{character.job}</span>
 					</div>
 				</div>
-				{#if !isAdminTeam}
-					<a
-						href="/member/{characterId}/save"
-						class="shrink-0 flex items-center justify-center h-10 px-4 rounded-2xl border border-border-dark text-sm font-light text-text-secondary hover:bg-gray-100 focus:bg-gray-100 active:bg-gray-200 transition-none"
-					>
-						저장
-					</a>
-				{/if}
+				<a
+					href="/member/{characterId}/save"
+					class="shrink-0 flex items-center justify-center h-10 px-4 rounded-2xl border border-border-dark text-sm font-light text-text-secondary hover:bg-gray-100 focus:bg-gray-100 active:bg-gray-200 transition-none"
+				>
+					저장
+				</a>
 			</div>
 
 			<div class="bg-white flex flex-col pb-2">
 				<div
 					class="flex items-center px-6 py-5 border-b border-bg-light"
 				>
-					<span class="text-base font-medium text-text-primary"
-						>{isAdminTeam
-							? "단풍바람 운영팀 한마디 목록"
-							: "획득한 메생결산 목록"}</span
-					>
+					<span class="text-base font-medium text-text-primary">획득한 메생결산 목록</span>
 				</div>
 				<div class="flex flex-col">
-					{#if isAdminTeam ? teamMessages.length > 0 : settlements.length > 0}
-						{#if isAdminTeam}
-							{#each teamMessages as item (item.id)}
-								<TeamMessageListItem {item} />
-							{/each}
-						{:else}
-							{#each settlements as item (item.id)}
-								<SettlementListItem {item} />
-							{/each}
-							{#if settlementsHasMore}
-								<div bind:this={settlementsSentinel} class="py-4 flex items-center justify-center">
-									{#if settlementsLoadingMore}
-										<p class="text-text-muted text-sm">불러오는 중...</p>
-									{/if}
-								</div>
-							{/if}
+					{#if settlements.length > 0}
+						{#each settlements as item (item.id)}
+							<SettlementListItem {item} />
+						{/each}
+						{#if settlementsHasMore}
+							<div bind:this={settlementsSentinel} class="py-4 flex items-center justify-center">
+								{#if settlementsLoadingMore}
+									<p class="text-text-muted text-sm">불러오는 중...</p>
+								{/if}
+							</div>
 						{/if}
 					{:else}
 						<div class="flex items-center justify-center py-8">
-							<p class="text-text-muted">
-								{isAdminTeam
-									? "운영팀 정보가 없습니다."
-									: "메생결산이 없습니다."}
-							</p>
+							<p class="text-text-muted">메생결산이 없습니다.</p>
 						</div>
 					{/if}
 				</div>
