@@ -1,0 +1,1 @@
+export const env={"PUBLIC_API_URL":"/api","PUBLIC_KAKAO_CLIENT_ID":"","PUBLIC_KAKAO_REDIRECT_URI":"http://localhost:5173/auth/callback","PUBLIC_API_PREFIX":"/v1"}

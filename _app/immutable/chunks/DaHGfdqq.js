@@ -1,0 +1,1 @@
+import{F as c}from"./BdvoR5k5.js";function u(){const{subscribe:s,update:e}=c([]);let r=0;return{subscribe:s,show:(i,a=3e3)=>{const o=r++;e(t=>[...t,{id:o,message:i}]),setTimeout(()=>{e(t=>t.filter(n=>n.id!==o))},a)}}}const b=u();export{b as t};
